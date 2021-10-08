@@ -719,7 +719,7 @@ void ApplicationState::dumpAppFiles() {
         return;
     }
     DEBUG_FUNCTION_LINE("Read DiscHeader");
-    auto *discHeader = new WiiUDiscHeader(discReader, 0);
+    auto *discHeader = new WiiUDiscHeader(discReader);
     bool forceExit = false;
     for (auto &partition: discHeader->wiiUContentsInformation->partitions->partitions) {
         auto gmPartition = dynamic_cast<WiiUGMPartition *>(partition);

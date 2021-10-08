@@ -20,7 +20,7 @@
 uint32_t  WiiUManufactorDiscID::LENGTH = 65536;
 
 WiiUManufactorDiscID::WiiUManufactorDiscID(DiscReader *reader, uint32_t offset) {
-    if(!reader->readEncrypted(data, offset, LENGTH)){
+    if (!reader->readEncrypted(data, offset, LENGTH)) {
         OSFatal("WiiUManufactorDiscID: read failed");
     }
 }

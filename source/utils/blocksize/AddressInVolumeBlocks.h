@@ -23,6 +23,7 @@ class AddressInVolumeBlocks : public AddressInBlocks {
 
 public:
     AddressInVolumeBlocks() = default;
+
     AddressInVolumeBlocks(const VolumeBlockSize &pBlockSize, uint32_t pValue) : AddressInBlocks(pBlockSize, pValue) {
     }
 };

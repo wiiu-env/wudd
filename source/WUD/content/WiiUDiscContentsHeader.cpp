@@ -25,11 +25,11 @@ uint32_t WiiUDiscContentsHeader::MAGIC = 0xCCA6E67B;
 WiiUDiscContentsHeader::WiiUDiscContentsHeader(DiscReader *reader, uint32_t offset) {
     auto *buffer = (uint8_t *) malloc(LENGTH);
     if (!reader->hasDiscKey) {
-        if(!reader->readEncrypted(buffer, offset, LENGTH)){
+        if (!reader->readEncrypted(buffer, offset, LENGTH)) {
             OSFatal("WiiUDiscContentsHeader: Failed to read encrypted");
         }
     } else {
-        if(!reader->readDecrypted(buffer, offset, 0, LENGTH, reader->discKey, nullptr, true)){
+        if (!reader->readDecrypted(buffer, offset, 0, LENGTH, reader->discKey, nullptr, true)) {
             OSFatal("WiiUDiscContentsHeader: Failed to read decrypted");
         }
     }

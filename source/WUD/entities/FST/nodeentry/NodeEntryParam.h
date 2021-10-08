@@ -17,13 +17,14 @@
 #pragma once
 
 #include <cstdint>
+
 class DirectoryEntry;
 
 class NodeEntryParam {
 public:
     uint16_t sectionNumber;
     uint32_t entryNumber;
-    DirectoryEntry* parent;
+    DirectoryEntry *parent;
     uint16_t permission;
     uint8_t type;
     uint32_t uint24;

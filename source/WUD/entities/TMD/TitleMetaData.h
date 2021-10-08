@@ -28,7 +28,7 @@ public:
 
     std::vector<Content *> contentList;
 
-    Content* getContentByIndex(uint16_t index);
+    Content *getContentByIndex(uint16_t index);
 
 private:
     uint16_t contentCount;

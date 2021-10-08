@@ -89,7 +89,7 @@ public:
     static bool findStringIC(const std::string &strHaystack, const std::string &strNeedle);
 
     // https://stackoverflow.com/a/3418285
-    static bool replace(std::string& str, const std::string& from, const std::string& to);
+    static bool replace(std::string &str, const std::string &from, const std::string &to);
 
     static bool strCompareIC(const std::string &str1, const std::string &str2);
 };

@@ -5,7 +5,7 @@
 #include <WUD/entities/FST/nodeentry/DirectoryEntry.h>
 #include <WUD/entities/FST/FST.h>
 
-class FSTUtils{
+class FSTUtils {
 public:
     static NodeEntry *getFSTEntryByFullPath(DirectoryEntry *root, std::string &givenFullPath);
 

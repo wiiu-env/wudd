@@ -25,7 +25,7 @@ RootEntry::RootEntry(DirectoryEntry *input) {
     entryNumber = input->entryNumber;
     parent = input->parent;
     nameString = input->nameString;
-    if(nameString == nullptr){
+    if (nameString == nullptr) {
         OSFatal("nameString was null");
     }
     entryType = input->entryType;

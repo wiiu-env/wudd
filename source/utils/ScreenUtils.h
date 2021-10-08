@@ -51,5 +51,6 @@ public:
 
 private:
     ScreenUtils() = default;
+
     ~ScreenUtils() = default;
 };

@@ -19,11 +19,14 @@
 #include <cstdint>
 #include "DiscReader.h"
 
-class DiscReaderDiscDrive : public DiscReader{
+class DiscReaderDiscDrive : public DiscReader {
 public:
     DiscReaderDiscDrive();
+
     ~DiscReaderDiscDrive() override;
+
     bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
+
     bool IsReady() override;
 
     bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;

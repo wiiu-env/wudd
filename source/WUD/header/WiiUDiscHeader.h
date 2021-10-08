@@ -19,19 +19,22 @@
 #include <cstdint>
 #include <WUD/DiscReader.h>
 #include <WUD/content/WiiUContentsInformation.h>
+#include <WUD/DiscReaderDiscDrive.h>
 #include "WiiUManufactorDiscID.h"
 #include "WiiUDiscID.h"
 
 class WiiUDiscHeader {
 
 public:
-    static uint32_t LENGTH;
+    explicit WiiUDiscHeader(DiscReaderDiscDrive *pDrive);
 
     WiiUDiscHeader(DiscReader *reader, uint32_t offset);
+
+    ~WiiUDiscHeader();
 
     WiiUManufactorDiscID *manufactorDiscID = nullptr;
     WiiUDiscID *discId = nullptr;
     WiiUContentsInformation *wiiUContentsInformation = nullptr;
 
-    ~WiiUDiscHeader();
+    static uint32_t LENGTH;
 };

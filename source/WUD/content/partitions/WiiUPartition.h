@@ -25,6 +25,7 @@ class WiiUPartition {
 
 public:
     WiiUPartition();
+
     explicit WiiUPartition(DiscReader *reader, uint32_t offset, const DiscBlockSize &blockSize);
 
     virtual uint64_t getSectionOffsetOnDefaultPartition();
@@ -35,11 +36,11 @@ public:
         return volumeId;
     }
 
-    [[nodiscard]] virtual std::map<AddressInDiscBlocks, VolumeHeader *> getVolumes() const&{
+    [[nodiscard]] virtual std::map<AddressInDiscBlocks, VolumeHeader *> getVolumes() const &{
         return volumes;
     }
 
-    [[nodiscard]] virtual uint16_t getFileSystemDescriptor() const{
+    [[nodiscard]] virtual uint16_t getFileSystemDescriptor() const {
         return fileSystemDescriptor;
     }
 

@@ -17,7 +17,7 @@
 #include "StringEntry.h"
 #include "StringTable.h"
 
-std::string StringEntry::toString() const{
+std::string StringEntry::toString() const {
     return stringTable->getByAddress(offset);
 }
 

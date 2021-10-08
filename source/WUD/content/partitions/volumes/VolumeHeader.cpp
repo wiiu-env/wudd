@@ -21,7 +21,7 @@
 
 uint32_t  VolumeHeader::MAGIC = 0xCC93A4F5;
 
-VolumeHeader::VolumeHeader(DiscReader *reader, uint64_t offset)  {
+VolumeHeader::VolumeHeader(DiscReader *reader, uint64_t offset) {
     auto buffer = (uint8_t *) malloc(64);
     if (buffer == nullptr) {
         OSFatal("VolumeHeader: failed to alloc buffer");
@@ -51,12 +51,12 @@ VolumeHeader::VolumeHeader(DiscReader *reader, uint64_t offset)  {
 
     free(buffer);
 
-    auto bufferH3 = (uint8_t *) malloc(ROUNDUP(h3HashArrayListSize,16));
+    auto bufferH3 = (uint8_t *) malloc(ROUNDUP(h3HashArrayListSize, 16));
     if (bufferH3 == nullptr) {
         OSFatal("VolumeHeader: failed to alloc h3 buffer");
     }
 
-    if (!reader->readEncrypted(bufferH3,offset + 64, ROUNDUP(h3HashArrayListSize,16))) {
+    if (!reader->readEncrypted(bufferH3, offset + 64, ROUNDUP(h3HashArrayListSize, 16))) {
         OSFatal("VolumeHeader: failed to read h3");
     }
 
@@ -67,7 +67,7 @@ VolumeHeader::VolumeHeader(DiscReader *reader, uint64_t offset)  {
 
 std::vector<H3HashArray *> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_t pNumberOfH3HashArray, uint32_t pH3HashArrayListSize) {
     std::vector<H3HashArray *> arrayList;
-    if(pNumberOfH3HashArray == 0){
+    if (pNumberOfH3HashArray == 0) {
         return arrayList;
     }
 

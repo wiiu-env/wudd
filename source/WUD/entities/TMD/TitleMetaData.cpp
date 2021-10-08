@@ -32,9 +32,9 @@ TitleMetaData::~TitleMetaData() {
     }
 }
 
-Content* TitleMetaData::getContentByIndex(uint16_t i) {
+Content *TitleMetaData::getContentByIndex(uint16_t i) {
     for (auto &content: contentList) {
-        if(content->index == i){
+        if (content->index == i) {
             return content;
         }
     }

@@ -30,9 +30,9 @@
 class WiiUPartitions {
 
 public:
-    static bool getFSTEntryAsByte(uint8_t **buffer_out, uint32_t *outSize, std::string &filePath, FST *fst, const AddressInDiscBlocks& volumeAddress, DiscReader* discReader);
+    static bool getFSTEntryAsByte(uint8_t **buffer_out, uint32_t *outSize, std::string &filePath, FST *fst, const AddressInDiscBlocks &volumeAddress, DiscReader *discReader);
 
-    WiiUPartitions(DiscReader *reader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize& blockSize);
+    WiiUPartitions(DiscReader *reader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize &blockSize);
 
     ~WiiUPartitions();
 

@@ -26,7 +26,7 @@
 class FST {
 
 public:
-    FST(uint8_t *data, uint32_t fstSize, uint32_t offset, const VolumeBlockSize& blockSize);
+    FST(uint8_t *data, uint32_t fstSize, uint32_t offset, const VolumeBlockSize &blockSize);
 
     ~FST();
 
@@ -35,5 +35,5 @@ public:
     StringTable *stringTable;
     NodeEntries *nodeEntries;
 
-    [[nodiscard]] RootEntry * getRootEntry() const;
+    [[nodiscard]] RootEntry *getRootEntry() const;
 };

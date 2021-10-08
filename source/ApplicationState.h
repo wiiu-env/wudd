@@ -104,7 +104,7 @@ private:
     std::vector<uint64_t> skippedSectors;
     int readResult = 0;
 
-    [[nodiscard]] bool writeDataToFile(void* buffer, int numberOfSection);
+    [[nodiscard]] bool writeDataToFile(void *buffer, int numberOfSection);
 
     uint64_t totalSectorCount = 0;
 
@@ -116,7 +116,8 @@ private:
     uint32_t writeBufferSize = 0;
 
     [[nodiscard]] bool writeCached(uint32_t addr, uint32_t writeSize);
-     void clearWriteCache();
+
+    void clearWriteCache();
 
     [[nodiscard]] bool flushWriteCache();
 

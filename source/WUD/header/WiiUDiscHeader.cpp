@@ -38,3 +38,7 @@ WiiUDiscHeader::~WiiUDiscHeader() {
     delete discId;
     delete wiiUContentsInformation;
 }
+
+WiiUDiscHeader::WiiUDiscHeader(DiscReaderDiscDrive *pDrive) : WiiUDiscHeader(pDrive, 0) {
+
+}

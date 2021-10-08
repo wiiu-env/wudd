@@ -23,6 +23,7 @@ class DiscBlockSize : public BlockSize {
 
 public:
     DiscBlockSize() = default;
+
     explicit DiscBlockSize(uint32_t blockSize) : BlockSize(blockSize) {
 
     }

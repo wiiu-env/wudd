@@ -22,7 +22,7 @@ class NUSDecryption {
 public:
     explicit NUSDecryption(Ticket *pTicket);
 
-    void decryptData(uint8_t *IV, uint8_t *inData, uint8_t *outData, uint32_t size) const ;
+    void decryptData(uint8_t *IV, uint8_t *inData, uint8_t *outData, uint32_t size) const;
 
     Ticket *ticket;
 };

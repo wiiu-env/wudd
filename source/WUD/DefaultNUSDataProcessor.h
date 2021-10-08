@@ -27,7 +27,7 @@ public:
 
     bool readPlainDecryptedContent(Content *pContent, uint8_t **data, uint32_t *length) override;
 
-    NUSDataProvider* getDataProvider() override;
+    NUSDataProvider *getDataProvider() override;
 
 private:
     NUSDataProvider *dataProvider;

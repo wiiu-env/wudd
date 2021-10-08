@@ -22,9 +22,9 @@
 class FSTHeader {
 
 public:
-    explicit FSTHeader(uint8_t *data) ;
+    explicit FSTHeader(uint8_t *data);
 
-    ~FSTHeader()= default;
+    ~FSTHeader() = default;
 
     uint8_t FSTVersion;
     SectionBlockSize blockSize;

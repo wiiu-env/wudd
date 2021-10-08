@@ -21,6 +21,7 @@
 class DiscReader {
 public:
     DiscReader();
+
     virtual ~DiscReader();
 
     virtual bool IsReady() = 0;

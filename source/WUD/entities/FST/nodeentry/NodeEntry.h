@@ -41,19 +41,19 @@ public:
     uint32_t entryNumber{};
 
     static NodeEntry *AutoDeserialize(uint8_t *data, uint32_t offset, DirectoryEntry *pParent, uint32_t eEntryNumber, SectionEntries *sectionEntries,
-                                      StringTable *stringTable, const SectionBlockSize& blockSize);
+                                      StringTable *stringTable, const SectionBlockSize &blockSize);
 
-    virtual ~NodeEntry()= default;
+    virtual ~NodeEntry() = default;
 
     virtual void printPathRecursive() {
         DEBUG_FUNCTION_LINE("%s", getFullPath().c_str());
     }
 
-    [[nodiscard]] std::string getFullPath() const&;
+    [[nodiscard]] std::string getFullPath() const &;
 
-    [[nodiscard]] std::string getPath() const&;
+    [[nodiscard]] std::string getPath() const &;
 
-    [[nodiscard]] std::string getName() const&;
+    [[nodiscard]] std::string getName() const &;
 
     [[nodiscard]] bool isDirectory() const;
 

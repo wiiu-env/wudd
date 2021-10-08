@@ -26,5 +26,5 @@ public:
         this->blockSize = blockSize;
     }
 
-    uint32_t blockSize {};
+    uint32_t blockSize{};
 };

@@ -18,6 +18,7 @@
 #include "WiiUContentsInformation.h"
 
 uint32_t  WiiUContentsInformation::LENGTH = 32768;
+
 WiiUContentsInformation::WiiUContentsInformation(DiscReader *reader, uint32_t offset) {
     uint32_t curOffset = offset;
     discContentHeader = new WiiUDiscContentsHeader(reader, curOffset);
