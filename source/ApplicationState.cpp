@@ -476,7 +476,7 @@ void ApplicationState::update(Input *input) {
             this->writtenSector = 0;
             return;
         }
-    } else if (this->state == STATE_PLEASE_INSERT_DISC){
+    } else if (this->state == STATE_PLEASE_INSERT_DISC) {
         if (entrySelected(input)) {
             this->state = STATE_WELCOME_SCREEN;
         }
@@ -593,7 +593,7 @@ bool ApplicationState::writeDataToFile(void *buffer, int numberOfSectors) {
             snprintf(tmp, 33, "%08X%08X%08X%08X", test[0], test[1], test[2], test[3]);
             std::string hash(tmp);
 
-            uint32_t *indexTable = (uint32_t *) this->sectorIndexTable;
+            auto *indexTable = (uint32_t *) this->sectorIndexTable;
 
             auto it = hashMap.find(hash);
             if (it != hashMap.end()) {
@@ -616,8 +616,6 @@ bool ApplicationState::writeDataToFile(void *buffer, int numberOfSectors) {
 }
 
 bool ApplicationState::writeCached(uint32_t addr, uint32_t writeSize) {
-    // DEBUG_FUNCTION_LINE("Lest write %d bytes", writeSize);
-
     if (writeSize == this->writeBufferSize) {
         if (!this->flushWriteCache()) {
             return false;
@@ -639,7 +637,6 @@ bool ApplicationState::writeCached(uint32_t addr, uint32_t writeSize) {
         if (this->writeBufferPos + curWrite > this->writeBufferSize) {
             curWrite = this->writeBufferSize - this->writeBufferPos;
         }
-        // DEBUG_FUNCTION_LINE("Copy from %08X into %08X, size %08X, %d",(addr + written),((uint32_t) this->writeBuffer) + this->writeBufferPos, curWrite, this->writeBufferPos/READ_SECTOR_SIZE);
         OSBlockMove((void *) (((uint32_t) this->writeBuffer) + this->writeBufferPos), (void *) (addr + written), curWrite, 1);
         this->writeBufferPos += curWrite;
 
@@ -812,7 +809,7 @@ void ApplicationState::dumpAppFiles() {
                         toRead = bufferSize;
                     }
 
-                    if(!dataProvider->readRawContent(content, readBuffer, curOffset, toRead)){
+                    if (!dataProvider->readRawContent(content, readBuffer, curOffset, toRead)) {
                         DEBUG_FUNCTION_LINE("Failed to read content");
                         this->setError(ERROR_WRITE_FAILED);
                         forceExit = true;
