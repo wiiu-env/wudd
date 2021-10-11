@@ -126,7 +126,7 @@ void ApplicationState::render() {
         WiiUScreen::drawLine("Read disc information");
     } else if (this->state == STATE_READ_DISC_INFO_DONE) {
         WiiUScreen::drawLinef("Dumping: %s", this->discId);
-    } else if (this->state == STATE_DUMP_TICKET) {
+    } else if (this->state == STATE_DUMP_DISC_KEY) {
         WiiUScreen::drawLinef("Dumping game.key");
     } else if (this->state == STATE_DUMP_DISC_START || this->state == STATE_DUMP_DISC || this->state == STATE_WAIT_USER_ERROR_CONFIRM) {
         WiiUScreen::drawLinef("Dumping: %s", this->discId);
@@ -277,28 +277,18 @@ void ApplicationState::update(Input *input) {
         return;
     } else if (this->state == STATE_READ_DISC_INFO_DONE) {
         DEBUG_FUNCTION_LINE("STATE_READ_DISC_INFO_DONE");
-        this->state = STATE_DUMP_TICKET;
-    } else if (this->state == STATE_DUMP_TICKET) {
-        DEBUG_FUNCTION_LINE("STATE_DUMP_TICKET");
+        this->state = STATE_DUMP_DISC_KEY;
+    } else if (this->state == STATE_DUMP_DISC_KEY) {
+        DEBUG_FUNCTION_LINE("STATE_DUMP_DISC_KEY");
 
         auto res = IOSUHAX_FSA_RawRead(gFSAfd, this->sectorBuf, READ_SECTOR_SIZE, 1, 3, this->oddFd);
         uint8_t discKey[16];
         bool hasDiscKey = false;
         if (res >= 0) {
             if (((uint32_t *) this->sectorBuf)[0] != 0xCCA6E67B) {
-                uint8_t iv[16];
-                memset(iv, 0, 16);
-
-                auto odm_handle = IOS_Open("/dev/odm", IOS_OPEN_READ);
-                if (odm_handle >= 0) {
-                    uint32_t io_buffer[0x20 / 4];
-                    // disc encryption key, only works with patched IOSU
-                    io_buffer[0] = 3;
-                    if (IOS_Ioctl(odm_handle, 0x06, io_buffer, 0x14, io_buffer, 0x20) == 0) {
-                        memcpy(discKey, io_buffer, 16);
-                        hasDiscKey = true;
-                    }
-                    IOS_Close(odm_handle);
+                auto discKeyRes = IOSUHAX_ODM_GetDiscKey(discKey);
+                if (discKeyRes >= 0) {
+                    hasDiscKey = true;
                 }
             }
         }
