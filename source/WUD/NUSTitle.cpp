@@ -61,7 +61,7 @@ std::optional<std::shared_ptr<NUSTitle>> NUSTitle::loadTitle(const std::shared_p
     auto fstOpt = FST::make_shared(dataBuffer, 0, VolumeBlockSize(1));
 
     if (!fstOpt.has_value()) {
-        DEBUG_FUNCTION_LINE();
+        DEBUG_FUNCTION_LINE("Failed to parse FST");
         return {};
     }
 
@@ -89,7 +89,6 @@ NUSTitle::NUSTitle(std::shared_ptr<TitleMetaData> pTMD,
 
 std::optional<std::shared_ptr<NUSTitle>>
 NUSTitle::loadTitleFromGMPartition(const std::shared_ptr<WiiUGMPartition> &pPartition, const std::shared_ptr<DiscReader> &pDrive, const std::array<uint8_t, 16> &commonKey) {
-    DEBUG_FUNCTION_LINE();
     return loadTitle(std::shared_ptr<NUSDataProvider>(new NUSDataProviderWUD(pPartition, pDrive)), commonKey);
 }
 

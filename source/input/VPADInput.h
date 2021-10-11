@@ -27,7 +27,7 @@ public:
     }
 
     //!Destructor
-    ~VPadInput() override {}
+    ~VPadInput() override = default;
 
     bool update(int32_t width, int32_t height) {
         lastData = data;

@@ -21,8 +21,6 @@
 Ticket::Ticket(const std::array<uint8_t, 16> &pEncryptedKey, const std::array<uint8_t, 16> &pDecryptedKey) :
         ticketKeyEnc(pEncryptedKey),
         ticketKeyDec(pDecryptedKey) {
-    DEBUG_FUNCTION_LINE();
-
 }
 
 std::optional<std::shared_ptr<Ticket>> Ticket::make_shared(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey) {

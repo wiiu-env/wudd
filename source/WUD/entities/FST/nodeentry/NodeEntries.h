@@ -29,11 +29,6 @@
 class NodeEntries {
 
 public:
-
-    virtual ~NodeEntries() {
-        DEBUG_FUNCTION_LINE("Bye");
-    }
-
     static std::optional<std::shared_ptr<NodeEntry>>
     DeserializeImpl(const std::vector<uint8_t> &data,
                     uint32_t offset,

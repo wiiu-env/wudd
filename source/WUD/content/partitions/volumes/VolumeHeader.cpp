@@ -76,8 +76,6 @@ std::optional<std::shared_ptr<VolumeHeader>> VolumeHeader::make_shared(const std
     auto minorVersion = buffer[39];
     auto expiringMajorVersion = buffer[40];
 
-    DEBUG_FUNCTION_LINE("FSTSize: %08X", FSTSize);
-
     free(buffer);
 
     auto bufferH3 = (uint8_t *) malloc(ROUNDUP(h3HashArrayListSize, 16));

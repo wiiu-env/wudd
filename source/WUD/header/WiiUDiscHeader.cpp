@@ -58,7 +58,6 @@ std::optional<std::unique_ptr<WiiUDiscHeader>> WiiUDiscHeader::make_unique(const
         DEBUG_FUNCTION_LINE("Unexpected offset");
         return {};
     }
-    DEBUG_FUNCTION_LINE();
     return std::unique_ptr<WiiUDiscHeader>(new WiiUDiscHeader(
             std::move(manufactorDiscIDOpt.value()),
             std::move(discIdOpt.value()),

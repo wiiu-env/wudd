@@ -25,5 +25,4 @@ void NUSDecryption::decryptData(const std::array<uint8_t, 0x10> &IV, uint8_t *in
 }
 
 NUSDecryption::NUSDecryption(std::shared_ptr<Ticket> pTicket) : ticket(std::move(pTicket)) {
-    DEBUG_FUNCTION_LINE();
 }

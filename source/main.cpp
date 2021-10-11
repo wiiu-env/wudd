@@ -66,10 +66,7 @@ void main_loop() {
     ApplicationState state;
     VPadInput input;
 
-    DEBUG_FUNCTION_LINE();
-
     if (gFSAfd < 0 || !sIosuhaxMount) {
-        DEBUG_FUNCTION_LINE();
         state.setError(ApplicationState::eErrorState::ERROR_IOSUHAX_FAILED);
     }
 
@@ -79,7 +76,6 @@ void main_loop() {
         state.update(&input);
         state.render();
     }
-    exit(0);
 }
 
 void initIOSUHax() {

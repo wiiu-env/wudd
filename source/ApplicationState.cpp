@@ -848,7 +848,6 @@ void ApplicationState::dumpAppFiles() {
                 contentI++;
             }
             if (forceExit) {
-                exit(0);
                 break;
             }
         }

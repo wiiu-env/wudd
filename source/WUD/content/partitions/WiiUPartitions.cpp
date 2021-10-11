@@ -189,6 +189,5 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
 }
 
 WiiUPartitions::WiiUPartitions(std::vector<std::shared_ptr<WiiUPartition>> pPartitions) : partitions(std::move(pPartitions)) {
-    DEBUG_FUNCTION_LINE();
 }
 

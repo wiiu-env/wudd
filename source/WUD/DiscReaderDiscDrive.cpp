@@ -24,7 +24,6 @@
 
 
 DiscReaderDiscDrive::DiscReaderDiscDrive() : DiscReader() {
-    DEBUG_FUNCTION_LINE();
     auto *sector_buf = (uint8_t *) malloc(READ_SECTOR_SIZE);
     if (sector_buf == nullptr) {
         return;
@@ -76,7 +75,6 @@ bool DiscReaderDiscDrive::IsReady() {
 }
 
 DiscReaderDiscDrive::~DiscReaderDiscDrive() {
-    DEBUG_FUNCTION_LINE();
     if (device_handle != -1) {
         IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &device_handle);
     }

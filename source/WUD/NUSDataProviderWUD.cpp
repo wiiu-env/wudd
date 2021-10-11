@@ -17,14 +17,11 @@
 #include "NUSDataProviderWUD.h"
 
 NUSDataProviderWUD::NUSDataProviderWUD(const std::shared_ptr<WiiUGMPartition> &pGamePartition, const std::shared_ptr<DiscReader> &pDiscReader) {
-    DEBUG_FUNCTION_LINE();
     gamePartition = pGamePartition;
     discReader = pDiscReader;
 }
 
-NUSDataProviderWUD::~NUSDataProviderWUD() {
-    DEBUG_FUNCTION_LINE();
-}
+NUSDataProviderWUD::~NUSDataProviderWUD() = default;
 
 bool NUSDataProviderWUD::readRawContent(const std::shared_ptr<Content> &content, uint8_t *buffer, uint64_t offset, uint32_t size) {
     if (buffer == nullptr) {
@@ -41,7 +38,6 @@ bool NUSDataProviderWUD::readRawContent(const std::shared_ptr<Content> &content,
 bool NUSDataProviderWUD::getContentH3Hash(const std::shared_ptr<Content> &content, std::vector<uint8_t> &out_data) {
     auto cur = gamePartition->getVolumes().begin()->second->h3HashArrayList[content->index];
     if (cur == nullptr || cur->size == 0) {
-        DEBUG_FUNCTION_LINE();
         return false;
     }
     out_data.resize(cur->size);

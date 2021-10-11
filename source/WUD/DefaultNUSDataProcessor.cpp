@@ -56,5 +56,4 @@ DefaultNUSDataProcessor::DefaultNUSDataProcessor(
         std::shared_ptr<NUSDecryption> pNUSDecryption) :
         dataProvider(std::move(pDataProvider)),
         nusDecryption(std::move(pNUSDecryption)) {
-    DEBUG_FUNCTION_LINE();
 }
