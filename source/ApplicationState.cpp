@@ -811,7 +811,13 @@ void ApplicationState::dumpAppFiles() {
                     if (toRead > bufferSize) {
                         toRead = bufferSize;
                     }
-                    dataProvider->readRawContent(content, readBuffer, curOffset, toRead);
+
+                    if(!dataProvider->readRawContent(content, readBuffer, curOffset, toRead)){
+                        DEBUG_FUNCTION_LINE("Failed to read content");
+                        this->setError(ERROR_WRITE_FAILED);
+                        forceExit = true;
+                        break;
+                    }
                     if (file.write((const uint8_t *) readBuffer, toRead) != (int32_t) toRead) {
                         DEBUG_FUNCTION_LINE("Failed to write");
                         break;
