@@ -172,6 +172,8 @@ void ApplicationState::render() {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
     } else if (this->state == STATE_DUMP_APP_FILES_DONE) {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
+    } else if (this->state == STATE_PLEASE_INSERT_DISC) {
+        WiiUScreen::drawLinef("Please insert a Disc. Press A to continue");
     }
     printFooter();
     WiiUScreen::flipBuffers();
@@ -245,7 +247,7 @@ void ApplicationState::update(Input *input) {
         }
         DEBUG_FUNCTION_LINE("STATE_OPEN_ODD1");
         if (this->retryCount-- <= 0) {
-            this->setError(ERROR_OPEN_ODD1);
+            this->state = STATE_PLEASE_INSERT_DISC;
             return;
         }
         auto ret = IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &(this->oddFd));
@@ -473,6 +475,10 @@ void ApplicationState::update(Input *input) {
             this->readSectors = 0;
             this->writtenSector = 0;
             return;
+        }
+    } else if (this->state == STATE_PLEASE_INSERT_DISC){
+        if (entrySelected(input)) {
+            this->state = STATE_WELCOME_SCREEN;
         }
     }
 }
