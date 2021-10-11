@@ -19,11 +19,17 @@
 #include <cstdint>
 #include <utils/rijndael.h>
 #include <cstring>
+#include <optional>
+#include <memory>
+#include <vector>
 
 class Ticket {
 public:
-    Ticket(uint8_t *data, uint8_t commonKey[16]);
+    std::array<uint8_t, 16> ticketKeyEnc;
+    std::array<uint8_t, 16> ticketKeyDec;
 
-    uint8_t ticketKeyEnc[16]{};
-    uint8_t ticketKeyDec[16]{};
+    static std::optional<std::shared_ptr<Ticket>> make_shared(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey);
+
+private:
+    Ticket(const std::array<uint8_t, 16> &encryptedKey, const std::array<uint8_t, 16> &decryptedKey);
 };

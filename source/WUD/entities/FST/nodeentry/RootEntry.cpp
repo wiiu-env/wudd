@@ -17,29 +17,28 @@
 #include <coreinit/debug.h>
 #include "RootEntry.h"
 
-RootEntry::RootEntry(DirectoryEntry *input) {
-    if ((input->entryType & ENTRY_TYPE_Directory) != ENTRY_TYPE_Directory || input->entryNumber != 0) {
-        OSFatal("Input is no root entry.");
-    }
+RootEntry::RootEntry(const std::shared_ptr<DirectoryEntry> &input) : DirectoryEntry(input) {
 
-    entryNumber = input->entryNumber;
-    parent = input->parent;
-    nameString = input->nameString;
-    if (nameString == nullptr) {
-        OSFatal("nameString was null");
-    }
-    entryType = input->entryType;
-
-    parentEntryNumber = input->parentEntryNumber;
-    lastEntryNumber = input->lastEntryNumber;
-    permission = input->permission;
-    sectionEntry = input->sectionEntry;
 }
 
-uint32_t RootEntry::parseLastEntryNumber(uint8_t *data, uint32_t offset) {
-    return ((uint32_t *) &data[8 + offset])[0];
+uint32_t RootEntry::parseLastEntryNumber(const std::array<uint8_t, NodeEntry::LENGTH> &data) {
+    return ((uint32_t *) &data[8])[0];
 }
 
-RootEntry *RootEntry::parseData(uint8_t *data, NodeEntryParam param, SectionEntries *sectionEntries, StringTable *stringTable) {
-    return new RootEntry(DirectoryEntry::parseData(data, param, sectionEntries, stringTable));
+std::optional<std::shared_ptr<NodeEntry>>
+RootEntry::parseData
+        (const std::array<uint8_t, NodeEntry::LENGTH> &data,
+         const NodeEntryParam &param,
+         const std::shared_ptr<SectionEntries> &sectionEntries,
+         const std::shared_ptr<StringTable> &stringTable) {
+    auto dir = DirectoryEntry::parseData(data, param, sectionEntries, stringTable);
+    if (dir.has_value()) {
+        if ((dir.value()->entryType & ENTRY_TYPE_Directory) != ENTRY_TYPE_Directory || dir.value()->entryNumber != 0) {
+            DEBUG_FUNCTION_LINE("Input is no root entry.");
+            return {};
+        }
+        return std::shared_ptr<NodeEntry>(new RootEntry(dir.value()));
+    }
+    DEBUG_FUNCTION_LINE("Failed to parse dir");
+    return {};
 }

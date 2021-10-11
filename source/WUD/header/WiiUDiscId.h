@@ -16,17 +16,23 @@
  ****************************************************************************/
 #pragma once
 
+#include <memory>
 #include <string>
 #include <WUD/DiscReader.h>
+#include <optional>
+#include <utility>
 
-class WiiUDiscID {
+class WiiUDiscId {
 
 public:
-    WiiUDiscID(DiscReader *reader, uint32_t offset);
-
-    static uint32_t LENGTH;
-    static uint32_t MAGIC;
-    uint8_t majorVersion;
+    static constexpr uint32_t LENGTH = 32768;
+    static constexpr uint32_t MAGIC = 0xCC549EB9;
     uint8_t minorVersion;
+    uint8_t majorVersion;
     std::string footprint;
+
+    static std::optional<std::unique_ptr<WiiUDiscId>> make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset);
+
+private:
+    WiiUDiscId(uint8_t pMinorVersion, uint8_t pMajorVersion, const std::string &pFootprint);
 };

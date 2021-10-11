@@ -16,26 +16,30 @@
  ****************************************************************************/
 #pragma once
 
+#include <optional>
+#include <memory>
 #include <cstdint>
+#include <utility>
 #include <vector>
 #include <utils/blocksize/VolumeBlockSize.h>
+#include <utils/logger.h>
 #include "SectionEntry.h"
 
 class SectionEntries {
 
 public:
-    SectionEntries(uint8_t *data, uint32_t numberOfSections, const VolumeBlockSize &pBlockSize);
-
     [[nodiscard]] uint32_t getSizeInBytes() const;
 
     [[nodiscard]] uint32_t size() const;
 
-    [[nodiscard]] SectionEntry *getSection(uint16_t sectionNumber) const;
+    [[nodiscard]] std::optional<std::shared_ptr<SectionEntry>> getSection(uint16_t sectionNumber) const;
 
-    [[nodiscard]] std::vector<SectionEntry *> getSections() const &{
-        return list;
-    }
+    [[nodiscard]] std::vector<std::shared_ptr<SectionEntry>> getSections() const &;
+
+    static std::optional<std::shared_ptr<SectionEntries>> make_shared(const std::vector<uint8_t> &data, uint32_t numberOfSections, const VolumeBlockSize &pBlockSize);
 
 private:
-    std::vector<SectionEntry *> list;
+    explicit SectionEntries(std::vector<std::shared_ptr<SectionEntry>> pList);
+
+    std::vector<std::shared_ptr<SectionEntry>> list;
 };

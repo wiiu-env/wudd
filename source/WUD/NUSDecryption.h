@@ -17,12 +17,13 @@
 #pragma once
 
 #include "Ticket.h"
+#include <array>
 
 class NUSDecryption {
 public:
-    explicit NUSDecryption(Ticket *pTicket);
+    explicit NUSDecryption(std::shared_ptr<Ticket> pTicket);
 
-    void decryptData(uint8_t *IV, uint8_t *inData, uint8_t *outData, uint32_t size) const;
+    void decryptData(const std::array<uint8_t, 0x10> &IV, uint8_t *inData, uint8_t *outData, uint32_t size) const;
 
-    Ticket *ticket;
+    std::shared_ptr<Ticket> ticket;
 };

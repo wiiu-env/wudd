@@ -25,22 +25,22 @@
 class WiiUDataPartition : public WiiUPartition {
 
 public:
-    WiiUDataPartition(WiiUPartition *partition, FST *pFST);
+    WiiUDataPartition(std::shared_ptr<WiiUPartition> pPartition, std::shared_ptr<FST> pFST);
 
     ~WiiUDataPartition() override;
 
     [[nodiscard]] std::string getVolumeId() const & override;
 
-    [[nodiscard]] std::map<AddressInDiscBlocks, VolumeHeader *> getVolumes() const & override;
+    [[nodiscard]] std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> getVolumes() const & override;
 
     [[nodiscard]] uint16_t getFileSystemDescriptor() const override;
 
 
     [[nodiscard]] uint64_t getSectionOffsetOnDefaultPartition() override;
 
-    FST *fst{};
+    std::shared_ptr<FST> fst;
 
 private:
-    WiiUPartition *basePartition;
+    std::shared_ptr<WiiUPartition> basePartition;
 };
 

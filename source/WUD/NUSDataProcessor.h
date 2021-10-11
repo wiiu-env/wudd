@@ -10,7 +10,7 @@ protected:
 public:
     virtual ~NUSDataProcessor() = default;
 
-    virtual NUSDataProvider *getDataProvider() = 0;
+    virtual std::shared_ptr<NUSDataProvider> getDataProvider() = 0;
 
-    virtual bool readPlainDecryptedContent(Content *pContent, uint8_t **data, uint32_t *length) = 0;
+    virtual bool readPlainDecryptedContent(const std::shared_ptr<Content> &pContent, std::vector<uint8_t> &out_data) = 0;
 };

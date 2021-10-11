@@ -16,6 +16,7 @@
  ****************************************************************************/
 #pragma once
 
+#include <memory>
 #include <cstdint>
 #include <utils/blocksize/DiscBlockSize.h>
 #include <utils/blocksize/AddressInDiscBlocks.h>
@@ -30,13 +31,21 @@
 class WiiUPartitions {
 
 public:
-    static bool getFSTEntryAsByte(uint8_t **buffer_out, uint32_t *outSize, std::string &filePath, FST *fst, const AddressInDiscBlocks &volumeAddress, DiscReader *discReader);
+    static bool getFSTEntryAsByte(std::string &filePath,
+                                  const std::shared_ptr<FST> &fst,
+                                  const AddressInDiscBlocks &volumeAddress,
+                                  const std::shared_ptr<DiscReader> &discReader,
+                                  std::vector<uint8_t> &out_data);
 
-    WiiUPartitions(DiscReader *reader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize &blockSize);
+    std::vector<std::shared_ptr<WiiUPartition>> partitions;
+    static constexpr uint32_t LENGTH = 30720;
 
-    ~WiiUPartitions();
+    static std::optional<std::unique_ptr<WiiUPartitions>> make_unique(
+            const std::shared_ptr<DiscReader> &discReader,
+            uint32_t offset,
+            uint32_t numberOfPartitions,
+            const DiscBlockSize &blockSize);
 
-    std::vector<WiiUPartition *> partitions;
-    static uint32_t LENGTH;
-
+private:
+    explicit WiiUPartitions(std::vector<std::shared_ptr<WiiUPartition>> pPartitions);
 };

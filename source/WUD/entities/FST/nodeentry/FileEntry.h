@@ -23,19 +23,29 @@
 
 class FileEntry : public NodeEntry {
 public:
-    explicit FileEntry(SectionAddress address);
 
-    static NodeEntry *parseData(uint8_t *data, NodeEntryParam param, SectionEntries *sectionEntries, StringTable *stringTable, const SectionBlockSize &blockSize);
+    static std::optional<std::shared_ptr<NodeEntry>>
+    parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
+              const NodeEntryParam &param,
+              const std::shared_ptr<SectionEntries> &sectionEntries,
+              const std::shared_ptr<StringTable> &stringTable,
+              const SectionBlockSize &blockSize);
 
     ~FileEntry() override = default;
 
-    SectionEntry *getSectionEntry();
+    std::shared_ptr<SectionEntry> getSectionEntry();
 
     [[nodiscard]] uint64_t getOffset() const;
 
     [[nodiscard]] uint32_t getSize() const;
 
 private:
+    FileEntry(const NodeEntryParam &param,
+              const std::shared_ptr<StringEntry> &pStringEntry,
+              const std::shared_ptr<SectionEntry> &pSectionEntry,
+              uint32_t pSize,
+              SectionAddress offset);
+
     SectionAddress address;
     uint32_t size{};
 };

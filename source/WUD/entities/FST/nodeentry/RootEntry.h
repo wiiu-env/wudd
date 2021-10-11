@@ -24,13 +24,17 @@
 
 class RootEntry : public DirectoryEntry {
 
-    explicit RootEntry(DirectoryEntry *input);
-
 public:
-
     ~RootEntry() override = default;
 
-    static RootEntry *parseData(uint8_t *data, NodeEntryParam param, SectionEntries *sectionEntries, StringTable *stringTable);
+    static std::optional<std::shared_ptr<NodeEntry>>
+    parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
+              const NodeEntryParam &param,
+              const std::shared_ptr<SectionEntries> &sectionEntries,
+              const std::shared_ptr<StringTable> &stringTable);
 
-    static uint32_t parseLastEntryNumber(uint8_t *data, uint32_t offset);
+    static uint32_t parseLastEntryNumber(const std::array<uint8_t, NodeEntry::LENGTH> &data);
+
+private:
+    explicit RootEntry(const std::shared_ptr<DirectoryEntry> &input);
 };

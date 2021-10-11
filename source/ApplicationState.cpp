@@ -22,6 +22,7 @@
 #include <WUD/entities/TMD/TitleMetaData.h>
 #include <WUD/NUSDataProviderWUD.h>
 #include <WUD/NUSTitle.h>
+#include <memory>
 
 extern ntfs_md *ntfs_mounts;
 extern int ntfs_mount_count;
@@ -704,32 +705,36 @@ void ApplicationState::printDumpState(const char *fmt, ...) {
 void ApplicationState::dumpAppFiles() {
     uint8_t opt[0x400];
     IOSUHAX_read_otp(opt, 0x400);
-    uint8_t cKey[0x10];
-    memcpy(cKey, opt + 0xE0, 0x10);
+    std::array<uint8_t, 0x10> cKey{};
+    memcpy(cKey.data(), opt + 0xE0, 0x10);
 
     DEBUG_FUNCTION_LINE("Reading Partitions");
 
     printDumpState("Reading Partitions...");
 
-    auto discReader = new DiscReaderDiscDrive();
+    auto discReader = std::make_shared<DiscReaderDiscDrive>();
     if (!discReader->IsReady()) {
         DEBUG_FUNCTION_LINE("!IsReady");
         this->setError(ERROR_OPEN_ODD1);
-        delete discReader;
         return;
     }
     DEBUG_FUNCTION_LINE("Read DiscHeader");
-    auto *discHeader = new WiiUDiscHeader(discReader);
+    auto discHeader = WiiUDiscHeader::make_unique(discReader);
+    if (!discHeader.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to read discheader");
+        return;
+    }
     bool forceExit = false;
-    for (auto &partition: discHeader->wiiUContentsInformation->partitions->partitions) {
-        auto gmPartition = dynamic_cast<WiiUGMPartition *>(partition);
+    for (auto &partition: discHeader.value()->wiiUContentsInformation->partitions->partitions) {
+        auto gmPartition = std::dynamic_pointer_cast<WiiUGMPartition>(partition);
         if (gmPartition != nullptr) {
-            auto *nusTitle = NUSTitle::loadTitleFromGMPartition(gmPartition, discReader, cKey);
-            if (nusTitle == nullptr) {
+            auto nusTitleOpt = NUSTitle::loadTitleFromGMPartition(gmPartition, discReader, cKey);
+            if (!nusTitleOpt.has_value()) {
                 DEBUG_FUNCTION_LINE("nusTitle was null");
                 continue;
             }
-            auto *dataProvider = nusTitle->dataProcessor->getDataProvider();
+            auto nusTitle = nusTitleOpt.value();
+            auto dataProvider = nusTitle->dataProcessor->getDataProvider();
 
             uint64_t partitionSize = 0;
             uint64_t partitionSizeWritten = 0;
@@ -745,26 +750,26 @@ void ApplicationState::dumpAppFiles() {
             snprintf(buffer, 500, "%swudump/%s/%s", target.c_str(), this->discId, gmPartition->getVolumeId().c_str());
             FSUtils::CreateSubfolder(buffer);
 
-            uint8_t *wBuffer = nullptr;
-            uint32_t wBufferLen = 0;
-            if (dataProvider->getRawTMD(&wBuffer, &wBufferLen)) {
+            std::vector<uint8_t> wBuffer;
+            if (dataProvider->getRawTMD(wBuffer)) {
                 std::string fileName = std::string(buffer).append("/").append(WUD_TMD_FILENAME);
                 printDumpState("%s\nSaving %s", partitionDumpInfo.c_str(), WUD_TMD_FILENAME);
-                FSUtils::saveBufferToFile(fileName.c_str(), wBuffer, wBufferLen);
-                free(wBuffer);
+                FSUtils::saveBufferToFile(fileName.c_str(), wBuffer.data(), wBuffer.size());
+                wBuffer.clear();
             }
 
-            if (dataProvider->getRawTicket(&wBuffer, &wBufferLen)) {
+            if (dataProvider->getRawTicket(wBuffer)) {
                 std::string fileName = std::string(buffer).append("/").append(WUD_TICKET_FILENAME);
                 printDumpState("%s\nSaving %s", partitionDumpInfo.c_str(), WUD_TICKET_FILENAME);
-                FSUtils::saveBufferToFile(fileName.c_str(), wBuffer, wBufferLen);
-                free(wBuffer);
+                FSUtils::saveBufferToFile(fileName.c_str(), wBuffer.data(), wBuffer.size());
+                wBuffer.clear();
             }
-            if (dataProvider->getRawCert(&wBuffer, &wBufferLen)) {
+
+            if (dataProvider->getRawCert(wBuffer)) {
                 std::string fileName = std::string(buffer).append("/").append(WUD_TICKET_FILENAME);
                 printDumpState("%s\nSaving %s", partitionDumpInfo.c_str(), WUD_CERT_FILENAME);
-                FSUtils::saveBufferToFile(fileName.c_str(), wBuffer, wBufferLen);
-                free(wBuffer);
+                FSUtils::saveBufferToFile(fileName.c_str(), wBuffer.data(), wBuffer.size());
+                wBuffer.clear();
             }
 
             auto contentCount = nusTitle->tmd->contentList.size();
@@ -836,26 +841,20 @@ void ApplicationState::dumpAppFiles() {
                     break;
                 }
 
-                uint8_t *h3Data = nullptr;
-                uint32_t h3Length = 0;
-                if (dataProvider->getContentH3Hash(content, &h3Data, &h3Length)) {
+                std::vector<uint8_t> h3Data;
+                if (dataProvider->getContentH3Hash(content, h3Data)) {
                     char bufh3[32];
                     snprintf(bufh3, 31, "%08X.h3", content->ID);
                     std::string h3FileName = std::string(buffer) + "/" + bufh3;
                     printDumpState("%s\n%s", partitionDumpInfo.c_str(), contentDumpInfo.c_str());
-                    FSUtils::saveBufferToFile(h3FileName.c_str(), h3Data, h3Length);
+                    FSUtils::saveBufferToFile(h3FileName.c_str(), h3Data.data(), h3Data.size());
                 }
                 contentI++;
             }
-
-            delete nusTitle;
-
             if (forceExit) {
                 exit(0);
                 break;
             }
         }
     }
-    delete discHeader;
-    delete discReader;
 }

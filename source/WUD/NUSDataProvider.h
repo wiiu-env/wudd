@@ -25,17 +25,17 @@ class NUSDataProvider {
 public:
     virtual ~NUSDataProvider() = default;
 
-    virtual bool readRawContent(Content *content, uint8_t *buffer, uint64_t offset, uint32_t size) = 0;
+    virtual bool readRawContent(const std::shared_ptr<Content> &content, uint8_t *buffer, uint64_t offset, uint32_t size) = 0;
 
-    virtual bool getContentH3Hash(Content *content, uint8_t **data, uint32_t *size) = 0;
+    virtual bool getContentH3Hash(const std::shared_ptr<Content> &content, std::vector<uint8_t> &out_data) = 0;
 
-    virtual bool getRawTMD(uint8_t **data, uint32_t *size) = 0;
+    virtual bool getRawTMD(std::vector<uint8_t> &out_data) = 0;
 
-    virtual bool getRawTicket(uint8_t **data, uint32_t *size) = 0;
+    virtual bool getRawTicket(std::vector<uint8_t> &out_data) = 0;
 
-    virtual bool getRawCert(uint8_t **data, uint32_t *size) = 0;
+    virtual bool getRawCert(std::vector<uint8_t> &out_data) = 0;
 
-    virtual void setFST(FST *fst) {
+    virtual void setFST(const std::shared_ptr<FST> &fst) {
 
     }
 };

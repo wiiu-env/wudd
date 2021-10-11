@@ -19,20 +19,37 @@
 
 uint32_t  WiiUContentsInformation::LENGTH = 32768;
 
-WiiUContentsInformation::WiiUContentsInformation(DiscReader *reader, uint32_t offset) {
+std::optional<std::unique_ptr<WiiUContentsInformation>> WiiUContentsInformation::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
     uint32_t curOffset = offset;
-    discContentHeader = new WiiUDiscContentsHeader(reader, curOffset);
+    auto discContentHeaderOpt = WiiUDiscContentsHeader::make_unique(discReader, curOffset);
+    if (!discContentHeaderOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to read WiiUDiscContentsHeader");
+        return {};
+    }
     curOffset += WiiUDiscContentsHeader::LENGTH;
 
-    partitions = new WiiUPartitions(reader, curOffset, discContentHeader->numberOfPartition, discContentHeader->blockSize);
+    auto partitionsOpt = WiiUPartitions::make_unique(discReader, curOffset, discContentHeaderOpt.value()->numberOfPartition, discContentHeaderOpt.value()->blockSize);
+    if (!partitionsOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to read Partitions");
+        return {};
+    }
     curOffset += WiiUPartitions::LENGTH;
 
     if (curOffset - offset != LENGTH) {
-        OSFatal("Length mismatch");
+        DEBUG_FUNCTION_LINE("Unexpected offset");
+        return {};
     }
+
+    return std::unique_ptr<WiiUContentsInformation>(new WiiUContentsInformation(
+            std::move(discContentHeaderOpt.value()),
+            std::move(partitionsOpt.value())));
 }
 
-WiiUContentsInformation::~WiiUContentsInformation() {
-    delete partitions;
-    delete discContentHeader;
-}
+
+WiiUContentsInformation::WiiUContentsInformation(std::unique_ptr<WiiUDiscContentsHeader> pDiscContentHeader,
+                                                 std::unique_ptr<WiiUPartitions> pPartitions) :
+        discContentHeader(std::move(pDiscContentHeader)),
+        partitions(std::move(pPartitions)) {
+
+};
+

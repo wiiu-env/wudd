@@ -14,30 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include "WiiUDiscID.h"
-#include <coreinit/debug.h>
+#pragma once
 
-uint32_t WiiUDiscID::LENGTH = 32768;
-uint32_t WiiUDiscID::MAGIC = 0xCC549EB9;
+#include <memory>
+#include <cstdint>
+#include <WUD/DiscReader.h>
+#include <optional>
 
-WiiUDiscID::WiiUDiscID(DiscReader *reader, uint32_t offset) {
-    auto data = (uint8_t *) malloc(LENGTH);
-    if (data == nullptr) {
-        OSFatal("Failed to alloc for WiiUDiscID");
-    }
+class WiiUManufactorDiscId {
 
-    if (!reader->readEncrypted(data, offset, LENGTH)) {
-        OSFatal("Failed to read data");
-    }
+public:
+    static std::optional<std::unique_ptr<WiiUManufactorDiscId>> make_unique(const std::shared_ptr<DiscReader> &discReader);
 
-    if (((uint32_t *) data)[0] != MAGIC) {
-        OSFatal("MAGIC FAIL");
-    }
+    static constexpr uint32_t LENGTH = 65536;
 
-    majorVersion = data[5];
-    minorVersion = data[6];
+    std::array<uint8_t, WiiUManufactorDiscId::LENGTH> data;
 
-    footprint = std::string((char *) &data[32]);
-
-    free(data);
-}
+private:
+    explicit WiiUManufactorDiscId(const std::array<uint8_t, WiiUManufactorDiscId::LENGTH> &pData);
+};

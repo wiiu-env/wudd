@@ -16,21 +16,23 @@
  ****************************************************************************/
 #include "WiiUDataPartition.h"
 
-WiiUDataPartition::~WiiUDataPartition() {
-    delete basePartition;
-    delete fst;
-}
+#include <utility>
 
-WiiUDataPartition::WiiUDataPartition(WiiUPartition *partition, FST *pFST) {
-    basePartition = partition;
-    fst = pFST;
+WiiUDataPartition::~WiiUDataPartition() = default;
+
+WiiUDataPartition::WiiUDataPartition(
+        std::shared_ptr<WiiUPartition> pPartition,
+        std::shared_ptr<FST> pFST) :
+        fst(std::move(pFST)),
+        basePartition(std::move(pPartition)) {
+
 }
 
 std::string WiiUDataPartition::getVolumeId() const &{
     return basePartition->getVolumeId();
 }
 
-std::map<AddressInDiscBlocks, VolumeHeader *> WiiUDataPartition::getVolumes() const &{
+std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUDataPartition::getVolumes() const &{
     return basePartition->getVolumes();
 }
 

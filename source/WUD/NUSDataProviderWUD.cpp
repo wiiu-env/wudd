@@ -16,41 +16,40 @@
  ****************************************************************************/
 #include "NUSDataProviderWUD.h"
 
-NUSDataProviderWUD::NUSDataProviderWUD(WiiUGMPartition *pGamePartition, DiscReader *pDiscReader) {
+NUSDataProviderWUD::NUSDataProviderWUD(const std::shared_ptr<WiiUGMPartition> &pGamePartition, const std::shared_ptr<DiscReader> &pDiscReader) {
+    DEBUG_FUNCTION_LINE();
     gamePartition = pGamePartition;
     discReader = pDiscReader;
 }
 
 NUSDataProviderWUD::~NUSDataProviderWUD() {
-    delete fst;
+    DEBUG_FUNCTION_LINE();
 }
 
-bool NUSDataProviderWUD::readRawContent(Content *content, uint8_t *buffer, uint64_t offset, uint32_t size) {
+bool NUSDataProviderWUD::readRawContent(const std::shared_ptr<Content> &content, uint8_t *buffer, uint64_t offset, uint32_t size) {
     if (buffer == nullptr) {
-        DEBUG_FUNCTION_LINE();
         return false;
     }
-    auto offsetInWUD = getOffsetInWUD(content) + offset;
+    auto offsetInWUDOpt = getOffsetInWUD(content);
+    if (!offsetInWUDOpt.has_value()) {
+        return false;
+    }
+    auto offsetInWUD = offsetInWUDOpt.value() + offset;
     return discReader->readEncrypted(buffer, offsetInWUD, size);
 }
 
-bool NUSDataProviderWUD::getContentH3Hash(Content *content, uint8_t **data, uint32_t *size) {
-    if (content == nullptr || data == nullptr || size == nullptr) {
-        DEBUG_FUNCTION_LINE();
-        return false;
-    }
+bool NUSDataProviderWUD::getContentH3Hash(const std::shared_ptr<Content> &content, std::vector<uint8_t> &out_data) {
     auto cur = gamePartition->getVolumes().begin()->second->h3HashArrayList[content->index];
     if (cur == nullptr || cur->size == 0) {
         DEBUG_FUNCTION_LINE();
         return false;
     }
-    *data = (uint8_t *) malloc(cur->size);
-    *size = cur->size;
-    memcpy(*data, cur->data, *size);
+    out_data.resize(cur->size);
+    memcpy(out_data.data(), cur->data, cur->size);
     return true;
 }
 
-void NUSDataProviderWUD::setFST(FST *pFST) {
+void NUSDataProviderWUD::setFST(const std::shared_ptr<FST> &pFST) {
     // We need to set the correct blocksizes
     auto blockSize = gamePartition->getVolumes().begin()->second->blockSize;
     for (const auto &e: pFST->sectionEntries->getSections()) {
@@ -60,55 +59,30 @@ void NUSDataProviderWUD::setFST(FST *pFST) {
     fst = pFST;
 }
 
-bool NUSDataProviderWUD::getRawCert(uint8_t **data, uint32_t *size) {
-    if (data == nullptr || size == nullptr) {
-        return false;
-    }
-    *data = (uint8_t *) malloc(gamePartition->certLen);
-    if (*data == nullptr) {
-        return false;
-    }
-    *size = gamePartition->certLen;
-    memcpy(*data, gamePartition->rawCert, gamePartition->certLen);
+bool NUSDataProviderWUD::getRawCert(std::vector<uint8_t> &out_data) {
+    out_data = gamePartition->rawCert;
     return true;
 }
 
-bool NUSDataProviderWUD::getRawTicket(uint8_t **data, uint32_t *size) {
-    if (data == nullptr || size == nullptr) {
-        return false;
-    }
-    *data = (uint8_t *) malloc(gamePartition->tikLen);
-    if (*data == nullptr) {
-        return false;
-    }
-    *size = gamePartition->tikLen;
-    memcpy(*data, gamePartition->rawTicket, gamePartition->tikLen);
+bool NUSDataProviderWUD::getRawTicket(std::vector<uint8_t> &out_data) {
+    out_data = gamePartition->rawTicket;
     return true;
 }
 
-bool NUSDataProviderWUD::getRawTMD(uint8_t **data, uint32_t *size) {
-    if (data == nullptr || size == nullptr) {
-        DEBUG_FUNCTION_LINE("input was null");
-        return false;
-    }
-    *data = (uint8_t *) malloc(gamePartition->TMDLen);
-    if (*data == nullptr) {
-        DEBUG_FUNCTION_LINE("Failed to alloc memory");
-        return false;
-    }
-    *size = gamePartition->TMDLen;
-    memcpy(*data, gamePartition->rawTMD, gamePartition->TMDLen);
+bool NUSDataProviderWUD::getRawTMD(std::vector<uint8_t> &out_data) {
+    out_data = gamePartition->rawTMD;
     return true;
 }
 
-uint64_t NUSDataProviderWUD::getOffsetInWUD(Content *content) const {
+std::optional<uint64_t> NUSDataProviderWUD::getOffsetInWUD(const std::shared_ptr<Content> &content) const {
     if (content->index == 0) { // Index 0 is the FST which is at the beginning of the partition;
-        auto *vh = gamePartition->getVolumes().begin()->second;
+        auto vh = gamePartition->getVolumes().begin()->second;
         return gamePartition->getSectionOffsetOnDefaultPartition() + vh->FSTAddress.getAddressInBytes();
     }
-    auto *info = FSTUtils::getSectionEntryForIndex(fst, content->index);
-    if (info == nullptr) {
-        OSFatal("Failed to get section for Content");
+    auto info = FSTUtils::getSectionEntryForIndex(fst, content->index);
+    if (!info.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to get section for Content");
+        return {};
     }
-    return gamePartition->getSectionOffsetOnDefaultPartition() + info->address.getAddressInBytes();
+    return gamePartition->getSectionOffsetOnDefaultPartition() + info.value()->address.getAddressInBytes();
 }

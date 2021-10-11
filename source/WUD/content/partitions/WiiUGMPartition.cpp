@@ -16,28 +16,22 @@
  ****************************************************************************/
 #include "WiiUGMPartition.h"
 
-WiiUGMPartition::~WiiUGMPartition() {
-    free(rawCert);
-    free(rawTMD);
-    free(rawTicket);
-    delete basePartition;
-}
-
-WiiUGMPartition::WiiUGMPartition(WiiUPartition *partition, uint8_t *pRawTIK, uint32_t pTikLen, uint8_t *pRawTMD, uint32_t pTMDLen, uint8_t *pRawCert, uint32_t pCertLen) {
-    basePartition = partition;
-    rawCert = pRawCert;
-    rawTMD = pRawTMD;
-    rawTicket = pRawTIK;
-    tikLen = pTikLen;
-    TMDLen = pTMDLen;
-    certLen = pCertLen;
+WiiUGMPartition::WiiUGMPartition(std::shared_ptr<WiiUPartition> partition,
+                                 std::vector<uint8_t> pRawTicket,
+                                 std::vector<uint8_t> pRawTMD,
+                                 std::vector<uint8_t> pRawCert)
+        : WiiUPartition(),
+          rawTicket(std::move(pRawTicket)),
+          rawTMD(std::move(pRawTMD)),
+          rawCert(std::move(pRawCert)),
+          basePartition(std::move(partition)) {
 }
 
 std::string WiiUGMPartition::getVolumeId() const &{
     return basePartition->getVolumeId();
 }
 
-std::map<AddressInDiscBlocks, VolumeHeader *> WiiUGMPartition::getVolumes() const &{
+std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUGMPartition::getVolumes() const &{
     return basePartition->getVolumes();
 }
 

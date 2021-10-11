@@ -17,25 +17,30 @@
 #include <coreinit/debug.h>
 #include "NodeEntries.h"
 
-NodeEntries::NodeEntries(RootEntry *pEntry) {
-    rootEntry = pEntry;
-}
-
-NodeEntries::~NodeEntries() {
-    delete rootEntry;
-}
-
-NodeEntry *NodeEntries::DeserializeImpl(uint8_t *data, uint32_t offset, DirectoryEntry *parent, uint32_t entryNumber, SectionEntries *sectionEntries, StringTable *stringTable,
-                                        const SectionBlockSize &blockSize) {
-    NodeEntry *nodeEntry = NodeEntry::AutoDeserialize(data, offset, parent, entryNumber, sectionEntries, stringTable, blockSize);
-    auto asDirEntry = dynamic_cast<DirectoryEntry *>(nodeEntry);
+std::optional<std::shared_ptr<NodeEntry>> NodeEntries::DeserializeImpl(const std::vector<uint8_t> &pData,
+                                                                       uint32_t pOffset,
+                                                                       const std::optional<std::shared_ptr<DirectoryEntry>> &pParent,
+                                                                       uint32_t pEntryNumber,
+                                                                       const std::shared_ptr<SectionEntries> &pSectionEntries,
+                                                                       const std::shared_ptr<StringTable> &pStringTable,
+                                                                       const SectionBlockSize &pBlockSize) {
+    auto nodeEntry = NodeEntry::AutoDeserialize(pData, pOffset, pParent, pEntryNumber, pSectionEntries, pStringTable, pBlockSize);
+    if (!nodeEntry.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to AutoDeserialize NodeEntry");
+        return {};
+    }
+    auto asDirEntry = std::dynamic_pointer_cast<DirectoryEntry>(nodeEntry.value());
     if (asDirEntry != nullptr) {
         uint32_t curEntryNumber = asDirEntry->entryNumber + 1;
         while (curEntryNumber < asDirEntry->lastEntryNumber) {
-            NodeEntry *entry = NodeEntries::DeserializeImpl(data, offset + (curEntryNumber - asDirEntry->entryNumber) * NodeEntry::LENGTH,
-                                                            asDirEntry, curEntryNumber, sectionEntries, stringTable, blockSize);
-            asDirEntry->addChild(entry);
-            auto *childAsDir = dynamic_cast<DirectoryEntry *>(entry);
+            auto entry = NodeEntries::DeserializeImpl(pData, pOffset + (curEntryNumber - asDirEntry->entryNumber) * NodeEntry::LENGTH,
+                                                      asDirEntry, curEntryNumber, pSectionEntries, pStringTable, pBlockSize);
+            if (!entry.has_value()) {
+                DEBUG_FUNCTION_LINE("Failed to Deserialize child of NodeEntry");
+                return {};
+            }
+            asDirEntry->addChild(entry.value());
+            auto childAsDir = std::dynamic_pointer_cast<DirectoryEntry>(entry.value());
             if (childAsDir != nullptr) {
                 curEntryNumber = childAsDir->lastEntryNumber;
             } else {
@@ -46,12 +51,26 @@ NodeEntry *NodeEntries::DeserializeImpl(uint8_t *data, uint32_t offset, Director
     return nodeEntry;
 }
 
-NodeEntries *NodeEntries::parseData(unsigned char *data, uint32_t offset, SectionEntries *sectionEntries, StringTable *stringTable, const SectionBlockSize &blockSize) {
-    NodeEntry *rootEntry = NodeEntries::DeserializeImpl(data, offset, (DirectoryEntry *) nullptr, 0, sectionEntries, stringTable, blockSize);
-    auto rootEntryCasted = dynamic_cast<RootEntry *>(rootEntry);
-    if (rootEntryCasted != nullptr) {
-        return new NodeEntries(rootEntryCasted);
+std::optional<std::unique_ptr<NodeEntries>>
+NodeEntries::make_unique(const std::vector<uint8_t> &data, uint32_t offset, const std::shared_ptr<SectionEntries> &pSectionEntries, const std::shared_ptr<StringTable> &pStringTable,
+                         const SectionBlockSize &blockSize) {
+    auto rootEntry = NodeEntries::DeserializeImpl(data, offset, std::nullopt, 0, pSectionEntries, pStringTable, blockSize);
+    if (!rootEntry.has_value()) {
+        DEBUG_FUNCTION_LINE("DeserializeImpl for root entry has failed");
+        return {};
     }
-    OSFatal("Failed to parse Root");
-    return nullptr;
+    auto rootEntryCasted = std::dynamic_pointer_cast<RootEntry>(rootEntry.value());
+    if (rootEntryCasted != nullptr) {
+        return std::unique_ptr<NodeEntries>(new NodeEntries(rootEntryCasted));
+    }
+    DEBUG_FUNCTION_LINE("Failed to parse Root");
+    return {};
+}
+
+std::shared_ptr<RootEntry> NodeEntries::getRootEntry() const {
+    return rootEntry;
+}
+
+NodeEntries::NodeEntries(const std::shared_ptr<RootEntry> &pEntry) {
+    rootEntry = pEntry;
 }

@@ -15,19 +15,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "Ticket.h"
+#include <algorithm>
+#include <utils/logger.h>
 
-Ticket::Ticket(uint8_t *data, uint8_t *commonKey) {
-    uint8_t *tikKeyEnc = data + 0x1BF;
-    uint8_t *title_id = data + 0x1DC;
-    uint8_t IV[0x10];
+Ticket::Ticket(const std::array<uint8_t, 16> &pEncryptedKey, const std::array<uint8_t, 16> &pDecryptedKey) :
+        ticketKeyEnc(pEncryptedKey),
+        ticketKeyDec(pDecryptedKey) {
+    DEBUG_FUNCTION_LINE();
 
-    int k;
-    for (k = 0; k < 8; k++) {
-        IV[k] = title_id[k];
-        IV[k + 8] = 0x00;
+}
+
+std::optional<std::shared_ptr<Ticket>> Ticket::make_shared(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey) {
+    if (data.size() <= 0x1DC + 0x10) {
+        DEBUG_FUNCTION_LINE("Not enough data to parse a ticket");
+        return {};
     }
 
-    aes_set_key(commonKey);
-    aes_decrypt(IV, tikKeyEnc, ticketKeyDec, 16);
-    memcpy(ticketKeyEnc, tikKeyEnc, 16);
+    std::array<uint8_t, 16> title_id{};
+    std::array<uint8_t, 16> decryptedKey{};
+    std::array<uint8_t, 16> encryptedKey{};
+
+    std::copy_n(data.begin() + 0x1BF, 0x10, decryptedKey.begin());
+    std::copy_n(data.begin() + 0x1BF, 0x10, encryptedKey.begin());
+    std::copy_n(data.begin() + 0x1DC, 0x10, title_id.begin());
+
+    uint8_t IV[0x10];
+    for (int i = 0; i < 8; i++) {
+        IV[i] = title_id[i];
+        IV[i + 8] = 0x00;
+    }
+
+    if (commonKey.has_value()) {
+        aes_set_key((uint8_t *) commonKey.value().data());
+        aes_decrypt(IV, encryptedKey.data(), decryptedKey.data(), 16);
+    }
+
+    return std::shared_ptr<Ticket>(new Ticket(encryptedKey, decryptedKey));
 }

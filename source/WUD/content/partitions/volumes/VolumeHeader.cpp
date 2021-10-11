@@ -15,58 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
+#include <memory>
 #include "VolumeHeader.h"
-#include <utils/utils.h>
 #include <coreinit/debug.h>
+#include <utils/logger.h>
 
 uint32_t  VolumeHeader::MAGIC = 0xCC93A4F5;
 
-VolumeHeader::VolumeHeader(DiscReader *reader, uint64_t offset) {
-    auto buffer = (uint8_t *) malloc(64);
-    if (buffer == nullptr) {
-        OSFatal("VolumeHeader: failed to alloc buffer");
-    }
-
-    if (!reader->readEncrypted(buffer, offset, 64)) {
-        OSFatal("VolumeHeader: failed to read");
-    }
-
-    auto *bufferUint = (uint32_t *) buffer;
-
-    if (bufferUint[0] != MAGIC) {
-        OSFatal("VolumeHeader MAGIC mismatch.");
-    }
-
-    blockSize = VolumeBlockSize(bufferUint[1]);
-    volumeSize = SizeInVolumeBlocks(blockSize, bufferUint[2]);
-    h3HashArrayListSize = bufferUint[3];
-    numberOfH3HashArray = bufferUint[4];
-    FSTSize = bufferUint[5];
-    FSTAddress = AddressInVolumeBlocks(blockSize, bufferUint[6]);
-    FSTHashMode = buffer[36];
-    encryptType = buffer[37];
-    majorVersion = buffer[38];
-    minorVersion = buffer[39];
-    expiringMajorVersion = buffer[40];
-
-    free(buffer);
-
-    auto bufferH3 = (uint8_t *) malloc(ROUNDUP(h3HashArrayListSize, 16));
-    if (bufferH3 == nullptr) {
-        OSFatal("VolumeHeader: failed to alloc h3 buffer");
-    }
-
-    if (!reader->readEncrypted(bufferH3, offset + 64, ROUNDUP(h3HashArrayListSize, 16))) {
-        OSFatal("VolumeHeader: failed to read h3");
-    }
-
-    h3HashArrayList = getH3HashArray(bufferH3, numberOfH3HashArray, h3HashArrayListSize);
-
-    free(bufferH3);
-}
-
-std::vector<H3HashArray *> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_t pNumberOfH3HashArray, uint32_t pH3HashArrayListSize) {
-    std::vector<H3HashArray *> arrayList;
+std::vector<std::shared_ptr<H3HashArray>> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_t pNumberOfH3HashArray, uint32_t pH3HashArrayListSize) {
+    std::vector<std::shared_ptr<H3HashArray>> arrayList;
     if (pNumberOfH3HashArray == 0) {
         return arrayList;
     }
@@ -80,15 +37,93 @@ std::vector<H3HashArray *> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_
             curEnd = offsetPtr[1];
         }
 
-        arrayList.push_back(new H3HashArray(h3Data + curOffset, curEnd - curOffset));
+        arrayList.push_back(std::make_shared<H3HashArray>(h3Data + curOffset, curEnd - curOffset));
     }
 
     return arrayList;
 }
 
-VolumeHeader::~VolumeHeader() {
-    for (auto &h3: h3HashArrayList) {
-        delete h3;
+std::optional<std::shared_ptr<VolumeHeader>> VolumeHeader::make_shared(const std::shared_ptr<DiscReader> &discReader, uint64_t offset) {
+    auto buffer = (uint8_t *) malloc(64);
+    if (buffer == nullptr) {
+        DEBUG_FUNCTION_LINE("Failed to alloc buffer");
+        return {};
     }
+
+    if (!discReader->readEncrypted(buffer, offset, 64)) {
+        free(buffer);
+        DEBUG_FUNCTION_LINE("Failed to read data");
+        return {};
+    }
+
+    auto *bufferUint = (uint32_t *) buffer;
+
+    if (bufferUint[0] != MAGIC) {
+        DEBUG_FUNCTION_LINE("MAGIC mismatch");
+        free(buffer);
+        return {};
+    }
+
+    auto blockSize = VolumeBlockSize(bufferUint[1]);
+    auto volumeSize = SizeInVolumeBlocks(blockSize, bufferUint[2]);
+    auto h3HashArrayListSize = bufferUint[3];
+    auto numberOfH3HashArray = bufferUint[4];
+    auto FSTSize = bufferUint[5];
+    auto FSTAddress = AddressInVolumeBlocks(blockSize, bufferUint[6]);
+    auto FSTHashMode = buffer[36];
+    auto encryptType = buffer[37];
+    auto majorVersion = buffer[38];
+    auto minorVersion = buffer[39];
+    auto expiringMajorVersion = buffer[40];
+
+    DEBUG_FUNCTION_LINE("FSTSize: %08X", FSTSize);
+
+    free(buffer);
+
+    auto bufferH3 = (uint8_t *) malloc(ROUNDUP(h3HashArrayListSize, 16));
+    if (bufferH3 == nullptr) {
+        DEBUG_FUNCTION_LINE("Failed to alloc h3 buffer");
+        return {};
+    }
+
+    if (!discReader->readEncrypted(bufferH3, offset + 64, ROUNDUP(h3HashArrayListSize, 16))) {
+        DEBUG_FUNCTION_LINE("Failed to read h3 data");
+        free(bufferH3);
+        return {};
+    }
+
+    auto h3HashArrayList = getH3HashArray(bufferH3, numberOfH3HashArray, h3HashArrayListSize);
+
+    free(bufferH3);
+
+    return std::unique_ptr<VolumeHeader>(
+            new VolumeHeader(blockSize, volumeSize, FSTSize, FSTAddress, FSTHashMode, encryptType, majorVersion, minorVersion, expiringMajorVersion, h3HashArrayList, h3HashArrayListSize,
+                             numberOfH3HashArray));
 }
+
+VolumeHeader::VolumeHeader(const VolumeBlockSize &pBlockSize,
+                           SizeInVolumeBlocks pVolumeSize,
+                           uint32_t pFSTSize,
+                           AddressInVolumeBlocks pFSTAddress,
+                           uint8_t pFSTHashMode,
+                           uint8_t pEncryptType,
+                           uint8_t pMajorVersion,
+                           uint8_t pMinorVersion,
+                           uint8_t pExpiringMajorVersion,
+                           std::vector<std::shared_ptr<H3HashArray>> pH3HashArrayList,
+                           uint32_t pH3HashArrayListSize,
+                           uint32_t pNumberOfH3HashArray) : blockSize(pBlockSize),
+                                                            volumeSize(std::move(pVolumeSize)),
+                                                            FSTSize(pFSTSize),
+                                                            FSTAddress(std::move(pFSTAddress)),
+                                                            FSTHashMode(pFSTHashMode),
+                                                            encryptType(pEncryptType),
+                                                            majorVersion(pMajorVersion),
+                                                            minorVersion(pMinorVersion),
+                                                            expiringMajorVersion(pExpiringMajorVersion),
+                                                            h3HashArrayList(std::move(pH3HashArrayList)),
+                                                            h3HashArrayListSize(pH3HashArrayListSize),
+                                                            numberOfH3HashArray(pNumberOfH3HashArray) {
+}
+
 

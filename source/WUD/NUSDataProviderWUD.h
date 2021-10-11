@@ -25,26 +25,26 @@
 class NUSDataProviderWUD : public NUSDataProvider {
 
 public:
-    NUSDataProviderWUD(WiiUGMPartition *pGamePartition, DiscReader *pDiscReader);
+    NUSDataProviderWUD(const std::shared_ptr<WiiUGMPartition> &pPartition, const std::shared_ptr<DiscReader> &pDrive);
 
     ~NUSDataProviderWUD() override;
 
-    bool readRawContent(Content *content, uint8_t *buffer, uint64_t offset, uint32_t size) override;
+    bool readRawContent(const std::shared_ptr<Content> &content, uint8_t *buffer, uint64_t offset, uint32_t size) override;
 
-    bool getContentH3Hash(Content *content, uint8_t **data, uint32_t *size) override;
+    bool getContentH3Hash(const std::shared_ptr<Content> &content, std::vector<uint8_t> &out_data) override;
 
-    void setFST(FST *pFST) override;
+    void setFST(const std::shared_ptr<FST> &pFST) override;
 
-    bool getRawCert(uint8_t **data, uint32_t *size) override;
+    bool getRawCert(std::vector<uint8_t> &out_data) override;
 
-    bool getRawTicket(uint8_t **data, uint32_t *size) override;
+    bool getRawTicket(std::vector<uint8_t> &data) override;
 
-    bool getRawTMD(uint8_t **data, uint32_t *size) override;
+    bool getRawTMD(std::vector<uint8_t> &out_data) override;
 
-    FST *fst{};
-    WiiUGMPartition *gamePartition;
-    DiscReader *discReader;
+    std::shared_ptr<FST> fst;
+    std::shared_ptr<WiiUGMPartition> gamePartition;
+    std::shared_ptr<DiscReader> discReader;
 
 private:
-    uint64_t getOffsetInWUD(Content *content) const;
+    [[nodiscard]] std::optional<uint64_t> getOffsetInWUD(const std::shared_ptr<Content> &content) const;
 };

@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "StringEntry.h"
+
+#include <utility>
+#include <utils/logger.h>
 #include "StringTable.h"
 
-std::string StringEntry::toString() const {
+std::optional<std::string> StringEntry::toString() const {
     return stringTable->getByAddress(offset);
 }
 
-StringEntry::StringEntry(StringTable *pTable, uint32_t pOffset) {
-    stringTable = pTable;
-    offset = pOffset;
+StringEntry::StringEntry(std::shared_ptr<StringTable> pTable, uint32_t pOffset) : stringTable(std::move(pTable)), offset(pOffset) {
 }

@@ -19,6 +19,8 @@
 #include <WUD/entities/FST/stringtable/StringTable.h>
 #include <utils/blocksize/SectionBlockSize.h>
 #include <WUD/entities/FST/sectionentry/SectionEntries.h>
+
+#include <utility>
 #include "DirectoryEntry.h"
 #include "RootEntry.h"
 #include "NodeEntry.h"
@@ -27,14 +29,32 @@
 class NodeEntries {
 
 public:
-    explicit NodeEntries(RootEntry *pEntry);
 
-    ~NodeEntries();
+    virtual ~NodeEntries() {
+        DEBUG_FUNCTION_LINE("Bye");
+    }
 
-    static NodeEntry *
-    DeserializeImpl(unsigned char *data, uint32_t offset, DirectoryEntry *parent, uint32_t entryNumber, SectionEntries *sectionEntries, StringTable *stringTable, const SectionBlockSize &blockSize);
+    static std::optional<std::shared_ptr<NodeEntry>>
+    DeserializeImpl(const std::vector<uint8_t> &data,
+                    uint32_t offset,
+                    const std::optional<std::shared_ptr<DirectoryEntry>> &pParent,
+                    uint32_t entryNumber,
+                    const std::shared_ptr<SectionEntries> &sectionEntries,
+                    const std::shared_ptr<StringTable> &stringTable,
+                    const SectionBlockSize &blockSize);
 
-    static NodeEntries *parseData(unsigned char *data, uint32_t offset, SectionEntries *sectionEntries, StringTable *stringTable, const SectionBlockSize &blockSize);
+    static std::optional<std::unique_ptr<NodeEntries>>
+    make_unique(const std::vector<uint8_t> &data,
+                uint32_t offset,
+                const std::shared_ptr<SectionEntries> &sectionEntries,
+                const std::shared_ptr<StringTable> &stringTable,
+                const SectionBlockSize &blockSize);
 
-    RootEntry *rootEntry;
+    [[nodiscard]] std::shared_ptr<RootEntry> getRootEntry() const;
+
+private:
+    explicit NodeEntries(const std::shared_ptr<RootEntry> &pEntry);
+
+
+    std::shared_ptr<RootEntry> rootEntry;
 };

@@ -16,45 +16,45 @@
  ****************************************************************************/
 #include "DefaultNUSDataProcessor.h"
 
-bool DefaultNUSDataProcessor::readPlainDecryptedContent(Content *pContent, uint8_t **data, uint32_t *length) {
-    if (pContent == nullptr || data == nullptr || length == nullptr) {
-        return false;
-    }
 
+bool DefaultNUSDataProcessor::readPlainDecryptedContent(const std::shared_ptr<Content> &pContent, std::vector<uint8_t> &out_data) {
     if ((pContent->type & 0x0002) == 0x0002) {
         DEBUG_FUNCTION_LINE("Hashed content not supported yet");
         return false;
     }
+    auto contentSize = ROUNDUP(pContent->encryptedFileSize, 16);
+    out_data.resize(contentSize);
 
-    *length = ROUNDUP(pContent->encryptedFileSize, 16);
-    *data = (uint8_t *) malloc(*length);
-    if (*data == nullptr) {
+    auto *inData = (uint8_t *) malloc(contentSize);
+    if (inData == nullptr) {
+        DEBUG_FUNCTION_LINE("Failed to alloc");
         return false;
     }
 
-    auto *inData = (uint8_t *) malloc(*length);
-
-    if (!dataProvider->readRawContent(pContent, inData, 0, *length)) {
-        free(*data);
+    if (!dataProvider->readRawContent(pContent, inData, 0, contentSize)) {
+        DEBUG_FUNCTION_LINE("Failed tor read content");
         free(inData);
         return false;
     }
 
-    uint8_t IV[16];
-    memset(IV, 0, 16);
+    std::array<uint8_t, 16> IV{};
+    memset(IV.data(), 0, 16);
     uint16_t content_index = pContent->index;
-    memcpy(IV, &content_index, 2);
+    memcpy(IV.data(), &content_index, 2);
 
-    nusDecryption->decryptData(IV, inData, *data, *length);
+    nusDecryption->decryptData(IV, inData, out_data.data(), contentSize);
     free(inData);
     return true;
 }
 
-NUSDataProvider *DefaultNUSDataProcessor::getDataProvider() {
+std::shared_ptr<NUSDataProvider> DefaultNUSDataProcessor::getDataProvider() {
     return dataProvider;
 }
 
-DefaultNUSDataProcessor::DefaultNUSDataProcessor(NUSDataProvider *pDataProvider, NUSDecryption *pNUSDecryption) {
-    dataProvider = pDataProvider;
-    nusDecryption = pNUSDecryption;
+DefaultNUSDataProcessor::DefaultNUSDataProcessor(
+        std::shared_ptr<NUSDataProvider> pDataProvider,
+        std::shared_ptr<NUSDecryption> pNUSDecryption) :
+        dataProvider(std::move(pDataProvider)),
+        nusDecryption(std::move(pNUSDecryption)) {
+    DEBUG_FUNCTION_LINE();
 }

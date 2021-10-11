@@ -25,6 +25,8 @@ public:
 
     ~DiscReaderDiscDrive() override;
 
+    static std::optional<DiscReaderDiscDrive *> Create();
+
     bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
 
     bool IsReady() override;

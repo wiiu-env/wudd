@@ -16,25 +16,41 @@
  ****************************************************************************/
 #include "SectionEntries.h"
 
-SectionEntries::SectionEntries(uint8_t *data, uint32_t numberOfSections, const VolumeBlockSize &pBlockSize) {
-    for (uint32_t i = 0; i < numberOfSections; i++) {
-        list.push_back(new SectionEntry(data + (i * 32), i, pBlockSize));
-    }
-}
-
-SectionEntry *SectionEntries::getSection(uint16_t sectionNumber) const {
+std::optional<std::shared_ptr<SectionEntry>> SectionEntries::getSection(uint16_t sectionNumber) const {
     for (auto const &e: list) {
         if (e->sectionNumber == sectionNumber) {
             return e;
         }
     }
-    return nullptr;
+    return {};
 }
 
 uint32_t SectionEntries::getSizeInBytes() const {
-    return list.size() * 32;
+    return list.size() * SectionEntry::LENGTH;
 }
 
 uint32_t SectionEntries::size() const {
     return list.size();
+}
+
+std::optional<std::shared_ptr<SectionEntries>> SectionEntries::make_shared(const std::vector<uint8_t> &data, uint32_t numberOfSections, const VolumeBlockSize &pBlockSize) {
+    std::vector<std::shared_ptr<SectionEntry>> list;
+    for (uint32_t i = 0; i < numberOfSections; i++) {
+        if (data.size() < (i + 1) * SectionEntry::LENGTH) {
+            DEBUG_FUNCTION_LINE("Failed to parse SectionEntries");
+            return {};
+        }
+        std::array<uint8_t, SectionEntry::LENGTH> sectionEntryData{};
+        memcpy(sectionEntryData.data(), data.data() + (i * SectionEntry::LENGTH), SectionEntry::LENGTH);
+        list.push_back(std::make_shared<SectionEntry>(sectionEntryData, i, pBlockSize));;
+    }
+    return std::shared_ptr<SectionEntries>(new SectionEntries(list));
+}
+
+std::vector<std::shared_ptr<SectionEntry>> SectionEntries::getSections() const &{
+    return list;
+}
+
+SectionEntries::SectionEntries(std::vector<std::shared_ptr<SectionEntry>> pList) : list(std::move(pList)) {
+
 }

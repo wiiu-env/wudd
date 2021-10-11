@@ -34,32 +34,43 @@ class NodeEntry {
 
 public:
     uint16_t permission{};
-    StringEntry *nameString{};
-    SectionEntry *sectionEntry{};
-    DirectoryEntry *parent{};
+    std::shared_ptr<StringEntry> nameString;
+    std::shared_ptr<SectionEntry> sectionEntry;
+    std::optional<std::shared_ptr<DirectoryEntry>> parent;
     uint8_t entryType{};
     uint32_t entryNumber{};
 
-    static NodeEntry *AutoDeserialize(uint8_t *data, uint32_t offset, DirectoryEntry *pParent, uint32_t eEntryNumber, SectionEntries *sectionEntries,
-                                      StringTable *stringTable, const SectionBlockSize &blockSize);
+    static std::optional<std::shared_ptr<NodeEntry>>
+    AutoDeserialize(const std::vector<uint8_t> &data,
+                    uint32_t offset,
+                    const std::optional<std::shared_ptr<DirectoryEntry>> &pParent,
+                    uint32_t eEntryNumber,
+                    const std::shared_ptr<SectionEntries> &sectionEntries,
+                    const std::shared_ptr<StringTable> &stringTable, const SectionBlockSize &blockSize);
 
     virtual ~NodeEntry() = default;
 
-    virtual void printPathRecursive() {
-        DEBUG_FUNCTION_LINE("%s", getFullPath().c_str());
-    }
+    virtual void printPathRecursive();
 
-    [[nodiscard]] std::string getFullPath() const &;
+    [[nodiscard]] std::string getFullPath();
 
-    [[nodiscard]] std::string getPath() const &;
+    [[nodiscard]] std::string getPath();
 
-    [[nodiscard]] std::string getName() const &;
+    [[nodiscard]] std::string getName();
 
     [[nodiscard]] bool isDirectory() const;
 
     [[nodiscard]] bool isFile() const;
 
-    static uint32_t LENGTH;
-private:
-    [[nodiscard]] std::string getFullPathInternal() const &;
+    static constexpr uint32_t LENGTH = 16;
+
+    [[nodiscard]] std::string getFullPathInternal();
+
+protected:
+    NodeEntry(uint16_t pPermission,
+              std::shared_ptr<StringEntry> pNameString,
+              std::shared_ptr<SectionEntry> pSectionEntry,
+              std::optional<std::shared_ptr<DirectoryEntry>> pParent,
+              uint8_t pType,
+              uint32_t pEntryNumber);
 };

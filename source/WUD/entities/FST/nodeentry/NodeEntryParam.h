@@ -24,7 +24,7 @@ class NodeEntryParam {
 public:
     uint16_t sectionNumber;
     uint32_t entryNumber;
-    DirectoryEntry *parent;
+    std::optional<std::shared_ptr<DirectoryEntry>> parent;
     uint16_t permission;
     uint8_t type;
     uint32_t uint24;

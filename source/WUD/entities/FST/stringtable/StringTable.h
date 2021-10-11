@@ -16,6 +16,9 @@
  ****************************************************************************/
 #pragma once
 
+#include <optional>
+#include <memory>
+#include <vector>
 #include <string>
 #include <map>
 #include "StringEntry.h"
@@ -23,25 +26,19 @@
 class StringTable {
 
 public:
-    ~StringTable() {
-        for (auto &cur: stringMap) {
-            delete cur.second;
-        }
-        stringMap.clear();
-        strings.clear();
-    }
+    static std::optional<std::shared_ptr<StringTable>> make_shared(const std::vector<uint8_t> &data, uint32_t offset, uint32_t stringCount);
 
-    static StringTable *parseData(uint8_t *data, uint32_t dataLength, uint32_t offset, uint32_t stringCount);
+    std::optional<std::string> getByAddress(uint32_t address);
 
-    std::string getByAddress(uint32_t address);
-
-    StringEntry *getStringEntry(uint32_t address);
+    std::optional<std::shared_ptr<StringEntry>> getStringEntry(uint32_t address);
 
     uint32_t getSize();
 
-    StringEntry *getEntry(std::string &str);
+    std::optional<std::shared_ptr<StringEntry>> getEntry(std::string &str);
 
 private:
-    std::map<uint32_t, StringEntry *> stringMap;
+    StringTable() = default;
+
+    std::map<uint32_t, std::shared_ptr<StringEntry>> stringMap;
     std::map<uint32_t, std::string> strings;
 };

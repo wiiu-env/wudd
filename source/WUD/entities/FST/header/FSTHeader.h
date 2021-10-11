@@ -16,20 +16,24 @@
  ****************************************************************************/
 #pragma once
 
+#include <optional>
+#include <memory>
 #include <cstdint>
 #include <utils/blocksize/SectionBlockSize.h>
 
 class FSTHeader {
 
 public:
-    explicit FSTHeader(uint8_t *data);
+    static constexpr uint32_t LENGTH = 32;
 
-    ~FSTHeader() = default;
+    static std::optional<std::unique_ptr<FSTHeader>> make_unique(const std::array<uint8_t, FSTHeader::LENGTH> &data);
 
     uint8_t FSTVersion;
     SectionBlockSize blockSize;
-    uint8_t hashDisabled;
     uint32_t numberOfSections;
-    uint32_t LENGTH = 32;
+    uint8_t hashDisabled;
+
+private:
+    FSTHeader(uint8_t pFSTVersion, SectionBlockSize pBlockSize, uint32_t pNumberOfSections, uint8_t pHashDisabled);
 
 };

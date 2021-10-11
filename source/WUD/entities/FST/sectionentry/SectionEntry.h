@@ -18,12 +18,15 @@
 
 #include <cstdint>
 #include <string>
+#include <array>
 #include <utils/blocksize/AddressInVolumeBlocks.h>
 #include <utils/blocksize/SizeInVolumeBlocks.h>
 
 class SectionEntry {
 public:
-    SectionEntry(uint8_t *data, uint32_t pSectionNumber, const VolumeBlockSize &pBlockSize);
+    static constexpr uint32_t LENGTH = 32;
+
+    SectionEntry(const std::array<uint8_t, SectionEntry::LENGTH> &data, uint32_t pSectionNumber, const VolumeBlockSize &pBlockSize);
 
     ~SectionEntry() = default;
 

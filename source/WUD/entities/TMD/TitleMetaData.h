@@ -16,20 +16,20 @@
  ****************************************************************************/
 #pragma once
 
+#include <optional>
+#include <memory>
 #include <cstdint>
 #include <vector>
 #include "Content.h"
 
 class TitleMetaData {
 public:
-    explicit TitleMetaData(uint8_t *data);
+    std::vector<std::shared_ptr<Content>> contentList;
 
-    ~TitleMetaData();
+    std::optional<std::shared_ptr<Content>> getContentByIndex(uint16_t index);
 
-    std::vector<Content *> contentList;
-
-    Content *getContentByIndex(uint16_t index);
+    static std::optional<std::shared_ptr<TitleMetaData>> make_shared(const std::vector<uint8_t> &data);
 
 private:
-    uint16_t contentCount;
+    explicit TitleMetaData(std::vector<std::shared_ptr<Content>> pContentList);
 };

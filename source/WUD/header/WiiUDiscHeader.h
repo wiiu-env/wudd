@@ -20,21 +20,25 @@
 #include <WUD/DiscReader.h>
 #include <WUD/content/WiiUContentsInformation.h>
 #include <WUD/DiscReaderDiscDrive.h>
-#include "WiiUManufactorDiscID.h"
-#include "WiiUDiscID.h"
+#include <memory>
+#include "WiiUManufactorDiscId.h"
+#include "WiiUDiscId.h"
 
 class WiiUDiscHeader {
-
 public:
-    explicit WiiUDiscHeader(DiscReaderDiscDrive *pDrive);
 
-    WiiUDiscHeader(DiscReader *reader, uint32_t offset);
+    static std::optional<std::unique_ptr<WiiUDiscHeader>> make_unique(const std::shared_ptr<DiscReader> &discReader);
 
-    ~WiiUDiscHeader();
-
-    WiiUManufactorDiscID *manufactorDiscID = nullptr;
-    WiiUDiscID *discId = nullptr;
-    WiiUContentsInformation *wiiUContentsInformation = nullptr;
+    std::unique_ptr<WiiUManufactorDiscId> manufactorDiscId;
+    std::unique_ptr<WiiUDiscId> discId;
+    std::unique_ptr<WiiUContentsInformation> wiiUContentsInformation;
 
     static uint32_t LENGTH;
+
+private:
+    explicit WiiUDiscHeader(
+            std::unique_ptr<WiiUManufactorDiscId> pManufactorDiscId,
+            std::unique_ptr<WiiUDiscId> pDiscId,
+            std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation
+    );
 };

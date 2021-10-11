@@ -23,24 +23,35 @@
 #include "FileEntry.h"
 
 class DirectoryEntry : public NodeEntry {
-
-
 public:
-    ~DirectoryEntry() override;
-
-    static DirectoryEntry *parseData(const uint8_t *data, NodeEntryParam param, SectionEntries *sectionEntries, StringTable *stringTable);
+    static std::optional<std::shared_ptr<DirectoryEntry>>
+    parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
+              const NodeEntryParam &param,
+              const std::shared_ptr<SectionEntries> &sectionEntries,
+              const std::shared_ptr<StringTable> &stringTable);
 
     uint32_t parentEntryNumber{};
     uint32_t lastEntryNumber{};
-    std::vector<NodeEntry *> children;
+    std::vector<std::shared_ptr<NodeEntry>> children;
 
-    void addChild(NodeEntry *entry);
+    void addChild(const std::shared_ptr<NodeEntry> &entry);
 
-    [[nodiscard]] std::vector<DirectoryEntry *> getDirChildren() const;
+    [[nodiscard]] std::vector<std::shared_ptr<DirectoryEntry>> getDirChildren() const;
 
-    [[nodiscard]] std::vector<FileEntry *> getFileChildren() const;
+    [[nodiscard]] std::vector<std::shared_ptr<FileEntry>> getFileChildren() const;
 
-    [[nodiscard]] std::vector<NodeEntry *> getChildren() const;
+    [[nodiscard]] std::vector<std::shared_ptr<NodeEntry>> getChildren() const;
 
     void printPathRecursive() override;
+
+protected:
+    explicit DirectoryEntry(const std::shared_ptr<DirectoryEntry> &input);
+
+private:
+    DirectoryEntry(
+            const NodeEntryParam &param,
+            const std::shared_ptr<StringEntry> &stringEntry,
+            const std::shared_ptr<SectionEntry> &sectionEntry,
+            uint32_t parentEntryNumber,
+            uint32_t lastEntryNumber);
 };

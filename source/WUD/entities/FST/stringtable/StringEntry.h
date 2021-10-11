@@ -18,16 +18,18 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
+#include <optional>
 
 class StringTable;
 
 class StringEntry {
 
 public:
-    StringEntry(StringTable *pTable, uint32_t pOffset);
+    StringEntry(std::shared_ptr<StringTable> pTable, uint32_t pOffset);
 
-    [[nodiscard]] std::string toString() const;
+    [[nodiscard]] std::optional<std::string> toString() const;
 
-    StringTable *stringTable;
+    std::shared_ptr<StringTable> stringTable;
     uint32_t offset;
 };

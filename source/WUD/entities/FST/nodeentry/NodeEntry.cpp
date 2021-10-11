@@ -17,16 +17,26 @@
 #include <utils/blocksize/SectionBlockSize.h>
 #include <WUD/entities/FST/stringtable/StringTable.h>
 #include <WUD/entities/FST/sectionentry/SectionEntries.h>
-#include <coreinit/debug.h>
+
+#include <algorithm>
+#include <utility>
 #include "NodeEntry.h"
 #include "DirectoryEntry.h"
 #include "RootEntry.h"
 
-uint32_t  NodeEntry::LENGTH = 16;
-
-NodeEntry *NodeEntry::AutoDeserialize(uint8_t *data, uint32_t offset, DirectoryEntry *pParent, uint32_t eEntryNumber, SectionEntries *sectionEntries,
-                                      StringTable *stringTable, const SectionBlockSize &blockSize) {
-    uint8_t *curEntryData = &data[offset];
+std::optional<std::shared_ptr<NodeEntry>>
+NodeEntry::AutoDeserialize(const std::vector<uint8_t> &data,
+                           uint32_t offset,
+                           const std::optional<std::shared_ptr<DirectoryEntry>> &pParent,
+                           uint32_t eEntryNumber,
+                           const std::shared_ptr<SectionEntries> &sectionEntries,
+                           const std::shared_ptr<StringTable> &stringTable,
+                           const SectionBlockSize &blockSize) {
+    if (offset + NodeEntry::LENGTH >= data.size()) {
+        return {};
+    }
+    std::array<uint8_t, NodeEntry::LENGTH> curEntryData{};
+    std::copy_n(data.begin() + (int) offset, NodeEntry::LENGTH, curEntryData.begin());
 
     NodeEntryParam param{};
     param.permission = ((uint16_t *) &curEntryData[12])[0];
@@ -34,41 +44,68 @@ NodeEntry *NodeEntry::AutoDeserialize(uint8_t *data, uint32_t offset, DirectoryE
     param.entryNumber = eEntryNumber;
     param.parent = pParent;
     param.type = curEntryData[0];
-    param.uint24 = ((uint32_t *) curEntryData)[0] & 0x00FFFFFF;
+    param.uint24 = ((uint32_t *) &curEntryData[0])[0] & 0x00FFFFFF;
 
     if ((param.type & ENTRY_TYPE_Directory) == ENTRY_TYPE_Directory && param.uint24 == 0) { // Root
-        return (NodeEntry *) RootEntry::parseData(curEntryData, param, sectionEntries, stringTable);
+        auto res = RootEntry::parseData(curEntryData, param, sectionEntries, stringTable);
+        if (!res.has_value()) {
+            DEBUG_FUNCTION_LINE("Failed to parse node");
+            return {};
+        }
+        return res;
     } else if ((param.type & ENTRY_TYPE_Directory) == ENTRY_TYPE_Directory) {
-        return (NodeEntry *) DirectoryEntry::parseData(curEntryData, param, sectionEntries, stringTable);
+        auto res = DirectoryEntry::parseData(curEntryData, param, sectionEntries, stringTable);
+        if (!res.has_value()) {
+            DEBUG_FUNCTION_LINE("Failed to parse node");
+            return {};
+        }
+        auto resAsNodeEntry = std::dynamic_pointer_cast<NodeEntry>(res.value());
+        if (resAsNodeEntry == nullptr) {
+            DEBUG_FUNCTION_LINE("Failed to cast to NodeEntry");
+            return {};
+        }
+        return resAsNodeEntry;
     } else if ((param.type & ENTRY_TYPE_File) == ENTRY_TYPE_File) {
-        return (NodeEntry *) FileEntry::parseData(curEntryData, param, sectionEntries, stringTable, blockSize);
+        auto res = FileEntry::parseData(curEntryData, param, sectionEntries, stringTable, blockSize);
+
+        if (!res.has_value()) {
+            DEBUG_FUNCTION_LINE("Failed to parse node");
+            return {};
+        }
+        auto resAsNodeEntry = std::dynamic_pointer_cast<NodeEntry>(res.value());
+        if (resAsNodeEntry == nullptr) {
+            DEBUG_FUNCTION_LINE("Failed to cast to NodeEntry");
+            return {};
+        }
+        return resAsNodeEntry;
     }
 
-    OSFatal("FST Unknown Node Type");
-    return nullptr;
+    DEBUG_FUNCTION_LINE("FST Unknown Node Type");
+    return {};
 }
 
-std::string NodeEntry::getName() const &{
-    if (nameString != nullptr) {
-        return nameString->toString();
+std::string NodeEntry::getName() {
+    auto res = nameString->toString();
+    if (res.has_value()) {
+        return res.value();
     }
-    return "ERROR";
+    return "[ERROR]";
 }
 
-std::string NodeEntry::getFullPathInternal() const &{
-    if (parent != nullptr) {
-        return parent->getFullPathInternal().append("/").append(getName());
+std::string NodeEntry::getFullPathInternal() {
+    if (parent.has_value()) {
+        return parent.value()->getFullPathInternal().append("/").append(getName());
     }
     return getName();
 }
 
-std::string NodeEntry::getFullPath() const &{
+std::string NodeEntry::getFullPath() {
     return getFullPathInternal();
 }
 
-std::string NodeEntry::getPath() const &{
-    if (parent != nullptr) {
-        return parent->getFullPath().append("/");
+std::string NodeEntry::getPath() {
+    if (parent.has_value()) {
+        return parent.value()->getFullPath().append("/");
     }
     return "/";
 }
@@ -81,3 +118,22 @@ bool NodeEntry::isDirectory() const {
 bool NodeEntry::isFile() const {
     return (entryType & ENTRY_TYPE_File) == ENTRY_TYPE_File;
 }
+
+NodeEntry::NodeEntry(const uint16_t pPermission,
+                     std::shared_ptr<StringEntry> pNameString,
+                     std::shared_ptr<SectionEntry> pSectionEntry,
+                     std::optional<std::shared_ptr<DirectoryEntry>> pParent,
+                     const uint8_t pType, const uint32_t pEntryNumber) :
+        permission(pPermission),
+        nameString(std::move(pNameString)),
+        sectionEntry(std::move(pSectionEntry)),
+        parent(std::move(pParent)),
+        entryType(pType),
+        entryNumber(pEntryNumber) {
+
+}
+
+void NodeEntry::printPathRecursive() {
+    DEBUG_FUNCTION_LINE("%s", getFullPath().c_str());
+}
+

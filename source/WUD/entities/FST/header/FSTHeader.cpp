@@ -15,16 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include <utils/blocksize/SectionBlockSize.h>
-#include <coreinit/debug.h>
+#include <utils/logger.h>
 #include "FSTHeader.h"
 
-FSTHeader::FSTHeader(uint8_t *data) {
-    auto *dataAsUint = (uint32_t *) data;
+std::optional<std::unique_ptr<FSTHeader>> FSTHeader::make_unique(const std::array<uint8_t, FSTHeader::LENGTH> &data) {
+    auto *dataAsUint = (uint32_t *) data.data();
     if ((dataAsUint[0] & 0xFFFFFF00) != 0x46535400) {
-        OSFatal("FST Header magic was wrong");
+        DEBUG_FUNCTION_LINE("FST Header magic was wrong");
+        return {};
     }
-    FSTVersion = data[3];
-    blockSize = SectionBlockSize(dataAsUint[1]);
-    numberOfSections = dataAsUint[2];
-    hashDisabled = data[12];
+    auto FSTVersion = data[3];
+    auto blockSize = SectionBlockSize(dataAsUint[1]);
+    auto numberOfSections = dataAsUint[2];
+    auto hashDisabled = data[12];
+
+    return std::unique_ptr<FSTHeader>(new FSTHeader(
+            FSTVersion,
+            blockSize,
+            numberOfSections,
+            hashDisabled
+    ));
+}
+
+FSTHeader::FSTHeader(uint8_t pFSTVersion, SectionBlockSize pBlockSize, uint32_t pNumberOfSections, uint8_t pHashDisabled) : FSTVersion(pFSTVersion),
+                                                                                                                            blockSize(pBlockSize),
+                                                                                                                            numberOfSections(pNumberOfSections),
+                                                                                                                            hashDisabled(pHashDisabled) {
+
 }

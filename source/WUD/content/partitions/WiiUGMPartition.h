@@ -16,32 +16,31 @@
  ****************************************************************************/
 #pragma once
 
+#include <memory>
 #include <cstdint>
 #include <cstdlib>
 #include "WiiUPartition.h"
 
 class WiiUGMPartition : public WiiUPartition {
 public:
-    WiiUGMPartition(WiiUPartition *partition, uint8_t *pRawTIK, uint32_t pTikLen, uint8_t *pRawTMD, uint32_t pTMDLen, uint8_t *pRawCert, uint32_t pCertLen);
-
-    ~WiiUGMPartition() override;
+    WiiUGMPartition(std::shared_ptr<WiiUPartition> partition,
+                    std::vector<uint8_t> pRawTicket,
+                    std::vector<uint8_t> pRawTMD,
+                    std::vector<uint8_t> pRawCert);
 
     [[nodiscard]] std::string getVolumeId() const & override;
 
-    [[nodiscard]] std::map<AddressInDiscBlocks, VolumeHeader *> getVolumes() const & override;
+    [[nodiscard]] std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> getVolumes() const & override;
 
     [[nodiscard]] uint16_t getFileSystemDescriptor() const override;
 
     [[nodiscard]] uint64_t getSectionOffsetOnDefaultPartition() override;
 
-    uint8_t *rawTicket;
-    uint8_t *rawTMD;
-    uint8_t *rawCert;
-    uint32_t tikLen;
-    uint32_t TMDLen;
-    uint32_t certLen;
+    std::vector<uint8_t> rawTicket;
+    std::vector<uint8_t> rawTMD;
+    std::vector<uint8_t> rawCert;
 
 private:
-    WiiUPartition *basePartition;
+    std::shared_ptr<WiiUPartition> basePartition;
 };
 

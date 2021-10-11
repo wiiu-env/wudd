@@ -16,68 +16,81 @@
  ****************************************************************************/
 #include "NUSTitle.h"
 
-NUSTitle *NUSTitle::loadTitle(NUSDataProvider *dataProvider, uint8_t *commonKey) {
-    uint8_t *data = nullptr;
-    uint32_t dataLen = 0;
-    if (!dataProvider->getRawTMD(&data, &dataLen)) {
+#include <utility>
+
+std::optional<std::shared_ptr<NUSTitle>> NUSTitle::loadTitle(const std::shared_ptr<NUSDataProvider> &dataProvider, const std::array<uint8_t, 16> &commonKey) {
+    std::vector<uint8_t> dataBuffer;
+    if (!dataProvider->getRawTMD(dataBuffer)) {
         DEBUG_FUNCTION_LINE("Failed to read TMD");
-        delete dataProvider;
-        return nullptr;
+        return {};
     }
 
-    auto *tmd = new TitleMetaData(data);
-    free(data);
+    auto tmdOpt = TitleMetaData::make_shared(dataBuffer);
+    if (!tmdOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to parse TMD");
+        return {};
+    }
+    dataBuffer.clear();
 
-    if (!dataProvider->getRawTicket(&data, &dataLen)) {
-        DEBUG_FUNCTION_LINE("Failed to read ticket");
-        delete tmd;
-        delete dataProvider;
-        return nullptr;
+    if (!dataProvider->getRawTicket(dataBuffer)) {
+        DEBUG_FUNCTION_LINE("Failed to read ticket data");
+        return {};
     }
 
-    auto *ticket = new Ticket(data, commonKey);
-    free(data);
-    auto *decryption = new NUSDecryption(ticket);
-    auto *dpp = new DefaultNUSDataProcessor(dataProvider, decryption);
+    auto ticketOpt = Ticket::make_shared(dataBuffer, commonKey);
+    if (!ticketOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to parse ticket");
+        return {};
+    }
+
+    dataBuffer.clear();
+    auto decryption = std::make_shared<NUSDecryption>(std::move(ticketOpt.value()));
+    auto dpp = std::shared_ptr<NUSDataProcessor>(new DefaultNUSDataProcessor(dataProvider, decryption));
 
     // If we have more than one content, the index 0 is the FST.
-    Content *fstContent = tmd->getContentByIndex(0);
-
-    if (!dpp->readPlainDecryptedContent(fstContent, &data, &dataLen)) {
-        DEBUG_FUNCTION_LINE("Failed to read decrypted content");
-        delete dataProvider;
-        delete dpp;
-        delete decryption;
-        delete ticket;
-        delete tmd;
-        return nullptr;
+    auto fstContentOpt = tmdOpt.value()->getContentByIndex(0);
+    if (!fstContentOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to get content for index 0");
+        return {};
     }
-    FST *fst = new FST(data, dataLen, 0, VolumeBlockSize(1));
+
+    if (!dpp->readPlainDecryptedContent(fstContentOpt.value(), dataBuffer)) {
+        DEBUG_FUNCTION_LINE("Failed to read decrypted content");
+        return {};
+    }
+    auto fstOpt = FST::make_shared(dataBuffer, 0, VolumeBlockSize(1));
+
+    if (!fstOpt.has_value()) {
+        DEBUG_FUNCTION_LINE();
+        return {};
+    }
 
     // The dataprovider may need the FST to calculate the offset of a content
     // on the partition.
-    dataProvider->setFST(fst);
-
-    return new NUSTitle(tmd, dpp, dataProvider, decryption, ticket, fst);
+    dataProvider->setFST(fstOpt.value());
+    return std::shared_ptr<NUSTitle>(new NUSTitle(tmdOpt.value(), dpp, dataProvider, decryption, ticketOpt.value(), fstOpt.value()));
 }
 
-NUSTitle::NUSTitle(TitleMetaData *pTMD, NUSDataProcessor *pProcessor, NUSDataProvider *pDataProvider, NUSDecryption *pDecryption, Ticket *pTicket, FST *pFST) {
-    tmd = pTMD;
-    dataProcessor = pProcessor;
-    ticket = pTicket;
-    fst = pFST;
-    decryption = pDecryption;
-    dataProvider = pDataProvider;
+NUSTitle::NUSTitle(std::shared_ptr<TitleMetaData> pTMD,
+                   std::shared_ptr<NUSDataProcessor> pProcessor,
+                   std::shared_ptr<NUSDataProvider> pDataProvider,
+                   std::shared_ptr<NUSDecryption> pDecryption,
+                   std::shared_ptr<Ticket> pTicket,
+                   std::shared_ptr<FST> pFST) :
+
+        dataProcessor(std::move(pProcessor)),
+        tmd(std::move(pTMD)),
+        ticket(std::move(pTicket)),
+        fst(std::move(pFST)),
+        decryption(std::move(pDecryption)),
+        dataProvider(std::move(pDataProvider)) {
+
 }
 
-NUSTitle::~NUSTitle() {
-    delete dataProvider;
-    delete dataProcessor;
-    delete decryption;
-    delete ticket;
-    delete tmd;
+std::optional<std::shared_ptr<NUSTitle>>
+NUSTitle::loadTitleFromGMPartition(const std::shared_ptr<WiiUGMPartition> &pPartition, const std::shared_ptr<DiscReader> &pDrive, const std::array<uint8_t, 16> &commonKey) {
+    DEBUG_FUNCTION_LINE();
+    return loadTitle(std::shared_ptr<NUSDataProvider>(new NUSDataProviderWUD(pPartition, pDrive)), commonKey);
 }
 
-NUSTitle *NUSTitle::loadTitleFromGMPartition(WiiUGMPartition *pPartition, DiscReaderDiscDrive *pDrive, uint8_t *commonKey) {
-    return loadTitle(new NUSDataProviderWUD(pPartition, pDrive), commonKey);
-}
+NUSTitle::~NUSTitle() = default;

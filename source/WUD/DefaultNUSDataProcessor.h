@@ -21,15 +21,15 @@
 
 class DefaultNUSDataProcessor : public NUSDataProcessor {
 public:
-    DefaultNUSDataProcessor(NUSDataProvider *pDataProvider, NUSDecryption *pNUSDecryption);
+    DefaultNUSDataProcessor(std::shared_ptr<NUSDataProvider> pDataProvider, std::shared_ptr<NUSDecryption> pNUSDecryption);
 
     ~DefaultNUSDataProcessor() override = default;
 
-    bool readPlainDecryptedContent(Content *pContent, uint8_t **data, uint32_t *length) override;
+    bool readPlainDecryptedContent(const std::shared_ptr<Content> &pContent, std::vector<uint8_t> &out_data) override;
 
-    NUSDataProvider *getDataProvider() override;
+    std::shared_ptr<NUSDataProvider> getDataProvider() override;
 
 private:
-    NUSDataProvider *dataProvider;
-    NUSDecryption *nusDecryption;
+    std::shared_ptr<NUSDataProvider> dataProvider;
+    std::shared_ptr<NUSDecryption> nusDecryption;
 };

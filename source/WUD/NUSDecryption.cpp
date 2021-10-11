@@ -16,11 +16,14 @@
  ****************************************************************************/
 #include "NUSDecryption.h"
 
-void NUSDecryption::decryptData(uint8_t *IV, uint8_t *inData, uint8_t *outData, uint32_t size) const {
-    aes_set_key(ticket->ticketKeyDec);
-    aes_decrypt(IV, inData, outData, size);
+#include <utility>
+#include <utils/logger.h>
+
+void NUSDecryption::decryptData(const std::array<uint8_t, 0x10> &IV, uint8_t *inData, uint8_t *outData, uint32_t size) const {
+    aes_set_key(ticket->ticketKeyDec.data());
+    aes_decrypt((uint8_t *) IV.data(), inData, outData, size);
 }
 
-NUSDecryption::NUSDecryption(Ticket *pTicket) {
-    ticket = pTicket;
+NUSDecryption::NUSDecryption(std::shared_ptr<Ticket> pTicket) : ticket(std::move(pTicket)) {
+    DEBUG_FUNCTION_LINE();
 }

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <map>
+#include <utility>
 #include <utils/blocksize/DiscBlockSize.h>
 #include <utils/blocksize/AddressInDiscBlocks.h>
 #include "volumes/VolumeHeader.h"
@@ -24,29 +25,29 @@
 class WiiUPartition {
 
 public:
-    WiiUPartition();
+    virtual ~WiiUPartition();
 
-    explicit WiiUPartition(DiscReader *reader, uint32_t offset, const DiscBlockSize &blockSize);
+    static constexpr uint32_t LENGTH = 128;
 
     virtual uint64_t getSectionOffsetOnDefaultPartition();
 
-    virtual ~WiiUPartition();
+    [[nodiscard]] virtual std::string getVolumeId() const &;
 
-    [[nodiscard]] virtual std::string getVolumeId() const &{
-        return volumeId;
-    }
+    [[nodiscard]] virtual std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> getVolumes() const &;
 
-    [[nodiscard]] virtual std::map<AddressInDiscBlocks, VolumeHeader *> getVolumes() const &{
-        return volumes;
-    }
+    [[nodiscard]] virtual uint16_t getFileSystemDescriptor() const;
 
-    [[nodiscard]] virtual uint16_t getFileSystemDescriptor() const {
-        return fileSystemDescriptor;
-    }
+    static std::optional<std::shared_ptr<WiiUPartition>> make_shared(const std::shared_ptr<DiscReader> &discReader, uint32_t offset, const DiscBlockSize &blockSize);
+
+protected:
+    WiiUPartition() = default;
 
 private:
+    WiiUPartition(char *pVolumeId, std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> pVolumes, uint16_t pFileSystemDescriptor)
+            : volumeId(pVolumeId), volumes(std::move(pVolumes)), fileSystemDescriptor(pFileSystemDescriptor) {
+    }
+
     std::string volumeId;
-    std::map<AddressInDiscBlocks, VolumeHeader *> volumes;
+    std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> volumes;
     uint16_t fileSystemDescriptor{};
-    static uint32_t LENGTH;
 };

@@ -16,22 +16,21 @@
  ****************************************************************************/
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <cstdint>
 #include <WUD/DiscReader.h>
 #include <utils/blocksize/VolumeBlockSize.h>
 #include <utils/blocksize/AddressInVolumeBlocks.h>
 #include <utils/blocksize/SizeInVolumeBlocks.h>
+#include <optional>
+#include <utils/utils.h>
 #include "H3HashArray.h"
 
 class VolumeHeader {
 
 public:
-    static std::vector<H3HashArray *> getH3HashArray(uint8_t *h3Data, uint32_t numberOfH3HashArray, uint32_t h3HashArrayListSize);
-
-    VolumeHeader(DiscReader *reader, uint64_t offset);
-
-    ~VolumeHeader();
+    static std::vector<std::shared_ptr<H3HashArray>> getH3HashArray(uint8_t *h3Data, uint32_t numberOfH3HashArray, uint32_t h3HashArrayListSize);
 
     static uint32_t MAGIC;
     VolumeBlockSize blockSize;
@@ -43,8 +42,26 @@ public:
     uint8_t majorVersion;
     uint8_t minorVersion;
     uint8_t expiringMajorVersion;
-    std::vector<H3HashArray *> h3HashArrayList;
+    std::vector<std::shared_ptr<H3HashArray>> h3HashArrayList;
 
     uint32_t h3HashArrayListSize;
     uint32_t numberOfH3HashArray;
+
+    static std::optional<std::shared_ptr<VolumeHeader>> make_shared(const std::shared_ptr<DiscReader> &discReader, uint64_t offset);
+
+private:
+    VolumeHeader(
+            const VolumeBlockSize &pBlockSize,
+            SizeInVolumeBlocks pVolumeSize,
+            uint32_t pFSTSize,
+            AddressInVolumeBlocks pFSTAddress,
+            uint8_t pFSTHashMode,
+            uint8_t pEncryptType,
+            uint8_t pMajorVersion,
+            uint8_t pMinorVersion,
+            uint8_t pExpiringMajorVersion,
+            std::vector<std::shared_ptr<H3HashArray>> pH3HashArrayList,
+            uint32_t pH3HashArrayListSize,
+            uint32_t pNumberOfH3HashArray);
+
 };

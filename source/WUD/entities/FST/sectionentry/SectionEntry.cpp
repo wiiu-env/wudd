@@ -16,8 +16,8 @@
  ****************************************************************************/
 #include "SectionEntry.h"
 
-SectionEntry::SectionEntry(uint8_t *data, uint32_t pSectionNumber, const VolumeBlockSize &pBlockSize) {
-    auto *dataAsUint = (uint32_t *) data;
+SectionEntry::SectionEntry(const std::array<uint8_t, SectionEntry::LENGTH> &data, uint32_t pSectionNumber, const VolumeBlockSize &pBlockSize) {
+    auto *dataAsUint = (uint32_t *) data.data();
     address = AddressInVolumeBlocks(pBlockSize, dataAsUint[0]);
     size = SizeInVolumeBlocks(pBlockSize, dataAsUint[1]);
 

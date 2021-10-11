@@ -17,16 +17,21 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include <memory>
 
 class Content {
 public:
-    static uint32_t LENGTH;
+    static constexpr uint32_t LENGTH = 0x30;
 
-    explicit Content(uint8_t *data);
-
-    uint16_t index;
     uint32_t ID;
+    uint16_t index;
     uint16_t type;
     uint64_t encryptedFileSize;
-    uint8_t hash[0x14]{};
+    std::array<uint8_t, 0x14> hash;
+
+    static std::optional<std::shared_ptr<Content>> make_shared(const std::array<uint8_t, 0x30> &data);
+
+private:
+    explicit Content(uint32_t pId, uint16_t pIndex, uint16_t pType, uint64_t pEncryptedFileSize, const std::array<uint8_t, 0x14> &pHash);
 };

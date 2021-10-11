@@ -16,94 +16,140 @@
  ****************************************************************************/
 #include <utils/FSTUtils.h>
 #include <coreinit/debug.h>
+
+#include <utility>
 #include "WiiUPartitions.h"
 #include "WiiUGMPartition.h"
 #include "WiiUDataPartition.h"
 
-uint32_t WiiUPartitions::LENGTH = 30720;
+bool WiiUPartitions::getFSTEntryAsByte(std::string &filePath,
+                                       const std::shared_ptr<FST> &fst,
+                                       const AddressInDiscBlocks &volumeAddress,
+                                       const std::shared_ptr<DiscReader> &discReader,
+                                       std::vector<uint8_t> &out_data) {
+    auto entryOpt = FSTUtils::getFSTEntryByFullPath(fst->getRootEntry(), filePath);
+    if (!entryOpt.has_value()) {
+        return false;
+    }
 
-WiiUPartitions::WiiUPartitions(DiscReader *reader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize &blockSize) {
-    std::vector<WiiUPartition *> tmp;
+    auto asFileEntry = std::dynamic_pointer_cast<FileEntry>(entryOpt.value());
+    if (asFileEntry == nullptr) {
+        return false;
+    }
+
+    auto info = asFileEntry->getSectionEntry();
+    uint64_t sectionOffsetOnDisc = volumeAddress.getAddressInBytes() + info->address.getAddressInBytes();
+
+    out_data.resize(asFileEntry->getSize());
+
+    if (!discReader->hasDiscKey) {
+        return discReader->readEncrypted(out_data.data(), sectionOffsetOnDisc + asFileEntry->getOffset(), asFileEntry->getSize());
+    }
+
+    // Calculating the IV
+    uint8_t IV[16];
+    memset(IV, 0, 16);
+    uint64_t ivTemp = asFileEntry->getOffset() >> 16;
+    memcpy(IV + 8, &ivTemp, 8);
+
+    return discReader->readDecrypted(out_data.data(), sectionOffsetOnDisc, asFileEntry->getOffset(), asFileEntry->getSize(), discReader->discKey, IV, false);
+}
+
+std::optional<std::unique_ptr<WiiUPartitions>>
+WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize &blockSize) {
+    std::vector<std::shared_ptr<WiiUPartition>> tmp;
+    std::vector<std::shared_ptr<WiiUPartition>> partitions;
+    partitions.reserve(numberOfPartitions);
     tmp.reserve(numberOfPartitions);
     for (uint32_t i = 0; i < numberOfPartitions; i++) {
-        tmp.push_back(new WiiUPartition(reader, offset + (i * 128), blockSize));
+        auto partitionOpt = WiiUPartition::make_shared(discReader, offset + (i * 128), blockSize);
+        if (!partitionOpt.has_value()) {
+            DEBUG_FUNCTION_LINE("Failed to read partition");
+            return {};
+        }
+        tmp.push_back(partitionOpt.value());
     }
-    WiiUPartition *SIPartition = nullptr;
+    std::optional<std::shared_ptr<WiiUPartition>> SIPartition;
     for (auto &partition: tmp) {
         if (partition->getVolumeId().starts_with("SI")) {
             SIPartition = partition;
+            break;
         }
     }
 
-    if (SIPartition != nullptr) {
-        for (auto const&[key, val]: SIPartition->getVolumes()) {
+    if (SIPartition.has_value()) {
+        for (auto const&[key, val]: SIPartition.value()->getVolumes()) {
             auto volumeAddress = key;
             auto volumeAddressInBytes = volumeAddress.getAddressInBytes();
             auto volumeHeader = val;
 
-            auto fst = (uint8_t *) malloc(volumeHeader->FSTSize);
-            if (fst == nullptr) {
-                OSFatal("WiiUPartitions: Failed to alloc FST buffer");
-            }
+            std::vector<uint8_t> fstData;
+            fstData.resize(volumeHeader->FSTSize);
 
-            if (!reader->hasDiscKey) {
-                if (!reader->readEncrypted(fst, volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(),
-                                           volumeHeader->FSTSize)) {
-                    OSFatal("WiiUPartitions: Failed to read encrypted");
+            if (!discReader->hasDiscKey) {
+                if (!discReader->readEncrypted(fstData.data(), volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(),
+                                               volumeHeader->FSTSize)) {
+                    DEBUG_FUNCTION_LINE("Failed to read FST");
+                    return {};
                 }
             } else {
-                if (!reader->readDecrypted(fst, volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(), 0, volumeHeader->FSTSize,
-                                           reader->discKey, nullptr, true)) {
-                    OSFatal("WiiUPartitions: Failed to read decrypted");
+                if (!discReader->readDecrypted(fstData.data(), volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(), 0, volumeHeader->FSTSize,
+                                               discReader->discKey, nullptr, true)) {
+                    DEBUG_FUNCTION_LINE("Failed to read FST");
+                    return {};
                 }
             }
 
-            FST *siFST = new FST(fst, volumeHeader->FSTSize, 0, volumeHeader->blockSize);
-            free(fst);
+            auto siFST = FST::make_shared(fstData, 0, volumeHeader->blockSize);
+            if (!siFST.has_value()) {
+                DEBUG_FUNCTION_LINE("Failed to parse FST");
+                return {};
+            }
 
-            for (auto &child: siFST->getRootEntry()->getDirChildren()) {
-                uint8_t *tikRaw = nullptr;
-                uint32_t tikRawLen = 0;
+            for (auto &child: siFST.value()->getRootEntry()->getDirChildren()) {
+                std::vector<uint8_t> bufferTicket;
                 std::string tikFilePath = std::string(child->getFullPath() + '/' + WUD_TICKET_FILENAME);
-                if (!getFSTEntryAsByte(&tikRaw, &tikRawLen, tikFilePath, siFST, volumeAddress, reader)) {
-                    OSFatal("tikRaw");
+                if (!getFSTEntryAsByte(tikFilePath, siFST.value(), volumeAddress, discReader, bufferTicket)) {
+                    DEBUG_FUNCTION_LINE("Failted to read FSTEntry");
+                    return {};
                 }
 
-                uint8_t *tmdRaw = nullptr;
-                uint32_t tmdRawLen = 0;
+                std::vector<uint8_t> bufferTMD;
                 std::string tmdFilePath = std::string(child->getFullPath() + '/' + WUD_TMD_FILENAME);
-                if (!getFSTEntryAsByte(&tmdRaw, &tmdRawLen, tmdFilePath, siFST, volumeAddress, reader)) {
-                    OSFatal("tmdRaw");
+                if (!getFSTEntryAsByte(tmdFilePath, siFST.value(), volumeAddress, discReader, bufferTMD)) {
+                    DEBUG_FUNCTION_LINE("Failted to read FSTEntry");
+                    return {};
                 }
 
-                uint8_t *certRaw = nullptr;
-                uint32_t certRawLen = 0;
+                std::vector<uint8_t> bufferCert;
                 std::string certFilePath = std::string(child->getFullPath() + '/' + WUD_CERT_FILENAME);
-                if (!getFSTEntryAsByte(&certRaw, &certRawLen, certFilePath, siFST, volumeAddress, reader)) {
-                    OSFatal("certRaw");
+                if (!getFSTEntryAsByte(certFilePath, siFST.value(), volumeAddress, discReader, bufferCert)) {
+                    DEBUG_FUNCTION_LINE("Failted to read FSTEntry");
+                    return {};
                 }
 
                 char partitionNameRaw[0x12];
                 memset(partitionNameRaw, 0, 0x12);
-                snprintf(partitionNameRaw, 0x11, "%016llX", *((uint64_t *) &tikRaw[0x1DC]));
+                snprintf(partitionNameRaw, 0x11, "%016llX", *((uint64_t *) &bufferTicket[0x1DC]));
 
                 std::string partitionName = std::string("GM") + partitionNameRaw;
 
-                WiiUPartition *curPartition = nullptr;
+                std::optional<std::shared_ptr<WiiUPartition>> curPartition;
                 for (auto &partition: tmp) {
                     if (partition->getVolumeId().starts_with(partitionName)) {
                         curPartition = partition;
+                        break;
                     }
                 }
 
-                if (curPartition == nullptr) {
-                    OSFatal("Failed to get partition");
+                if (!curPartition.has_value()) {
+                    DEBUG_FUNCTION_LINE("Failed to find partition");
+                    return {};
                 }
 
-                auto *gmPartition = new WiiUGMPartition(curPartition, tikRaw, tikRawLen, tmdRaw, tmdRawLen, certRaw, certRawLen);
+                auto gmPartition = std::shared_ptr<WiiUPartition>(new WiiUGMPartition(curPartition.value(), bufferTicket, bufferTMD, bufferCert));
                 partitions.push_back(gmPartition);
             }
-            delete siFST;
         }
 
     }
@@ -117,65 +163,32 @@ WiiUPartitions::WiiUPartitions(DiscReader *reader, uint32_t offset, uint32_t num
         }
         auto volumeAddress = partition->getVolumes().begin()->first;
         auto vh = partition->getVolumes().begin()->second;
-        auto *rawFST = (uint8_t *) malloc(vh->FSTSize);
-        if (rawFST == nullptr) {
-            OSFatal("Failed to alloc rawFST");
-        }
-        if (!reader->hasDiscKey) {
-            if (!reader->readEncrypted(rawFST, volumeAddress.getAddressInBytes() + vh->FSTAddress.getAddressInBytes(), vh->FSTSize)) {
+
+        std::vector<uint8_t> fstData;
+        fstData.resize(vh->FSTSize);
+
+        if (!discReader->hasDiscKey) {
+            if (!discReader->readEncrypted(fstData.data(), volumeAddress.getAddressInBytes() + vh->FSTAddress.getAddressInBytes(), vh->FSTSize)) {
                 OSFatal("WiiUPartition: Failed to read encrypted");
             }
         } else {
-            if (!reader->readDecrypted(rawFST, volumeAddress.getAddressInBytes() + vh->FSTAddress.getAddressInBytes(), 0, vh->FSTSize,
-                                       reader->discKey, nullptr, true)) {
+            if (!discReader->readDecrypted(fstData.data(), volumeAddress.getAddressInBytes() + vh->FSTAddress.getAddressInBytes(), 0, vh->FSTSize,
+                                           discReader->discKey, nullptr, true)) {
                 OSFatal("WiiUPartition: Failed to read encrypted");
             }
         }
 
-        FST *fst = new FST(rawFST, vh->FSTSize, 0, vh->blockSize);
-        free(rawFST);
-        partitions.push_back(new WiiUDataPartition(partition, fst));
+        auto fstOpt = FST::make_shared(fstData, 0, vh->blockSize);
+        if (!fstOpt.has_value()) {
+            DEBUG_FUNCTION_LINE("Failed to parse FST");
+            return {};
+        }
+        partitions.push_back(std::shared_ptr<WiiUPartition>(new WiiUDataPartition(partition, fstOpt.value())));
     }
+    return std::unique_ptr<WiiUPartitions>(new WiiUPartitions(partitions));
 }
 
-WiiUPartitions::~WiiUPartitions() {
-    for (auto &partition: partitions) {
-        delete partition;
-    }
-}
-
-bool WiiUPartitions::getFSTEntryAsByte(uint8_t **buffer_out, uint32_t *outSize, std::string &filePath, FST *fst, const AddressInDiscBlocks &volumeAddress, DiscReader *discReader) {
-    NodeEntry *entry = FSTUtils::getFSTEntryByFullPath(fst->nodeEntries->rootEntry, filePath);
-
-    auto asFileEntry = dynamic_cast<FileEntry *>(entry);
-    if (asFileEntry == nullptr) {
-        return false;
-    }
-
-    SectionEntry *info = asFileEntry->getSectionEntry();
-    if (info == nullptr) {
-        OSFatal("WiiUPartitions::getFSTEntryAsByte, section info was null");
-    }
-
-    uint64_t sectionOffsetOnDisc = volumeAddress.getAddressInBytes() + info->address.getAddressInBytes();
-
-    auto *buffer = (uint8_t *) malloc(asFileEntry->getSize());
-    if (buffer == nullptr) {
-        return false;
-    }
-    *buffer_out = buffer;
-    *outSize = asFileEntry->getSize();
-
-    if (!discReader->hasDiscKey) {
-        return discReader->readEncrypted(buffer, sectionOffsetOnDisc + asFileEntry->getOffset(), asFileEntry->getSize());
-    }
-
-    // Calculating the IV
-    uint8_t IV[16];
-    memset(IV, 0, 16);
-    uint64_t ivTemp = asFileEntry->getOffset() >> 16;
-    memcpy(IV + 8, &ivTemp, 8);
-
-    return discReader->readDecrypted(buffer, sectionOffsetOnDisc, asFileEntry->getOffset(), asFileEntry->getSize(), discReader->discKey, IV, false);
+WiiUPartitions::WiiUPartitions(std::vector<std::shared_ptr<WiiUPartition>> pPartitions) : partitions(std::move(pPartitions)) {
+    DEBUG_FUNCTION_LINE();
 }
 

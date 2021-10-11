@@ -20,30 +20,32 @@
 
 #include <utility>
 
-FileEntry::FileEntry(SectionAddress address) : address(std::move(address)) {
 
-}
+std::optional<std::shared_ptr<NodeEntry>>
+FileEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
+                     const NodeEntryParam &param,
+                     const std::shared_ptr<SectionEntries> &sectionEntries,
+                     const std::shared_ptr<StringTable> &stringTable,
+                     const SectionBlockSize &blockSize) {
+    auto size = ((uint32_t *) &data[8])[0];
+    auto offset = SectionAddress(blockSize, ((uint32_t *) &data[4])[0]);
 
-NodeEntry *FileEntry::parseData(uint8_t *data, NodeEntryParam param, SectionEntries *sectionEntries, StringTable *stringTable, const SectionBlockSize &blockSize) {
-    auto *entry = new FileEntry(SectionAddress(blockSize, ((uint32_t *) &data[4])[0]));
-
-    entry->entryNumber = param.entryNumber;
-    entry->parent = param.parent;
-    entry->entryType = param.type;
-    entry->nameString = stringTable->getStringEntry(param.uint24);
-    if (entry->nameString == nullptr) {
-        OSFatal("Failed to find string for offset");
+    auto stringNameOpt = stringTable->getStringEntry(param.uint24);
+    if (!stringNameOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to get string name");
+        return {};
     }
 
-    entry->size = ((uint32_t *) &data[8])[0];
+    auto sectionEntryOpt = sectionEntries->getSection(param.sectionNumber);
+    if (!sectionEntryOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to get section entry");
+        return {};
+    }
 
-    entry->permission = param.permission;
-    entry->sectionEntry = sectionEntries->getSection(param.sectionNumber);
-
-    return entry;
+    return std::shared_ptr<FileEntry>(new FileEntry(param, stringNameOpt.value(), sectionEntryOpt.value(), size, offset));
 }
 
-SectionEntry *FileEntry::getSectionEntry() {
+std::shared_ptr<SectionEntry> FileEntry::getSectionEntry() {
     return sectionEntry;
 }
 
@@ -53,4 +55,20 @@ uint64_t FileEntry::getOffset() const {
 
 uint32_t FileEntry::getSize() const {
     return size;
+}
+
+FileEntry::FileEntry(
+        const NodeEntryParam &param,
+        const std::shared_ptr<StringEntry> &pStringEntry,
+        const std::shared_ptr<SectionEntry> &pSectionEntry,
+        uint32_t pSize, SectionAddress pAddress) :
+        NodeEntry(param.permission,
+                  pStringEntry,
+                  pSectionEntry,
+                  param.parent,
+                  param.type,
+                  param.entryNumber),
+        address(std::move(pAddress)),
+        size(pSize) {
+
 }

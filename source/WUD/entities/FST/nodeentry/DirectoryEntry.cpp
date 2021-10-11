@@ -17,56 +17,48 @@
 #include <coreinit/debug.h>
 #include "DirectoryEntry.h"
 
-DirectoryEntry *DirectoryEntry::parseData(const uint8_t *data, NodeEntryParam param, SectionEntries *sectionEntries, StringTable *stringTable) {
-    auto *directoryEntry = new DirectoryEntry();
-    directoryEntry->entryNumber = param.entryNumber;
-    directoryEntry->parent = param.parent;
-    directoryEntry->entryType = param.type;
-    directoryEntry->nameString = stringTable->getStringEntry(param.uint24);
-    if (directoryEntry->nameString == nullptr) {
-        OSFatal("Failed to find string for offset");
+std::optional<std::shared_ptr<DirectoryEntry>>
+DirectoryEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data, const NodeEntryParam &param, const std::shared_ptr<SectionEntries> &sectionEntries,
+                          const std::shared_ptr<StringTable> &stringTable) {
+    auto parentEntryNumber = ((uint32_t *) &data[4])[0];
+    auto lastEntryNumber = ((uint32_t *) &data[8])[0];
+    auto stringNameOpt = stringTable->getStringEntry(param.uint24);
+    if (!stringNameOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to get string name");
+        return {};
     }
 
-    directoryEntry->parentEntryNumber = ((uint32_t *) &data[4])[0];
-    directoryEntry->lastEntryNumber = ((uint32_t *) &data[8])[0];
-
-    directoryEntry->permission = param.permission;
-
-    if (param.sectionNumber > sectionEntries->size()) {
-        OSFatal("section number does not match");
+    auto sectionEntryOpt = sectionEntries->getSection(param.sectionNumber);
+    if (!sectionEntryOpt.has_value()) {
+        DEBUG_FUNCTION_LINE("Failed to get section entry");
+        return {};
     }
-    directoryEntry->sectionEntry = sectionEntries->getSection(param.sectionNumber);
 
-    return directoryEntry;
+
+    return std::unique_ptr<DirectoryEntry>(new DirectoryEntry(param, stringNameOpt.value(), sectionEntryOpt.value(), parentEntryNumber, lastEntryNumber));
 }
 
-DirectoryEntry::~DirectoryEntry() {
-    for (auto &child: children) {
-        delete child;
-    }
-}
-
-std::vector<DirectoryEntry *> DirectoryEntry::getDirChildren() const {
-    std::vector<DirectoryEntry *> res;
+std::vector<std::shared_ptr<DirectoryEntry>> DirectoryEntry::getDirChildren() const {
+    std::vector<std::shared_ptr<DirectoryEntry>> res;
     for (auto &cur: children) {
         if (cur->isDirectory()) {
-            res.push_back(dynamic_cast<DirectoryEntry *>(cur));
+            res.push_back(std::dynamic_pointer_cast<DirectoryEntry>(cur));
         }
     }
     return res;
 }
 
-std::vector<FileEntry *> DirectoryEntry::getFileChildren() const {
-    std::vector<FileEntry *> res;
+std::vector<std::shared_ptr<FileEntry>> DirectoryEntry::getFileChildren() const {
+    std::vector<std::shared_ptr<FileEntry>> res;
     for (auto &cur: children) {
         if (cur->isFile()) {
-            res.push_back(dynamic_cast<FileEntry *>(cur));
+            res.push_back(std::dynamic_pointer_cast<FileEntry>(cur));
         }
     }
     return res;
 }
 
-std::vector<NodeEntry *> DirectoryEntry::getChildren() const {
+std::vector<std::shared_ptr<NodeEntry>> DirectoryEntry::getChildren() const {
     return children;
 }
 
@@ -77,6 +69,33 @@ void DirectoryEntry::printPathRecursive() {
     }
 }
 
-void DirectoryEntry::addChild(NodeEntry *entry) {
+void DirectoryEntry::addChild(const std::shared_ptr<NodeEntry> &entry) {
     children.push_back(entry);
+}
+
+DirectoryEntry::DirectoryEntry(const NodeEntryParam &param,
+                               const std::shared_ptr<StringEntry> &pStringEntry,
+                               const std::shared_ptr<SectionEntry> &pSectionEntry,
+                               uint32_t pParentEntryNumber,
+                               uint32_t pLastEntryNumber) :
+        NodeEntry(param.permission,
+                  pStringEntry,
+                  pSectionEntry,
+                  param.parent,
+                  param.type,
+                  param.entryNumber),
+        parentEntryNumber(pParentEntryNumber),
+        lastEntryNumber(pLastEntryNumber) {
+}
+
+DirectoryEntry::DirectoryEntry(const std::shared_ptr<DirectoryEntry> &input) :
+        NodeEntry(input->permission,
+                  input->nameString,
+                  input->sectionEntry,
+                  input->parent,
+                  input->entryType,
+                  input->entryNumber),
+        parentEntryNumber(input->parentEntryNumber),
+        lastEntryNumber(input->lastEntryNumber) {
+
 }

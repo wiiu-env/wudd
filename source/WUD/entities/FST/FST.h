@@ -16,7 +16,10 @@
  ****************************************************************************/
 #pragma once
 
+#include <optional>
+#include <memory>
 #include <cstdint>
+#include <utility>
 #include <WUD/entities/FST/header/FSTHeader.h>
 #include <WUD/entities/FST/sectionentry/SectionEntries.h>
 #include <WUD/entities/FST/stringtable/StringTable.h>
@@ -24,16 +27,20 @@
 #include <WUD/entities/FST/nodeentry/RootEntry.h>
 
 class FST {
-
 public:
-    FST(uint8_t *data, uint32_t fstSize, uint32_t offset, const VolumeBlockSize &blockSize);
+    [[nodiscard]] std::shared_ptr<RootEntry> getRootEntry() const;
 
-    ~FST();
+    static std::optional<std::shared_ptr<FST>> make_shared(const std::vector<uint8_t> &data, uint32_t offset, const VolumeBlockSize &blockSize);
 
-    FSTHeader *header;
-    SectionEntries *sectionEntries;
-    StringTable *stringTable;
-    NodeEntries *nodeEntries;
+    std::shared_ptr<SectionEntries> sectionEntries;
+private:
+    FST(std::unique_ptr<FSTHeader> pHeader,
+        std::shared_ptr<SectionEntries> pSectionEntries,
+        std::shared_ptr<StringTable> pStringTable,
+        std::unique_ptr<NodeEntries> pNodeEntries
+    );
 
-    [[nodiscard]] RootEntry *getRootEntry() const;
+    std::shared_ptr<StringTable> stringTable;
+    std::unique_ptr<NodeEntries> nodeEntries;
+    std::unique_ptr<FSTHeader> header;
 };

@@ -21,8 +21,8 @@
 
 class AddressInBlocks {
 public:
-    explicit AddressInBlocks(const BlockSize &blockSize, uint32_t pValue) : blockSize(blockSize) {
-        value = pValue;
+    explicit AddressInBlocks(const BlockSize &pBlockSize, uint32_t pValue) : blockSize(pBlockSize), value(pValue) {
+
     }
 
     AddressInBlocks() = default;

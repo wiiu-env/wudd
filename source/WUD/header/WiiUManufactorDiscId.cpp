@@ -14,13 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include "WiiUManufactorDiscID.h"
+#include "WiiUManufactorDiscId.h"
 #include <coreinit/debug.h>
+#include <utils/logger.h>
 
-uint32_t  WiiUManufactorDiscID::LENGTH = 65536;
-
-WiiUManufactorDiscID::WiiUManufactorDiscID(DiscReader *reader, uint32_t offset) {
-    if (!reader->readEncrypted(data, offset, LENGTH)) {
-        OSFatal("WiiUManufactorDiscID: read failed");
+std::optional<std::unique_ptr<WiiUManufactorDiscId>> WiiUManufactorDiscId::make_unique(const std::shared_ptr<DiscReader> &discReader) {
+    if (!discReader->IsReady()) {
+        DEBUG_FUNCTION_LINE("DiscReader is not ready");
+        return {};
     }
+    std::array<uint8_t, WiiUManufactorDiscId::LENGTH> data{};
+
+    if (!discReader->readEncrypted(data.data(), 0, WiiUManufactorDiscId::LENGTH)) {
+        DEBUG_FUNCTION_LINE("Failed to read data");
+        return {};
+    }
+    return std::unique_ptr<WiiUManufactorDiscId>(new WiiUManufactorDiscId(data));
+}
+
+WiiUManufactorDiscId::WiiUManufactorDiscId(const std::array<uint8_t, WiiUManufactorDiscId::LENGTH> &pData) : data(pData) {
+    this->data = pData;
 }

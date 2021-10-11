@@ -31,18 +31,26 @@ class NUSTitle {
 public:
     ~NUSTitle();
 
-    NUSDataProcessor *dataProcessor;
-    TitleMetaData *tmd;
-    Ticket *ticket;
-    FST *fst;
-    NUSDecryption *decryption;
-    NUSDataProvider *dataProvider;
+    std::shared_ptr<NUSDataProcessor> dataProcessor;
+    std::shared_ptr<TitleMetaData> tmd;
+    std::shared_ptr<Ticket> ticket;
+    std::shared_ptr<FST> fst;
+    std::shared_ptr<NUSDecryption> decryption;
+    std::shared_ptr<NUSDataProvider> dataProvider;
 
-    static NUSTitle *loadTitleFromGMPartition(WiiUGMPartition *pPartition, DiscReaderDiscDrive *pDrive, uint8_t commonKey[16]);
+    static std::optional<std::shared_ptr<NUSTitle>> loadTitleFromGMPartition(
+            const std::shared_ptr<WiiUGMPartition> &pPartition,
+            const std::shared_ptr<DiscReader> &pDrive,
+            const std::array<uint8_t, 16> &commonKey);
 
 private:
-    static NUSTitle *loadTitle(NUSDataProvider *dataProvider, uint8_t commonKey[16]);
+    static std::optional<std::shared_ptr<NUSTitle>> loadTitle(const std::shared_ptr<NUSDataProvider> &dataProvider, const std::array<uint8_t, 16> &commonKey);
 
-    NUSTitle(TitleMetaData *pTMD, NUSDataProcessor *pProcessor, NUSDataProvider *pDataProvider, NUSDecryption *pDecryption, Ticket *pTicket, FST *pFST);
+    NUSTitle(std::shared_ptr<TitleMetaData> pTMD,
+             std::shared_ptr<NUSDataProcessor> pProcessor,
+             std::shared_ptr<NUSDataProvider> pDataProvider,
+             std::shared_ptr<NUSDecryption> pDecryption,
+             std::shared_ptr<Ticket> pTicket,
+             std::shared_ptr<FST> pFST);
 
 };

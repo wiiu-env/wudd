@@ -16,20 +16,22 @@
  ****************************************************************************/
 #pragma once
 
-#include "../DiscReader.h"
+#include <memory>
+#include <WUD/DiscReader.h>
 #include "WiiUDiscContentsHeader.h"
 #include "partitions/WiiUPartitions.h"
 
 class WiiUContentsInformation {
 
 public:
-    WiiUContentsInformation(DiscReader *reader, uint32_t offset);
+    std::unique_ptr<WiiUDiscContentsHeader> discContentHeader;
 
-    ~WiiUContentsInformation();
-
-    WiiUDiscContentsHeader *discContentHeader;
-
-    WiiUPartitions *partitions;
+    std::unique_ptr<WiiUPartitions> partitions;
 
     static uint32_t LENGTH;
+
+    static std::optional<std::unique_ptr<WiiUContentsInformation>> make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset);
+
+private:
+    WiiUContentsInformation(std::unique_ptr<WiiUDiscContentsHeader> pDiscContentsHeader, std::unique_ptr<WiiUPartitions> pPartitions);
 };
