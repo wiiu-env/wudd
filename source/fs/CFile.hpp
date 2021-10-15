@@ -1,12 +1,12 @@
-#ifndef CFILE_HPP_
-#define CFILE_HPP_
+#pragma once
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 #include <wut_types.h>
+#include <utils/logger.h>
 
 class CFile {
 public:
@@ -29,31 +29,32 @@ public:
 
     int32_t open(const uint8_t *memory, int32_t memsize);
 
-    BOOL isOpen() const {
-        if (iFd >= 0)
+    [[nodiscard]] BOOL isOpen() const {
+        if (iFd >= 0) {
             return true;
+        }
 
-        if (mem_file)
+        if (mem_file) {
             return true;
-
+        }
         return false;
     }
 
-    void close();
+    virtual void close();
 
-    int32_t read(uint8_t *ptr, size_t size);
+    virtual int32_t read(uint8_t *ptr, size_t size);
 
-    int32_t write(const uint8_t *ptr, size_t size);
+    virtual int32_t write(const uint8_t *ptr, size_t size);
 
     int32_t fwrite(const char *format, ...);
 
-    int32_t seek(long int offset, int32_t origin);
+    virtual int32_t seek(int64_t offset, int32_t origin);
 
-    uint64_t tell() {
+    [[nodiscard]] uint64_t tell() const {
         return pos;
     };
 
-    uint64_t size() {
+    [[nodiscard]] uint64_t size() const {
         return filesize;
     };
 
@@ -63,9 +64,7 @@ public:
 
 protected:
     int32_t iFd;
-    const uint8_t *mem_file;
-    uint64_t filesize;
-    uint64_t pos;
+    const uint8_t *mem_file{};
+    uint64_t filesize{};
+    uint64_t pos{};
 };
-
-#endif

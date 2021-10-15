@@ -1,11 +1,12 @@
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
 #include <strings.h>
+#include <utils/logger.h>
 #include "CFile.hpp"
 
 CFile::CFile() {
     iFd = -1;
-    mem_file = NULL;
+    mem_file = nullptr;
     filesize = 0;
     pos = 0;
 }
@@ -21,7 +22,7 @@ CFile::CFile(const uint8_t *mem, int32_t size) {
 }
 
 CFile::~CFile() {
-    this->close();
+    CFile::close();
 }
 
 int32_t CFile::open(const std::string &filepath, eOpenTypes mode) {
@@ -76,7 +77,7 @@ void CFile::close() {
         ::close(iFd);
 
     iFd = -1;
-    mem_file = NULL;
+    mem_file = nullptr;
     filesize = 0;
     pos = 0;
 }
@@ -89,18 +90,18 @@ int32_t CFile::read(uint8_t *ptr, size_t size) {
         return ret;
     }
 
-    int32_t readsize = size;
+    size_t readsize = size;
 
     if (readsize > (int64_t) (filesize - pos))
         readsize = filesize - pos;
 
     if (readsize <= 0)
-        return readsize;
+        return (int32_t) readsize;
 
     if (mem_file != NULL) {
         memcpy(ptr, mem_file + pos, readsize);
         pos += readsize;
-        return readsize;
+        return (int32_t) readsize;
     }
 
     return -1;
@@ -111,20 +112,23 @@ int32_t CFile::write(const uint8_t *ptr, size_t size) {
         size_t done = 0;
         while (done < size) {
             int32_t ret = ::write(iFd, ptr, size - done);
-            if (ret <= 0)
+            if (ret <= 0) {
                 return ret;
+            }
 
             ptr += ret;
             done += ret;
             pos += ret;
         }
-        return done;
+        if (pos > filesize) {
+            filesize = pos;
+        }
+        return (int32_t) done;
     }
-
     return -1;
 }
 
-int32_t CFile::seek(long int offset, int32_t origin) {
+int32_t CFile::seek(int64_t offset, int32_t origin) {
     int32_t ret = 0;
     int64_t newPos = pos;
 
@@ -145,7 +149,7 @@ int32_t CFile::seek(long int offset, int32_t origin) {
     if (iFd >= 0)
         ret = ::lseek(iFd, pos, SEEK_SET);
 
-    if (mem_file != NULL) {
+    if (mem_file != nullptr) {
         if (pos > filesize) {
             pos = filesize;
         }

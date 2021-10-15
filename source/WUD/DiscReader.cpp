@@ -16,11 +16,10 @@
  ****************************************************************************/
 
 #include <WUD/content/WiiUDiscContentsHeader.h>
-#include <ApplicationState.h>
-#include <utils/logger.h>
+#include <MainApplicationState.h>
 #include <utils/rijndael.h>
 #include <coreinit/debug.h>
-#include "DiscReader.h"
+#include <common/common.h>
 
 bool DiscReader::readDecryptedChunk(uint64_t readOffset, uint8_t *out_buffer, uint8_t *key, uint8_t *IV) const {
     int CHUNK_SIZE = 0x10000;

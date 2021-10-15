@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2016-2021 Maschell
+ * Copyright (C) 2021 Maschell
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,16 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
-#include <optional>
-#include "DiscReader.h"
+#include "WriteOnlyFileWithCache.h"
 
-class DiscReaderDiscDrive : public DiscReader {
+class WUDFileWriter : public WriteOnlyFileWithCache {
 public:
-    DiscReaderDiscDrive();
+    WUDFileWriter(const char *string, eOpenTypes types, int32_t cacheSize, int32_t sectorSize);
 
-    ~DiscReaderDiscDrive() override;
+    ~WUDFileWriter() override;
 
-    static std::optional<DiscReaderDiscDrive *> Create();
+    virtual int32_t writeSector(const uint8_t *buffer, uint32_t numberOfSectors);
 
-    bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
-
-    bool IsReady() override;
-
-    bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;
-
-private:
-    bool init_done = false;
-    int32_t device_handle = -1;
+protected:
+    int32_t sectorSize;
 };

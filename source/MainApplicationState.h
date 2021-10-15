@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2016-2021 Maschell
+ * Copyright (C) 2021 Maschell
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,34 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
 #include <optional>
-#include "DiscReader.h"
+#include <queue>
+#include <ctime>
+#include "input/Input.h"
+#include "fs/CFile.hpp"
+#include "ApplicationState.h"
 
-class DiscReaderDiscDrive : public DiscReader {
+
+class MainApplicationState : public ApplicationState {
 public:
-    DiscReaderDiscDrive();
+    enum eGameState {
+        STATE_WELCOME_SCREEN,
+        STATE_DO_SUBSTATE,
+    };
 
-    ~DiscReaderDiscDrive() override;
+    MainApplicationState();
 
-    static std::optional<DiscReaderDiscDrive *> Create();
+    ~MainApplicationState() override;
 
-    bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
+    void render() override;
 
-    bool IsReady() override;
-
-    bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;
+    ApplicationState::eSubState update(Input *input) override;
 
 private:
-    bool init_done = false;
-    int32_t device_handle = -1;
+    std::unique_ptr<ApplicationState> subState{};
+
+    eGameState state = STATE_WELCOME_SCREEN;
 };

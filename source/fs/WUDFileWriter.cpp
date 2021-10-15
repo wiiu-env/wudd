@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2016-2021 Maschell
+ * Copyright (C) 2021 Maschell
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,27 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#pragma once
+#include <utils/logger.h>
+#include "WUDFileWriter.h"
 
-#include <cstdint>
-#include <optional>
-#include "DiscReader.h"
+WUDFileWriter::WUDFileWriter(const char *path, eOpenTypes mode, int32_t cacheSize, int32_t pSectorSize) :
+        WriteOnlyFileWithCache(path, mode, cacheSize),
+        sectorSize(pSectorSize) {
+}
 
-class DiscReaderDiscDrive : public DiscReader {
-public:
-    DiscReaderDiscDrive();
+int32_t WUDFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSectors) {
+    auto result = write(buffer, numberOfSectors * this->sectorSize);
+    if (result == (int32_t) (numberOfSectors * this->sectorSize)) {
+        return (int32_t) numberOfSectors;
+    }
+    return -1;
+}
 
-    ~DiscReaderDiscDrive() override;
-
-    static std::optional<DiscReaderDiscDrive *> Create();
-
-    bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
-
-    bool IsReady() override;
-
-    bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;
-
-private:
-    bool init_done = false;
-    int32_t device_handle = -1;
-};
+WUDFileWriter::~WUDFileWriter() {
+    WUDFileWriter::close();
+}

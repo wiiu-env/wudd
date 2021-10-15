@@ -16,7 +16,7 @@
  ****************************************************************************/
 #include <WUD/content/WiiUDiscContentsHeader.h>
 #include <common/common.h>
-#include <ApplicationState.h>
+#include <MainApplicationState.h>
 #include <iosuhax.h>
 #include <utils/rijndael.h>
 #include <utils/logger.h>

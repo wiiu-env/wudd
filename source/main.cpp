@@ -6,13 +6,13 @@
 
 #include <iosuhax.h>
 #include <ntfs.h>
+#include <coreinit/debug.h>
 
 #include "utils/logger.h"
 #include "utils/WiiUScreen.h"
 #include "input/VPADInput.h"
-#include "ApplicationState.h"
+#include "MainApplicationState.h"
 #include "common/common.h"
-#include "utils/utils.h"
 
 void initIOSUHax();
 
@@ -63,18 +63,19 @@ int main(int argc, char **argv) {
 
 void main_loop() {
     DEBUG_FUNCTION_LINE("Creating state");
-    ApplicationState state;
+    std::unique_ptr<MainApplicationState> state = std::make_unique<MainApplicationState>();
     VPadInput input;
 
     if (gFSAfd < 0 || !sIosuhaxMount) {
-        state.setError(ApplicationState::eErrorState::ERROR_IOSUHAX_FAILED);
+        // state.setError(MainApplicationState::eErrorState::ERROR_IOSUHAX_FAILED);
+        OSFatal("IOSUHAX Failed");
     }
 
     DEBUG_FUNCTION_LINE("Entering main loop");
     while (WHBProcIsRunning()) {
         input.update(1280, 720);
-        state.update(&input);
-        state.render();
+        state->update(&input);
+        state->render();
     }
 }
 
@@ -89,8 +90,8 @@ void initIOSUHax() {
         if (gFSAfd < 0) {
             DEBUG_FUNCTION_LINE("IOSUHAX_FSA_Open failed");
         } else {
+            DEBUG_FUNCTION_LINE("IOSUHAX done");
         }
-        DEBUG_FUNCTION_LINE("IOSUHAX done");
     }
 }
 

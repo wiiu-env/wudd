@@ -30,6 +30,12 @@ extern "C" {
 #define le32(i)         ((((uint32_t)le16((i) & 0xFFFF)) << 16) | ((uint32_t)le16(((i) & 0xFFFF0000) >> 16)))
 #define le64(i) ((((uint64_t)le32((i) & 0xFFFFFFFFLL)) << 32) | ((uint64_t)le32(((i) & 0xFFFFFFFF00000000LL) >> 32)))
 
+unsigned int swap_uint32(unsigned int val);
+
+unsigned long long swap_uint64(unsigned long long val);
+
+void calculateHash256(unsigned char *data, unsigned int length, unsigned char *hashOut);
+
 #ifdef __cplusplus
 }
 #endif

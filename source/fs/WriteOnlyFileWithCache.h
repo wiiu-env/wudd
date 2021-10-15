@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2016-2021 Maschell
+ * Copyright (C) 2021 Maschell
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,23 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
-#include <optional>
-#include "DiscReader.h"
+#include <fs/CFile.hpp>
 
-class DiscReaderDiscDrive : public DiscReader {
+class WriteOnlyFileWithCache : public CFile {
 public:
-    DiscReaderDiscDrive();
+    WriteOnlyFileWithCache(const char *string, eOpenTypes types, int32_t cacheSize);
 
-    ~DiscReaderDiscDrive() override;
+    ~WriteOnlyFileWithCache() override;
 
-    static std::optional<DiscReaderDiscDrive *> Create();
+    int32_t write(const uint8_t *data, size_t size) override;
 
-    bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
+    int32_t seek(int64_t offset, int32_t origin) override;
 
-    bool IsReady() override;
+    int32_t read(uint8_t *ptr, size_t size) override;
 
-    bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;
+    bool flush();
 
-private:
-    bool init_done = false;
-    int32_t device_handle = -1;
+    void *writeBuffer = nullptr;
+    size_t writeBufferSize;
+    size_t writeBufferPos;
 };
