@@ -48,14 +48,14 @@ public:
     }
 
     virtual void printHeader() {
-        WiiUScreen::drawLine("Wudump");
+        WiiUScreen::drawLine("WUDD - Wii U Disc Dumper");
         WiiUScreen::drawLine("==================");
         WiiUScreen::drawLine("");
     }
 
     virtual void printFooter() {
-        ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 27, "By Maschell");
-        ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 17, "By Maschell");
+        ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 27, "Created by Maschell, inspired by wudump from FIX94");
+        ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 17, "Created by Maschell, inspired by wudump from FIX94");
     }
 
 

@@ -17,7 +17,7 @@ include $(DEVKITPRO)/wut/share/wut_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	wudump
+TARGET		:=	wudd
 BUILD		:=	build
 SOURCES		:=	source \
 				source/fs \

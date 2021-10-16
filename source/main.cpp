@@ -13,7 +13,6 @@
 #include "utils/WiiUScreen.h"
 #include "input/VPADInput.h"
 #include "MainApplicationState.h"
-#include "common/common.h"
 
 void initIOSUHax();
 
@@ -23,7 +22,6 @@ void main_loop();
 
 bool sIosuhaxMount = false;
 
-
 int main(int argc, char **argv) {
     WHBLogUdpInit();
     DEBUG_FUNCTION_LINE("Hello from wudump!");
@@ -31,9 +29,6 @@ int main(int argc, char **argv) {
     WiiUScreen::Init();
 
     initIOSUHax();
-
-    //DEBUG_FUNCTION_LINE("init fat");
-    //fatInitDefault();
 
     uint32_t isAPDEnabled;
     IMIsAPDEnabled(&isAPDEnabled);
