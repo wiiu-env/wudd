@@ -4,3 +4,4 @@ build/
 cmake-build-debug/
 *.elf
 *.rpx
+*.wuhb
