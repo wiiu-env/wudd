@@ -7,6 +7,7 @@
 #include <iosuhax.h>
 #include <ntfs.h>
 #include <coreinit/debug.h>
+#include <coreinit/energysaver.h>
 
 #include "utils/logger.h"
 #include "utils/WiiUScreen.h"
@@ -23,9 +24,6 @@ void main_loop();
 bool sIosuhaxMount = false;
 
 
-ntfs_md *ntfs_mounts = nullptr;
-int ntfs_mount_count = 0;
-
 int main(int argc, char **argv) {
     WHBLogUdpInit();
     DEBUG_FUNCTION_LINE("Hello from wudump!");
@@ -36,6 +34,14 @@ int main(int argc, char **argv) {
 
     //DEBUG_FUNCTION_LINE("init fat");
     //fatInitDefault();
+
+    uint32_t isAPDEnabled;
+    IMIsAPDEnabled(&isAPDEnabled);
+
+    if (isAPDEnabled) {
+        DEBUG_FUNCTION_LINE("Disable auto shutdown");
+        IMDisableAPD();
+    }
 
     ntfs_mount_count = ntfsMountAll((ntfs_md **) &ntfs_mounts, NTFS_DEFAULT | NTFS_RECOVER);
 
@@ -51,6 +57,11 @@ int main(int argc, char **argv) {
             ntfsUnmount(ntfs_mounts[i].name, true);
         }
         free(ntfs_mounts);
+    }
+
+    if (isAPDEnabled) {
+        DEBUG_FUNCTION_LINE("Enable auto shutdown");
+        IMEnableAPD();
     }
 
     deInitIOSUHax();

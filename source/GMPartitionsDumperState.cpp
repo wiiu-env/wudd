@@ -27,7 +27,7 @@
 
 #define READ_BUFFER_SIZE (SECTOR_SIZE * 128)
 
-GMPartitionsDumperState::GMPartitionsDumperState() {
+GMPartitionsDumperState::GMPartitionsDumperState(eDumpTarget pTargetDevice) : targetDevice(pTargetDevice) {
     this->sectorBufSize = SECTOR_SIZE;
     this->state = STATE_OPEN_ODD1;
 }
@@ -77,11 +77,11 @@ void GMPartitionsDumperState::render() {
                 for (auto &content: partitionPair.second->tmd->contentList) {
                     size += ROUNDUP(content->encryptedFileSize, 16);
                 }
-                WiiUScreen::drawLinef("%s %s (~%0.2f MiB)", index == (uint32_t) selectedOption ? ">" : " ", partitionPair.first->getVolumeId().c_str(), (float) size / 1024.0f / 1024.0f);
+                WiiUScreen::drawLinef("%s %s (~%0.2f MiB)", index == (uint32_t) selectedOptionY ? ">" : " ", partitionPair.first->getVolumeId().c_str(), (float) size / 1024.0f / 1024.0f);
                 index++;
             }
             WiiUScreen::drawLine();
-            WiiUScreen::drawLinef("%s Back", index == (uint32_t) selectedOption ? ">" : " ");
+            WiiUScreen::drawLinef("%s Back", index == (uint32_t) selectedOptionY ? ">" : " ");
         }
     } else if (this->state == STATE_CREATE_DATA_PROVIDER) {
         WiiUScreen::drawLine("Create data provider from partition");
@@ -227,12 +227,12 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                 return SUBSTATE_RETURN;
             }
         }
-        proccessMenuNavigation(input, (int32_t) gmPartitionPairs.size() + 1);
+        proccessMenuNavigationY(input, (int32_t) gmPartitionPairs.size() + 1);
         if (entrySelected(input)) {
-            if (selectedOption >= (int32_t) gmPartitionPairs.size()) {
+            if (selectedOptionY >= (int32_t) gmPartitionPairs.size()) {
                 return SUBSTATE_RETURN;
             }
-            auto gmPartitionPair = gmPartitionPairs[selectedOption];
+            auto gmPartitionPair = gmPartitionPairs[selectedOptionY];
             if (gmPartitionPair.first != nullptr) {
                 this->curPartition = gmPartitionPair.first;
                 this->curNUSTitle = gmPartitionPair.second;
@@ -243,8 +243,11 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                 return SUBSTATE_RUNNING;
             }
 
-            this->targetPath = StringTools::strfmt("%swudump/%s/%s", "ntfs0:/", this->discId, curPartition->getVolumeId().c_str());
-            FSUtils::CreateSubfolder(targetPath.c_str());
+            this->targetPath = StringTools::strfmt("%swudump/%s/%s", getPathForDevice(targetDevice).c_str(), this->discId, curPartition->getVolumeId().c_str());
+            if (!FSUtils::CreateSubfolder(targetPath.c_str())) {
+                this->setError(ERROR_CREATE_DIR);
+                return SUBSTATE_RUNNING;
+            }
 
             this->state = STATE_DUMP_PARTITION_TMD;
         }
@@ -388,6 +391,14 @@ void GMPartitionsDumperState::setError(GMPartitionsDumperState::eErrorState err)
     //OSEnableHomeButtonMenu(true);
 }
 
+std::string GMPartitionsDumperState::getPathForDevice(eDumpTarget target) const {
+    if(target == TARGET_SD){
+        return "fs:/vol/external01/";
+    } else if (target == TARGET_NTFS){
+        return "ntfs0:/";
+    }
+}
+
 std::string GMPartitionsDumperState::ErrorMessage() const {
     if (this->errorState == ERROR_MALLOC_FAILED) {
         return "ERROR_MALLOC_FAILED";
@@ -406,6 +417,9 @@ std::string GMPartitionsDumperState::ErrorMessage() const {
     }
     if (this->errorState == ERROR_NO_GM_PARTITION) {
         return "ERROR_NO_GM_PARTITION";
+    }
+    if (this->errorState == ERROR_CREATE_DIR) {
+        return "ERROR_CREATE_DIR";
     }
     if (this->errorState == ERROR_FAILED_TO_GET_NUSTITLE) {
         return "ERROR_FAILED_TO_GET_NUSTITLE";

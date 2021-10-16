@@ -20,12 +20,11 @@
 
 class WUDFileWriter : public WriteOnlyFileWithCache {
 public:
-    WUDFileWriter(const char *string, eOpenTypes types, int32_t cacheSize, int32_t sectorSize);
-
-    ~WUDFileWriter() override;
+    WUDFileWriter(const char *string, int32_t cacheSize, int32_t sectorSize, bool split = false);
 
     virtual int32_t writeSector(const uint8_t *buffer, uint32_t numberOfSectors);
 
+    virtual void finalize();
 protected:
     int32_t sectorSize;
 };

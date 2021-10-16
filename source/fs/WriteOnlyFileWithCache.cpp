@@ -17,9 +17,14 @@
 #include <malloc.h>
 #include <coreinit/memory.h>
 #include <utils/logger.h>
+#include <utils/StringTools.h>
 #include "WriteOnlyFileWithCache.h"
 
-WriteOnlyFileWithCache::WriteOnlyFileWithCache(const char *path, CFile::eOpenTypes mode, int32_t cacheSize) : CFile(path, mode) {
+#define SPLIT_SIZE (0x80000000)
+
+WriteOnlyFileWithCache::WriteOnlyFileWithCache(const char *path, int32_t cacheSize, bool split) : CFile(split ? std::string(path) + ".part1" : path, WriteOnly),
+                                                                                                  originalPath(path),
+                                                                                                  splitFile(split) {
     if (!this->isOpen()) {
         return;
     }
@@ -50,20 +55,54 @@ bool WriteOnlyFileWithCache::flush() {
 }
 
 int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
-    if (writeSize == this->writeBufferSize) {
+    auto finalAddr = addr;
+    size_t finalWriteSize = writeSize;
+    if (splitFile) {
+        if (pos + writeBufferPos + finalWriteSize >= SPLIT_SIZE) {
+            DEBUG_FUNCTION_LINE("We need to split");
+            if (!flush()) {
+                return -2;
+            }
+
+            uint32_t realWriteSize = SPLIT_SIZE - pos;
+
+            if (realWriteSize > 0) {
+                DEBUG_FUNCTION_LINE("Write remaining %016lld bytes", realWriteSize);
+                if (CFile::write(reinterpret_cast<const uint8_t *>(addr), realWriteSize) != (int32_t) realWriteSize) {
+                    return -3;
+                }
+            }
+            finalWriteSize = writeSize - realWriteSize;
+            finalAddr = (uint8_t *) ((uint32_t) addr + realWriteSize);
+            part++;
+            if (!flush()) {
+                return -2;
+            }
+            CFile::close();
+
+            // open the next part
+            DEBUG_FUNCTION_LINE("Open %s", StringTools::strfmt("%s.part%d", originalPath.c_str(), part).c_str());
+            this->open(StringTools::strfmt("%s.part%d", originalPath.c_str(), part), WriteOnly);
+        }
+        if (finalWriteSize == 0) {
+            return (int32_t) writeSize;
+        }
+    }
+
+    if (finalWriteSize == this->writeBufferSize) {
         if (!this->flush()) {
             DEBUG_FUNCTION_LINE("Flush failed");
             return -1;
         }
-        return CFile::write(reinterpret_cast<const uint8_t *>(addr), writeSize);
+        return CFile::write(reinterpret_cast<const uint8_t *>(addr), finalWriteSize);
     }
 
-    auto toWrite = (int32_t) writeSize;
+    auto toWrite = (int32_t) finalWriteSize;
     if (toWrite == 0) {
         return 0;
     }
 
-    int32_t written = 0;
+    auto written = (int32_t) (writeSize - finalWriteSize);
 
     do {
         int32_t curWrite = toWrite;
@@ -71,7 +110,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
         if (this->writeBufferPos + curWrite > this->writeBufferSize) {
             curWrite = this->writeBufferSize - this->writeBufferPos;
         }
-        OSBlockMove((void *) (((uint32_t) this->writeBuffer) + this->writeBufferPos), (void *) (addr + written), curWrite, 1);
+        OSBlockMove((void *) (((uint32_t) this->writeBuffer) + this->writeBufferPos), (void *) (finalAddr + written), curWrite, 1);
         this->writeBufferPos += curWrite;
 
         if (this->writeBufferPos == this->writeBufferSize) {
@@ -88,6 +127,20 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
 }
 
 int32_t WriteOnlyFileWithCache::seek(int64_t offset, int32_t origin) {
+    // Hacky trick because we may need a seek.
+    if (origin == SEEK_SET_BASE_CLASS) {
+        if (splitFile) {
+            if ((offset / SPLIT_SIZE) + 1 != part) {
+                flush();
+                close();
+                part = (offset / SPLIT_SIZE) + 1;
+                DEBUG_FUNCTION_LINE("Open %s", StringTools::strfmt("%s.part%d", originalPath.c_str(), part).c_str());
+                this->open(StringTools::strfmt("%s.part%d", originalPath.c_str(), part), ReadWrite);
+            }
+            return CFile::seek(offset % SPLIT_SIZE, SEEK_SET);
+        }
+        return CFile::seek(offset, SEEK_SET);
+    }
     return -1;
 }
 

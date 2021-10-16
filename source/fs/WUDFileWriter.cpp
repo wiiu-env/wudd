@@ -17,8 +17,8 @@
 #include <utils/logger.h>
 #include "WUDFileWriter.h"
 
-WUDFileWriter::WUDFileWriter(const char *path, eOpenTypes mode, int32_t cacheSize, int32_t pSectorSize) :
-        WriteOnlyFileWithCache(path, mode, cacheSize),
+WUDFileWriter::WUDFileWriter(const char *path, int32_t cacheSize, int32_t pSectorSize, bool split) :
+        WriteOnlyFileWithCache(path, cacheSize, split),
         sectorSize(pSectorSize) {
 }
 
@@ -30,6 +30,6 @@ int32_t WUDFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
     return -1;
 }
 
-WUDFileWriter::~WUDFileWriter() {
-    WUDFileWriter::close();
+void WUDFileWriter::finalize() {
+
 }

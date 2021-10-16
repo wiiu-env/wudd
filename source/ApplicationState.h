@@ -17,16 +17,29 @@ public:
 
     virtual eSubState update(Input *input) = 0;
 
-    virtual void proccessMenuNavigation(Input *input, int32_t maxOptionValue) {
+    virtual void proccessMenuNavigationY(Input *input, int32_t maxOptionValue) {
         if (input->data.buttons_d & Input::BUTTON_UP) {
-            this->selectedOption--;
+            this->selectedOptionY--;
         } else if (input->data.buttons_d & Input::BUTTON_DOWN) {
-            this->selectedOption++;
+            this->selectedOptionY++;
         }
-        if (this->selectedOption < 0) {
-            this->selectedOption = maxOptionValue;
-        } else if (this->selectedOption >= maxOptionValue) {
-            this->selectedOption = 0;
+        if (this->selectedOptionY < 0) {
+            this->selectedOptionY = maxOptionValue;
+        } else if (this->selectedOptionY >= maxOptionValue) {
+            this->selectedOptionY = 0;
+        }
+    }
+
+    virtual void proccessMenuNavigationX(Input *input, int32_t maxOptionValue) {
+        if (input->data.buttons_d & Input::BUTTON_LEFT) {
+            this->selectedOptionX--;
+        } else if (input->data.buttons_d & Input::BUTTON_RIGHT) {
+            this->selectedOptionX++;
+        }
+        if (this->selectedOptionX < 0) {
+            this->selectedOptionX = maxOptionValue;
+        } else if (this->selectedOptionX >= maxOptionValue) {
+            this->selectedOptionX = 0;
         }
     }
 
@@ -46,5 +59,6 @@ public:
     }
 
 
-    int selectedOption = 0;
+    int selectedOptionY = 0;
+    int selectedOptionX = 0;
 };

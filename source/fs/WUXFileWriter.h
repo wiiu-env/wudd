@@ -33,13 +33,13 @@ typedef struct {
 
 class WUXFileWriter : public WUDFileWriter {
 public:
-    WUXFileWriter(const char *string, eOpenTypes types, int32_t cacheSize, int32_t pSectorSize);
+    WUXFileWriter(const char *string, int32_t cacheSize, int32_t pSectorSize, bool split = false);
 
     ~WUXFileWriter() override;
 
     int32_t writeSector(const uint8_t *buffer, uint32_t numberOfSectors) override;
 
-    void close() override;
+    void finalize() override;
 
 private:
     void writeSectorIndexTable();

@@ -18,9 +18,11 @@
 
 #include <fs/CFile.hpp>
 
+#define SEEK_SET_BASE_CLASS 0x4242
+
 class WriteOnlyFileWithCache : public CFile {
 public:
-    WriteOnlyFileWithCache(const char *string, eOpenTypes types, int32_t cacheSize);
+    WriteOnlyFileWithCache(const char *string, int32_t cacheSize, bool split = false);
 
     ~WriteOnlyFileWithCache() override;
 
@@ -30,9 +32,17 @@ public:
 
     int32_t read(uint8_t *ptr, size_t size) override;
 
+    [[nodiscard]] uint64_t tell() const override {
+        return pos + writeBufferPos;
+    };
+
     bool flush();
 
     void *writeBuffer = nullptr;
     size_t writeBufferSize;
     size_t writeBufferPos;
+
+    bool splitFile = false;
+    int32_t part = 1;
+    std::string originalPath;
 };

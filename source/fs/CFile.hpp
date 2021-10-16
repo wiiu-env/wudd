@@ -40,7 +40,7 @@ public:
         return false;
     }
 
-    virtual void close();
+    void close();
 
     virtual int32_t read(uint8_t *ptr, size_t size);
 
@@ -50,7 +50,7 @@ public:
 
     virtual int32_t seek(int64_t offset, int32_t origin);
 
-    [[nodiscard]] uint64_t tell() const {
+    [[nodiscard]] virtual uint64_t tell() const {
         return pos;
     };
 

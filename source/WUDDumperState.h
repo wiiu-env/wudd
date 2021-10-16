@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>
 #include <input/Input.h>
+#include <common/common.h>
 #include "ApplicationState.h"
 #include "fs/WriteOnlyFileWithCache.h"
 #include "fs/WUXFileWriter.h"
@@ -61,12 +62,12 @@ public:
         ERROR_NO_DISC_FOUND
     };
 
-    explicit WUDDumperState(eDumpTargetFormat pTarget);
+    explicit WUDDumperState(eDumpTargetFormat pTarget, eDumpTarget pTargetDevice);
 
     ~WUDDumperState() override;
 
     eDumpState state;
-    eDumpTargetFormat target;
+    eDumpTargetFormat targetFormat;
     WUDDumperState::eErrorState errorState = ERROR_NONE;
 
     void render() override;
@@ -78,6 +79,10 @@ public:
     [[nodiscard]] std::string ErrorMessage() const;
 
     [[nodiscard]] std::string ErrorDescription() const;
+
+    [[nodiscard]] std::string getPathForDevice(eDumpTarget target) const;
+
+    eDumpTarget targetDevice = TARGET_SD;
 
     void *sectorBuf = nullptr;
 
@@ -105,4 +110,5 @@ public:
     int32_t writtenSectors{};
 
     void *emptySector = nullptr;
+
 };

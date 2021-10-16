@@ -22,6 +22,7 @@
 #include <optional>
 #include <queue>
 #include <ctime>
+#include <common/common.h>
 #include "input/Input.h"
 #include "fs/CFile.hpp"
 #include "ApplicationState.h"
@@ -46,4 +47,6 @@ private:
     std::unique_ptr<ApplicationState> subState{};
 
     eGameState state = STATE_WELCOME_SCREEN;
+
+    eDumpTarget dumpTarget = TARGET_SD;
 };

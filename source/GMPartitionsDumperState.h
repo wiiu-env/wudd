@@ -58,6 +58,7 @@ public:
         ERROR_OPEN_ODD1,
         ERROR_PARSE_DISCHEADER,
         ERROR_NO_GM_PARTITION,
+        ERROR_CREATE_DIR,
         ERROR_FAILED_TO_GET_NUSTITLE,
         ERROR_FAILED_WRITE_TMD,
         ERROR_FAILED_WRITE_TICKET,
@@ -69,7 +70,7 @@ public:
         ERROR_WRITE_CONTENT
     };
 
-    explicit GMPartitionsDumperState();
+    explicit GMPartitionsDumperState(eDumpTarget pTargetDevice);
 
     ~GMPartitionsDumperState() override;
 
@@ -81,6 +82,8 @@ public:
     eSubState update(Input *input) override;
 
     void setError(eErrorState err);
+
+    [[nodiscard]] std::string getPathForDevice(eDumpTarget target) const;
 
     std::array<uint8_t, 11> discId{};
     std::array<uint8_t, 0x10> cKey{};
@@ -107,4 +110,6 @@ public:
     [[nodiscard]] std::string ErrorDescription() const;
 
     std::vector<std::pair<std::shared_ptr<WiiUGMPartition>, std::shared_ptr<NUSTitle>>> gmPartitionPairs;
+
+    eDumpTarget targetDevice = TARGET_SD;
 };
