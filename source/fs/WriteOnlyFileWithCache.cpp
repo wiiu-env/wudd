@@ -67,7 +67,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
             uint32_t realWriteSize = SPLIT_SIZE - pos;
 
             if (realWriteSize > 0) {
-                DEBUG_FUNCTION_LINE("Write remaining %016lld bytes", realWriteSize);
+                DEBUG_FUNCTION_LINE("Write remaining %8d bytes", realWriteSize);
                 if (CFile::write(reinterpret_cast<const uint8_t *>(addr), realWriteSize) != (int32_t) realWriteSize) {
                     return -3;
                 }

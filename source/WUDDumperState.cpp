@@ -126,10 +126,10 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         }
         if (targetFormat == DUMP_AS_WUX) {
             this->fileHandle = std::make_unique<WUXFileWriter>(StringTools::fmt("%swudump/%s/game.wux", getPathForDevice(targetDevice).c_str(), discId), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
-                                                               SECTOR_SIZE, true);
+                                                               SECTOR_SIZE, targetDevice == TARGET_SD);
         } else {
             this->fileHandle = std::make_unique<WUDFileWriter>(StringTools::fmt("%swudump/%s/game.wud", getPathForDevice(targetDevice).c_str(), discId), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
-                                                               SECTOR_SIZE, true);
+                                                               SECTOR_SIZE, targetDevice == TARGET_SD);
         }
         if (!this->fileHandle->isOpen()) {
             DEBUG_FUNCTION_LINE("Failed to open file");
