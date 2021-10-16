@@ -39,9 +39,6 @@ WUDDumperState::~WUDDumperState() {
 }
 
 ApplicationState::eSubState WUDDumperState::update(Input *input) {
-    if (this->state == STATE_RETURN) {
-        return ApplicationState::SUBSTATE_RETURN;
-    }
     if (this->state == STATE_ERROR) {
         if (entrySelected(input)) {
             return ApplicationState::SUBSTATE_RETURN;
@@ -79,7 +76,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         }
     } else if (this->state == STATE_PLEASE_INSERT_DISC) {
         if (entrySelected(input)) {
-            this->state = STATE_RETURN;
+            return SUBSTATE_RETURN;
         }
     } else if (this->state == STATE_READ_DISC_INFO) {
         if (IOSUHAX_FSA_RawRead(gFSAfd, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
@@ -218,7 +215,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
     } else if (this->state == STATE_DUMP_DISC_DONE) {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
         if (entrySelected(input)) {
-            this->state = STATE_RETURN;
+            return SUBSTATE_RETURN;
         }
 
         return ApplicationState::SUBSTATE_RUNNING;
@@ -284,8 +281,6 @@ void WUDDumperState::render() {
         }
     } else if (this->state == STATE_DUMP_DISC_DONE) {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
-    } else if (this->state == STATE_RETURN) {
-        WiiUScreen::drawLinef("Returning");
     }
 
     ApplicationState::printFooter();

@@ -40,7 +40,6 @@ public:
 
     enum eDumpState {
         STATE_ERROR,
-        STATE_RETURN,
         STATE_OPEN_ODD1,
         STATE_PLEASE_INSERT_DISC,
         STATE_READ_DISC_INFO,

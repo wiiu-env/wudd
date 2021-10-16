@@ -392,11 +392,10 @@ void GMPartitionsDumperState::setError(GMPartitionsDumperState::eErrorState err)
 }
 
 std::string GMPartitionsDumperState::getPathForDevice(eDumpTarget target) const {
-    if(target == TARGET_SD){
-        return "fs:/vol/external01/";
-    } else if (target == TARGET_NTFS){
+    if (target == TARGET_NTFS){
         return "ntfs0:/";
     }
+    return "fs:/vol/external01/";
 }
 
 std::string GMPartitionsDumperState::ErrorMessage() const {
