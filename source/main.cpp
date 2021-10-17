@@ -8,11 +8,14 @@
 #include <ntfs.h>
 #include <coreinit/debug.h>
 #include <coreinit/energysaver.h>
+#include <padscore/kpad.h>
+#include <input/WPADInput.h>
 
 #include "utils/logger.h"
 #include "utils/WiiUScreen.h"
 #include "input/VPADInput.h"
 #include "MainApplicationState.h"
+
 
 void initIOSUHax();
 
@@ -44,7 +47,11 @@ int main(int argc, char **argv) {
         DEBUG_FUNCTION_LINE("%s:", ntfs_mounts[i].name);
     }
 
+    WPADInput::init();
+
     main_loop();
+
+    WPADInput::close();
 
     if (ntfs_mounts != nullptr) {
         int i = 0;
@@ -70,7 +77,13 @@ int main(int argc, char **argv) {
 void main_loop() {
     DEBUG_FUNCTION_LINE("Creating state");
     std::unique_ptr<MainApplicationState> state = std::make_unique<MainApplicationState>();
-    VPadInput input;
+    VPadInput vpadInput;
+    WPADInput wpadInputs[4] = {
+            WPAD_CHAN_0,
+            WPAD_CHAN_1,
+            WPAD_CHAN_2,
+            WPAD_CHAN_3
+    };
 
     if (gFSAfd < 0 || !sIosuhaxMount) {
         // state.setError(MainApplicationState::eErrorState::ERROR_IOSUHAX_FAILED);
@@ -79,8 +92,12 @@ void main_loop() {
 
     DEBUG_FUNCTION_LINE("Entering main loop");
     while (WHBProcIsRunning()) {
-        input.update(1280, 720);
-        state->update(&input);
+        vpadInput.update(1280, 720);
+        for (auto & wpadInput : wpadInputs) {
+            wpadInput.update(1280, 720);
+            vpadInput.combine(wpadInput);
+        }
+        state->update(&vpadInput);
         state->render();
     }
 }
