@@ -11,12 +11,6 @@ public:
     //!Destructor
     virtual ~Input() = default;
 
-    void combine(const Input &b) {
-        data.buttons_d |= b.data.buttons_d;
-        data.buttons_h |= b.data.buttons_h;
-        data.buttons_r |= b.data.buttons_r;
-    }
-
     enum eButtons {
         BUTTON_NONE     = 0x0000,
         VPAD_TOUCH      = 0x80000000,
@@ -63,4 +57,5 @@ public:
 
     PadData data{};
     PadData lastData{};
+
 };

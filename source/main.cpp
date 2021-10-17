@@ -10,6 +10,7 @@
 #include <coreinit/energysaver.h>
 #include <padscore/kpad.h>
 #include <input/WPADInput.h>
+#include <input/CombinedInput.h>
 
 #include "utils/logger.h"
 #include "utils/WiiUScreen.h"
@@ -77,6 +78,7 @@ int main(int argc, char **argv) {
 void main_loop() {
     DEBUG_FUNCTION_LINE("Creating state");
     std::unique_ptr<MainApplicationState> state = std::make_unique<MainApplicationState>();
+    CombinedInput baseInput;
     VPadInput vpadInput;
     WPADInput wpadInputs[4] = {
             WPAD_CHAN_0,
@@ -92,12 +94,17 @@ void main_loop() {
 
     DEBUG_FUNCTION_LINE("Entering main loop");
     while (WHBProcIsRunning()) {
-        vpadInput.update(1280, 720);
-        for (auto & wpadInput : wpadInputs) {
-            wpadInput.update(1280, 720);
-            vpadInput.combine(wpadInput);
+        baseInput.reset();
+        if (vpadInput.update(1280, 720)) {
+            baseInput.combine(vpadInput);
         }
-        state->update(&vpadInput);
+        for (auto &wpadInput: wpadInputs) {
+            if(wpadInput.update(1280, 720)){
+                baseInput.combine(wpadInput);
+            }
+        }
+        baseInput.process();
+        state->update(&baseInput);
         state->render();
     }
 }

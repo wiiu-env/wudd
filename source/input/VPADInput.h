@@ -49,6 +49,8 @@ public:
             data.y = -(height >> 1) + (int32_t) (float) height - (((float) tpCalib.y / 720.0f) * (float) height);
 
             return true;
+        } else {
+            data.buttons_h = 0;
         }
         return false;
     }
