@@ -6,6 +6,7 @@
 
 #include <coreinit/debug.h>
 #include <coreinit/energysaver.h>
+#include <coreinit/title.h>
 #include <input/CombinedInput.h>
 #include <input/WPADInput.h>
 #include <iosuhax.h>
@@ -33,6 +34,16 @@ int main(int argc, char **argv) {
     WiiUScreen::Init();
 
     initIOSUHax();
+
+    uint64_t titleID = OSGetTitleID();
+    if (titleID == 0x0005000013374842 ||
+        titleID == 0x000500101004A000 ||
+        titleID == 0x000500101004A100 ||
+        titleID == 0x000500101004A200) {
+        gRunFromHBL = true;
+    } else {
+        gRunFromHBL = false;
+    }
 
     uint32_t isAPDEnabled;
     IMIsAPDEnabled(&isAPDEnabled);

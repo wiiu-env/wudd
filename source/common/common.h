@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <ntfs.h>
+#include <wut.h>
 
 extern int32_t gFSAfd;
 
@@ -10,6 +10,8 @@ extern int32_t gFSAfd;
 
 extern ntfs_md *ntfs_mounts;
 extern int ntfs_mount_count;
+
+extern BOOL gRunFromHBL;
 
 enum eDumpTarget {
     TARGET_SD,
