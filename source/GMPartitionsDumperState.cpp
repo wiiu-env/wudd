@@ -21,8 +21,9 @@
 #include <WUD/header/WiiUDiscHeader.h>
 #include <common/common.h>
 #include <fs/FSUtils.h>
-#include <iosuhax.h>
 #include <memory>
+#include <mocha/fsa.h>
+#include <mocha/mocha.h>
 #include <utils/StringTools.h>
 
 #define READ_BUFFER_SIZE (SECTOR_SIZE * 128)
@@ -30,6 +31,7 @@
 GMPartitionsDumperState::GMPartitionsDumperState(eDumpTarget pTargetDevice) : targetDevice(pTargetDevice) {
     this->sectorBufSize = SECTOR_SIZE;
     this->state         = STATE_OPEN_ODD1;
+    gBlockHomeButton    = true;
 }
 
 GMPartitionsDumperState::~GMPartitionsDumperState() {
@@ -37,6 +39,7 @@ GMPartitionsDumperState::~GMPartitionsDumperState() {
     this->sectorBuf = nullptr;
     free(this->readBuffer);
     this->readBuffer = nullptr;
+    gBlockHomeButton = false;
 }
 
 void GMPartitionsDumperState::render() {
@@ -73,11 +76,22 @@ void GMPartitionsDumperState::render() {
         } else {
             uint32_t index = 0;
             for (auto &partitionPair : gmPartitionPairs) {
-                uint32_t size = 0;
+                uint64_t size = 0;
                 for (auto &content : partitionPair.second->tmd->contentList) {
                     size += ROUNDUP(content->encryptedFileSize, 16);
                 }
-                WiiUScreen::drawLinef("%s %s (~%0.2f MiB)", index == (uint32_t) selectedOptionY ? ">" : " ", partitionPair.first->getVolumeId().c_str(), (float) size / 1024.0f / 1024.0f);
+                std::string titleId = partitionPair.first->getVolumeId().substr(2, 18);
+                std::string appType = "Other ";
+                if (titleId.starts_with("00050000")) {
+                    appType = "Game  ";
+                } else if (titleId.starts_with("0005000C")) {
+                    appType = "DLC   ";
+                } else if (titleId.starts_with("0005000E")) {
+                    appType = "Update";
+                }
+                WiiUScreen::drawLinef("%s %s - %s (~%0.2f GiB) (%s)", index == (uint32_t) selectedOptionY ? ">" : " ", appType.c_str(),
+                                      partitionPair.second->getShortnameEn().c_str(),
+                                      (float) ((float) size / 1024.0f / 1024.0f / 1024.0f), titleId.c_str());
                 index++;
             }
             WiiUScreen::drawLine();
@@ -94,6 +108,8 @@ void GMPartitionsDumperState::render() {
     } else if (this->state == STATE_DUMP_PARTITION_CONTENTS) {
         if (curPartition != nullptr) {
             WiiUScreen::drawLinef("Dumping Partition %s", curPartition->getVolumeId().c_str());
+            WiiUScreen::drawLinef("Name:    %s", curNUSTitle->getLongnameEn().c_str(), curNUSTitle->tmd->titleId);
+            WiiUScreen::drawLinef("TitleID: %016llX", curNUSTitle->tmd->titleId);
         } else {
             WiiUScreen::drawLine("Dumping Partition");
         }
@@ -127,10 +143,22 @@ void GMPartitionsDumperState::render() {
         if (size > 0) {
             WiiUScreen::drawLinef("Progress: %.2f MiB / %.2f MiB (%0.2f%%)", offset / 1024.0f / 1024.0f,
                                   size / 1024.0f / 1024.0f, ((offset * 1.0f) / size) * 100.0f);
+        } else {
+            WiiUScreen::drawLine();
         }
+        WiiUScreen::drawLine();
+        WiiUScreen::drawLine("Press B to abort the dumping");
 
     } else if (this->state == STATE_DUMP_DONE) {
         WiiUScreen::drawLine("Dumping done. Press A to return.");
+    } else if (this->state == STATE_ABORT_CONFIRMATION) {
+        WiiUScreen::drawLinef("Do you really want to abort the disc dumping?");
+        WiiUScreen::drawLinef("");
+        if (selectedOptionX == 0) {
+            WiiUScreen::drawLinef("> Continue dumping     Abort dumping");
+        } else {
+            WiiUScreen::drawLinef("  Continue dumping   > Abort dumping");
+        }
     }
 
     ApplicationState::printFooter();
@@ -149,17 +177,15 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
     }
 
     if (this->state == STATE_OPEN_ODD1) {
-        auto ret = IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &(this->oddFd));
+        auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &(this->oddFd));
         if (ret >= 0) {
             if (this->sectorBuf == nullptr) {
                 this->sectorBuf = (void *) memalign(0x100, this->sectorBufSize);
                 if (this->sectorBuf == nullptr) {
-                    DEBUG_FUNCTION_LINE("ERROR_MALLOC_FAILED");
                     this->setError(ERROR_MALLOC_FAILED);
                     return ApplicationState::SUBSTATE_RUNNING;
                 }
             }
-            DEBUG_FUNCTION_LINE("Opened /dev/odd01 %d", this->oddFd);
             this->state = STATE_READ_DISC_INFO;
         } else {
             this->state = STATE_PLEASE_INSERT_DISC;
@@ -169,7 +195,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
             return ApplicationState::SUBSTATE_RETURN;
         }
     } else if (this->state == STATE_READ_DISC_INFO) {
-        if (IOSUHAX_FSA_RawRead(gFSAfd, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
+        if (FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
             this->discId[10] = '\0';
             memcpy(this->discId.data(), sectorBuf, 10);
             if (this->discId[0] == 0) {
@@ -180,27 +206,30 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
             this->state = STATE_READ_DISC_INFO_DONE;
             return ApplicationState::SUBSTATE_RUNNING;
         }
+        FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
+        this->oddFd = -1;
 
         this->setError(ERROR_READ_FIRST_SECTOR);
         return ApplicationState::SUBSTATE_RUNNING;
     } else if (this->state == STATE_READ_DISC_INFO_DONE) {
         this->state = STATE_READ_COMMON_KEY;
     } else if (this->state == STATE_READ_COMMON_KEY) {
-        uint8_t opt[0x400];
-        IOSUHAX_read_otp(opt, 0x400);
-        memcpy(cKey.data(), opt + 0xE0, 0x10);
+        WiiUConsoleOTP otp;
+        Mocha_ReadOTP(&otp);
+        memcpy(cKey.data(), otp.wiiUBank.wiiUCommonKey, 0x10);
         this->state = STATE_CREATE_DISC_READER;
     } else if (this->state == STATE_CREATE_DISC_READER) {
-        this->discReader = std::make_shared<DiscReaderDiscDrive>();
-        if (!discReader->IsReady()) {
+        auto discReaderOpt = DiscReaderDiscDrive::make_unique();
+        if (!discReaderOpt) {
             this->setError(ERROR_OPEN_ODD1);
             return SUBSTATE_RUNNING;
         }
-        this->state = STATE_PARSE_DISC_HEADER;
+        this->discReader = std::move(discReaderOpt.value());
+        this->state      = STATE_PARSE_DISC_HEADER;
     } else if (this->state == STATE_PARSE_DISC_HEADER) {
         auto discHeaderOpt = WiiUDiscHeader::make_unique(discReader);
         if (!discHeaderOpt.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to read DiscHeader");
+            DEBUG_FUNCTION_LINE_ERR("Failed to read DiscHeader");
             this->setError(ERROR_PARSE_DISCHEADER);
             return SUBSTATE_RUNNING;
         }
@@ -217,9 +246,10 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                     return SUBSTATE_RUNNING;
                 }
 
-                this->gmPartitionPairs.emplace_back(gmPartition, nusTitleOpt.value());
+                this->gmPartitionPairs.emplace_back(gmPartition, std::move(nusTitleOpt.value()));
             }
         }
+
         this->state = STATE_CHOOSE_PARTITION_TO_DUMP;
     } else if (this->state == STATE_CHOOSE_PARTITION_TO_DUMP) {
         if (gmPartitionPairs.empty()) {
@@ -227,6 +257,11 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                 return SUBSTATE_RETURN;
             }
         }
+
+        if (buttonPressed(input, Input::BUTTON_B)) {
+            return SUBSTATE_RETURN;
+        }
+
         proccessMenuNavigationY(input, (int32_t) gmPartitionPairs.size() + 1);
         if (entrySelected(input)) {
             if (selectedOptionY >= (int32_t) gmPartitionPairs.size()) {
@@ -243,7 +278,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                 return SUBSTATE_RUNNING;
             }
 
-            this->targetPath = StringTools::strfmt("%swudump/%s/%s", getPathForDevice(targetDevice).c_str(), this->discId, curPartition->getVolumeId().c_str());
+            this->targetPath = string_format("%swudump/%s/%s", getPathForDevice(targetDevice).c_str(), this->discId, curPartition->getVolumeId().c_str());
             if (!FSUtils::CreateSubfolder(targetPath.c_str())) {
                 this->setError(ERROR_CREATE_DIR);
                 return SUBSTATE_RUNNING;
@@ -292,6 +327,10 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
         this->curContentIndex = 0;
         this->state           = STATE_DUMP_PARTITION_CONTENTS;
     } else if (this->state == STATE_DUMP_PARTITION_CONTENTS) {
+        if (buttonPressed(input, Input::BUTTON_B)) {
+            this->state = STATE_ABORT_CONFIRMATION;
+            return ApplicationState::SUBSTATE_RUNNING;
+        }
         // Get current content by index.
         if (curContent == nullptr) {
             auto curContentOpt = curNUSTitle->tmd->getContentByIndex(curContentIndex);
@@ -350,7 +389,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
 
         // alloc readBuffer if needed
         if (this->readBuffer == nullptr) {
-            readBuffer = (uint8_t *) malloc(READ_BUFFER_SIZE);
+            readBuffer = (uint8_t *) memalign(0x40, ROUNDUP(READ_BUFFER_SIZE, 0x40));
             if (readBuffer == nullptr) {
                 this->setError(ERROR_MALLOC_FAILED);
                 return SUBSTATE_RUNNING;
@@ -376,6 +415,20 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
         // Go on!
         this->state = STATE_DUMP_PARTITION_CONTENTS;
         return ApplicationState::SUBSTATE_RUNNING;
+    } else if (this->state == STATE_ABORT_CONFIRMATION) {
+        if (buttonPressed(input, Input::BUTTON_B)) {
+            this->state = STATE_DUMP_PARTITION_CONTENTS;
+            return ApplicationState::SUBSTATE_RUNNING;
+        }
+        proccessMenuNavigationX(input, 2);
+        if (buttonPressed(input, Input::BUTTON_A)) {
+            if (selectedOptionX == 0) {
+                this->state = STATE_DUMP_PARTITION_CONTENTS;
+                return ApplicationState::SUBSTATE_RUNNING;
+            } else {
+                return ApplicationState::SUBSTATE_RETURN;
+            }
+        }
     } else if (state == STATE_DUMP_DONE) {
         if (entrySelected(input)) {
             return ApplicationState::SUBSTATE_RETURN;

@@ -25,7 +25,7 @@
 class NUSDataProviderWUD : public NUSDataProvider {
 
 public:
-    NUSDataProviderWUD(const std::shared_ptr<WiiUGMPartition> &pPartition, const std::shared_ptr<DiscReader> &pDrive);
+    NUSDataProviderWUD(std::shared_ptr<WiiUGMPartition> pPartition, std::shared_ptr<DiscReader> pDiscReader);
 
     ~NUSDataProviderWUD() override;
 
@@ -44,7 +44,4 @@ public:
     std::shared_ptr<FST> fst;
     std::shared_ptr<WiiUGMPartition> gamePartition;
     std::shared_ptr<DiscReader> discReader;
-
-private:
-    [[nodiscard]] std::optional<uint64_t> getOffsetInWUD(const std::shared_ptr<Content> &content) const;
 };

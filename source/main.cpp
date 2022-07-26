@@ -1,39 +1,48 @@
-#include <whb/log.h>
-#include <whb/log_udp.h>
-#include <whb/proc.h>
-
-#include <thread>
-
+#include "MainApplicationState.h"
+#include "input/VPADInput.h"
+#include "utils/WiiUScreen.h"
+#include "utils/logger.h"
 #include <coreinit/debug.h>
 #include <coreinit/energysaver.h>
 #include <coreinit/title.h>
 #include <input/CombinedInput.h>
 #include <input/WPADInput.h>
-#include <iosuhax.h>
+#include <mocha/disc_interface.h>
+#include <mocha/mocha.h>
 #include <ntfs.h>
 #include <padscore/kpad.h>
+#include <thread>
+#include <whb/log.h>
+#include <whb/proc.h>
 
-#include "MainApplicationState.h"
-#include "input/VPADInput.h"
-#include "utils/WiiUScreen.h"
-#include "utils/logger.h"
+void initMochaLib();
 
-
-void initIOSUHax();
-
-void deInitIOSUHax();
+void deInitMochaLib();
 
 void main_loop();
 
-bool sIosuhaxMount = false;
+bool slibMochaMount = false;
+
+extern "C" void ACPInitialize();
+
+static uint32_t
+procHomeButtonDeniedCustom(void *context) {
+    if (!gBlockHomeButton && gRunFromHBL) {
+        WHBProcStopRunning();
+    } else {
+        gBlockHomeButtonCooldown = 5;
+    }
+    return 0;
+}
 
 int main(int argc, char **argv) {
-    WHBLogUdpInit();
+    initLogging();
     DEBUG_FUNCTION_LINE("Hello from wudump!");
     WHBProcInit();
     WiiUScreen::Init();
 
-    initIOSUHax();
+    initMochaLib();
+    ACPInitialize();
 
     uint64_t titleID = OSGetTitleID();
     if (titleID == 0x0005000013374842 ||
@@ -41,6 +50,12 @@ int main(int argc, char **argv) {
         titleID == 0x000500101004A100 ||
         titleID == 0x000500101004A200) {
         gRunFromHBL = true;
+
+        ProcUIClearCallbacks();
+        ProcUIRegisterCallback(PROCUI_CALLBACK_HOME_BUTTON_DENIED,
+                               &procHomeButtonDeniedCustom, NULL, 100);
+
+
     } else {
         gRunFromHBL = false;
     }
@@ -66,7 +81,7 @@ int main(int argc, char **argv) {
     WPADInput::close();
 
     if (ntfs_mounts != nullptr) {
-        int i = 0;
+        int i;
         for (i = 0; i < ntfs_mount_count; i++) {
             ntfsUnmount(ntfs_mounts[i].name, true);
         }
@@ -78,7 +93,7 @@ int main(int argc, char **argv) {
         IMEnableAPD();
     }
 
-    deInitIOSUHax();
+    deInitMochaLib();
 
     WiiUScreen::DeInit();
     WHBProcShutdown();
@@ -97,11 +112,6 @@ void main_loop() {
             WPAD_CHAN_2,
             WPAD_CHAN_3};
 
-    if (gFSAfd < 0 || !sIosuhaxMount) {
-        // state.setError(MainApplicationState::eErrorState::ERROR_IOSUHAX_FAILED);
-        OSFatal("IOSUHAX Failed");
-    }
-
     DEBUG_FUNCTION_LINE("Entering main loop");
     while (WHBProcIsRunning()) {
         baseInput.reset();
@@ -119,27 +129,22 @@ void main_loop() {
     }
 }
 
-void initIOSUHax() {
-    sIosuhaxMount = false;
-    int res       = IOSUHAX_Open(nullptr);
-    if (res < 0) {
-        DEBUG_FUNCTION_LINE("IOSUHAX_open failed");
+void initMochaLib() {
+    slibMochaMount       = false;
+    MochaUtilsStatus res = Mocha_InitLibrary();
+    if (res != MOCHA_RESULT_SUCCESS) {
+        DEBUG_FUNCTION_LINE_ERR("Mocha_InitLibrary failed: %s", Mocha_GetStatusStr(res));
+        OSFatal("Failed to init libmocha. Please update MochaPayload.");
     } else {
-        sIosuhaxMount = true;
-        gFSAfd        = IOSUHAX_FSA_Open();
-        if (gFSAfd < 0) {
-            DEBUG_FUNCTION_LINE("IOSUHAX_FSA_Open failed");
-        } else {
-            DEBUG_FUNCTION_LINE("IOSUHAX done");
-        }
+        slibMochaMount = true;
     }
 }
 
-void deInitIOSUHax() {
-    if (sIosuhaxMount) {
-        if (gFSAfd >= 0) {
-            IOSUHAX_FSA_Close(gFSAfd);
-        }
-        IOSUHAX_Close();
+void deInitMochaLib() {
+    if (slibMochaMount) {
+        Mocha_DeinitLibrary();
     }
+
+    Mocha_sdio_disc_interface.shutdown();
+    Mocha_usb_disc_interface.shutdown();
 }

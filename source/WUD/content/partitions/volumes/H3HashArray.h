@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <malloc.h>
+#include <memory>
 
 class H3HashArray {
 
@@ -26,6 +27,6 @@ public:
 
     ~H3HashArray();
 
-    uint8_t *data = nullptr;
+    std::unique_ptr<uint8_t[]> data;
     uint8_t size;
 };

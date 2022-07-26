@@ -22,9 +22,9 @@ Ticket::Ticket(const std::array<uint8_t, 16> &pEncryptedKey, const std::array<ui
                                                                                                              ticketKeyDec(pDecryptedKey) {
 }
 
-std::optional<std::shared_ptr<Ticket>> Ticket::make_shared(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey) {
+std::optional<std::unique_ptr<Ticket>> Ticket::make_unique(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey) {
     if (data.size() <= 0x1DC + 0x10) {
-        DEBUG_FUNCTION_LINE("Not enough data to parse a ticket");
+        DEBUG_FUNCTION_LINE_ERR("Not enough data to parse a ticket");
         return {};
     }
 
@@ -46,6 +46,10 @@ std::optional<std::shared_ptr<Ticket>> Ticket::make_shared(const std::vector<uin
         aes_set_key((uint8_t *) commonKey.value().data());
         aes_decrypt(IV, encryptedKey.data(), decryptedKey.data(), 16);
     }
-
-    return std::shared_ptr<Ticket>(new Ticket(encryptedKey, decryptedKey));
+    auto ticket = new (std::nothrow) Ticket(encryptedKey, decryptedKey);
+    if (!ticket) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to allocate Ticket");
+        return {};
+    }
+    return std::unique_ptr<Ticket>(ticket);
 }

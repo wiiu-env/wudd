@@ -22,7 +22,7 @@
 
 std::optional<std::shared_ptr<StringTable>> StringTable::make_shared(const std::vector<uint8_t> &data, uint32_t offset, uint32_t stringCount) {
     if (offset >= data.size()) {
-        DEBUG_FUNCTION_LINE("Invalid offset for reading StringTable");
+        DEBUG_FUNCTION_LINE_ERR("Invalid offset for reading StringTable");
         return {};
     }
     auto stringTable   = std::shared_ptr<StringTable>(new StringTable());
@@ -35,7 +35,7 @@ std::optional<std::shared_ptr<StringTable>> StringTable::make_shared(const std::
     }
 
     if (i < stringCount) {
-        DEBUG_FUNCTION_LINE("stringtable is broken");
+        DEBUG_FUNCTION_LINE_ERR("StringTable is broken");
         return {};
     }
 

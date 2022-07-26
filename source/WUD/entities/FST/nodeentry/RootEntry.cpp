@@ -32,11 +32,11 @@ RootEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
     auto dir = DirectoryEntry::parseData(data, param, sectionEntries, stringTable);
     if (dir.has_value()) {
         if ((dir.value()->entryType & ENTRY_TYPE_Directory) != ENTRY_TYPE_Directory || dir.value()->entryNumber != 0) {
-            DEBUG_FUNCTION_LINE("Input is no root entry.");
+            DEBUG_FUNCTION_LINE_ERR("Input is no root entry.");
             return {};
         }
         return std::shared_ptr<NodeEntry>(new RootEntry(dir.value()));
     }
-    DEBUG_FUNCTION_LINE("Failed to parse dir");
+    DEBUG_FUNCTION_LINE_ERR("Failed to parse dir");
     return {};
 }

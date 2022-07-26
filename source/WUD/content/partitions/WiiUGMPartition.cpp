@@ -15,23 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "WiiUGMPartition.h"
+#include "WUD/entities/FST/FST.h"
+#include "WUD/entities/TMD/Content.h"
 
-WiiUGMPartition::WiiUGMPartition(std::shared_ptr<WiiUPartition> partition,
+WiiUGMPartition::WiiUGMPartition(std::unique_ptr<WiiUPartition> partition,
                                  std::vector<uint8_t> pRawTicket,
                                  std::vector<uint8_t> pRawTMD,
-                                 std::vector<uint8_t> pRawCert)
+                                 std::vector<uint8_t> pRawCert,
+                                 std::string pathOnSIPartition)
     : WiiUPartition(),
       rawTicket(std::move(pRawTicket)),
       rawTMD(std::move(pRawTMD)),
       rawCert(std::move(pRawCert)),
+      pathOnSIPartition(std::move(pathOnSIPartition)),
       basePartition(std::move(partition)) {
 }
 
-std::string WiiUGMPartition::getVolumeId() const & {
+const std::string &WiiUGMPartition::getVolumeId() const {
     return basePartition->getVolumeId();
 }
 
-std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUGMPartition::getVolumes() const & {
+const std::map<AddressInDiscBlocks, std::unique_ptr<VolumeHeader>> &WiiUGMPartition::getVolumes() const {
     return basePartition->getVolumes();
 }
 

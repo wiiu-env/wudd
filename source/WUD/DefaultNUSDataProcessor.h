@@ -27,7 +27,7 @@ public:
 
     bool readPlainDecryptedContent(const std::shared_ptr<Content> &pContent, std::vector<uint8_t> &out_data) override;
 
-    std::shared_ptr<NUSDataProvider> getDataProvider() override;
+    std::shared_ptr<NUSDataProvider> &getDataProvider() override;
 
 private:
     std::shared_ptr<NUSDataProvider> dataProvider;

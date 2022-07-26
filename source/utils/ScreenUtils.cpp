@@ -17,7 +17,7 @@
 #include "ScreenUtils.h"
 #include <coreinit/screen.h>
 
-void ScreenUtils::printTextOnScreen(ConsoleScreenID screen, int x, int y, const char *msg) {
+void ScreenUtils::printTextOnScreen(ConsoleScreenID screen, uint32_t x, uint32_t y, const char *msg) {
     if (!msg) {
         return;
     }

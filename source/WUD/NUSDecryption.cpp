@@ -24,5 +24,5 @@ void NUSDecryption::decryptData(const std::array<uint8_t, 0x10> &IV, uint8_t *in
     aes_decrypt((uint8_t *) IV.data(), inData, outData, size);
 }
 
-NUSDecryption::NUSDecryption(std::shared_ptr<Ticket> pTicket) : ticket(std::move(pTicket)) {
+NUSDecryption::NUSDecryption(std::unique_ptr<Ticket> pTicket) : ticket(std::move(pTicket)) {
 }

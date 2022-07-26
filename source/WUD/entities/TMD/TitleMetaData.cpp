@@ -19,9 +19,8 @@
 #include <utility>
 #include <utils/logger.h>
 
-TitleMetaData::TitleMetaData(std::vector<std::shared_ptr<Content>> pContentList) : contentList(std::move(pContentList)) {
-
-    // Get Contents
+TitleMetaData::TitleMetaData(uint64_t titleId, std::vector<std::shared_ptr<Content>> pContentList) : contentList(std::move(pContentList)) {
+    this->titleId = titleId;
 }
 
 std::optional<std::shared_ptr<Content>> TitleMetaData::getContentByIndex(uint16_t i) {
@@ -33,16 +32,17 @@ std::optional<std::shared_ptr<Content>> TitleMetaData::getContentByIndex(uint16_
     return {};
 }
 
-std::optional<std::shared_ptr<TitleMetaData>> TitleMetaData::make_shared(const std::vector<uint8_t> &data) {
+std::optional<std::unique_ptr<TitleMetaData>> TitleMetaData::make_unique(const std::vector<uint8_t> &data) {
     if (data.empty() || data.size() <= 0xB04) {
         return {};
     }
     std::vector<std::shared_ptr<Content>> contentList;
     auto contentCount = ((uint16_t *) &data[0x1DE])[0];
+    auto titleID      = ((uint64_t *) &data[0x18C])[0];
     for (uint16_t i = 0; i < contentCount; i++) {
         auto curOffset = 0xB04 + (i * Content::LENGTH);
         if (data.size() < curOffset + Content::LENGTH) {
-            DEBUG_FUNCTION_LINE("Failed to parse TitleMetaData");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse TitleMetaData");
             return {};
         }
         std::array<uint8_t, Content::LENGTH> contentData{};
@@ -50,11 +50,11 @@ std::optional<std::shared_ptr<TitleMetaData>> TitleMetaData::make_shared(const s
 
         auto curContentOpt = Content::make_shared(contentData);
         if (!curContentOpt.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to parse Content");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse Content");
             return {};
         }
         contentList.push_back(curContentOpt.value());
     }
 
-    return std::shared_ptr<TitleMetaData>(new TitleMetaData(contentList));
+    return std::unique_ptr<TitleMetaData>(new TitleMetaData(titleID, contentList));
 }

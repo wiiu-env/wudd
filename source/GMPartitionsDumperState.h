@@ -48,7 +48,8 @@ public:
         STATE_DUMP_PARTITION_TICKET,
         STATE_DUMP_PARTITION_CERT,
         STATE_DUMP_PARTITION_CONTENTS,
-        STATE_DUMP_DONE
+        STATE_DUMP_DONE,
+        STATE_ABORT_CONFIRMATION
     };
 
     enum eErrorState {
@@ -92,8 +93,8 @@ public:
     int32_t oddFd   = -1;
     void *sectorBuf = nullptr;
     uint32_t sectorBufSize;
-    std::shared_ptr<DiscReaderDiscDrive> discReader = nullptr;
-    std::unique_ptr<WiiUDiscHeader> discHeader      = nullptr;
+    std::shared_ptr<DiscReader> discReader;
+    std::unique_ptr<WiiUDiscHeader> discHeader;
 
     std::shared_ptr<WiiUGMPartition> curPartition = nullptr;
     std::shared_ptr<NUSDataProvider> dataProvider = nullptr;

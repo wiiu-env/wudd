@@ -1,6 +1,7 @@
 #include "FSUtils.h"
 #include "CFile.hpp"
 #include "utils/logger.h"
+#include "utils/utils.h"
 #include <fcntl.h>
 #include <malloc.h>
 #include <stdio.h>
@@ -20,7 +21,7 @@ int32_t FSUtils::LoadFileToMem(const char *filepath, uint8_t **inbuffer, uint32_
     uint32_t filesize = lseek(iFd, 0, SEEK_END);
     lseek(iFd, 0, SEEK_SET);
 
-    auto *buffer = (uint8_t *) malloc(filesize);
+    auto *buffer = (uint8_t *) memalign(0x40, ROUNDUP(filesize, 0x40));
     if (buffer == nullptr) {
         close(iFd);
         return -2;
@@ -146,7 +147,7 @@ bool FSUtils::copyFile(const std::string &in, const std::string &out) {
     }
 
     auto bufferSize = 1024 * 1024;
-    char *buf       = (char *) malloc(bufferSize);
+    char *buf       = (char *) memalign(0x40, ROUNDUP(bufferSize, 0x40));
     if (buf == NULL) {
         return false;
     }

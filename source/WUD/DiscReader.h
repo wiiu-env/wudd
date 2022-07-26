@@ -17,6 +17,8 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
+#include <mutex>
 
 class DiscReader {
 public:
@@ -26,9 +28,9 @@ public:
 
     virtual bool IsReady() = 0;
 
-    virtual bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const = 0;
+    virtual bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint32_t block_offset) const = 0;
 
-    bool readEncryptedAligned(uint8_t *buf, uint64_t offset_in_sector, uint32_t size);
+    bool readEncryptedAligned(uint8_t *buf, uint32_t block_offset, uint32_t size);
 
     bool readDecryptedChunk(uint64_t readOffset, uint8_t *out_buffer, uint8_t *key, uint8_t *IV) const;
 
@@ -40,5 +42,6 @@ public:
     bool hasDiscKey = false;
 
 private:
-    uint8_t *sector_buf;
+    std::mutex sector_buf_mutex;
+    uint8_t *sector_buf = nullptr;
 };

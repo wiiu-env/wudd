@@ -15,21 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include <MainApplicationState.h>
+#include "utils/utils.h"
 #include <WUD/content/WiiUDiscContentsHeader.h>
 #include <common/common.h>
 #include <coreinit/debug.h>
 #include <utils/rijndael.h>
 
 bool DiscReader::readDecryptedChunk(uint64_t readOffset, uint8_t *out_buffer, uint8_t *key, uint8_t *IV) const {
-    int CHUNK_SIZE = 0x10000;
+    uint32_t CHUNK_SIZE = 0x10000;
 
     uint32_t sectorOffset = readOffset / READ_SECTOR_SIZE;
 
-    auto *encryptedBuffer = (uint8_t *) malloc(CHUNK_SIZE);
+    auto encryptedBuffer = (uint8_t *) memalign(0x40, CHUNK_SIZE);
 
-    if (encryptedBuffer == nullptr) {
-        DEBUG_FUNCTION_LINE("Failed to alloc buffer");
+    if (!encryptedBuffer) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to alloc buffer");
         return false;
     }
 
@@ -41,8 +41,8 @@ bool DiscReader::readDecryptedChunk(uint64_t readOffset, uint8_t *out_buffer, ui
         memcpy(IV, &encryptedBuffer[CHUNK_SIZE - 16], 16);
         result = true;
     }
-
     free(encryptedBuffer);
+
     return result;
 }
 
@@ -61,8 +61,9 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
 
     uint32_t usedSize       = size;
     uint64_t usedFileOffset = fileOffset;
-    auto *buffer            = (uint8_t *) malloc(BLOCK_SIZE);
-    if (buffer == nullptr) {
+    auto buffer             = make_unique_nothrow<uint8_t[]>((size_t) BLOCK_SIZE);
+    if (!buffer) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to allocate buffer");
         return false;
     }
 
@@ -77,8 +78,8 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
 
     do {
         uint64_t totalOffset = (clusterOffset + usedFileOffset);
-        uint64_t blockNumber = (totalOffset / BLOCK_SIZE);
-        uint64_t blockOffset = (totalOffset % BLOCK_SIZE);
+        uint32_t blockNumber = (totalOffset / BLOCK_SIZE);
+        uint32_t blockOffset = (totalOffset % BLOCK_SIZE);
 
         readOffset = (blockNumber * BLOCK_SIZE);
         if (!useFixedIV) {
@@ -87,14 +88,14 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
             memcpy(usedIV + 8, &ivTemp, 8);
         }
 
-        if (!readDecryptedChunk(readOffset, buffer, key, usedIV)) {
+        if (!readDecryptedChunk(readOffset, buffer.get(), key, usedIV)) {
             result = false;
             break;
         }
         maxCopySize = BLOCK_SIZE - blockOffset;
         copySize    = (usedSize > maxCopySize) ? maxCopySize : usedSize;
 
-        memcpy(out_buffer + totalread, buffer + blockOffset, copySize);
+        memcpy(out_buffer + totalread, buffer.get() + blockOffset, copySize);
 
         totalread += copySize;
 
@@ -103,22 +104,21 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
         usedFileOffset += copySize;
     } while (totalread < size);
 
-    free(buffer);
-
     return result;
 }
 
-bool DiscReader::readEncryptedAligned(uint8_t *buf, uint64_t offset_in_sector, uint32_t size) {
+bool DiscReader::readEncryptedAligned(uint8_t *buf, uint32_t block_offset, uint32_t size) {
     auto full_block_count = size / SECTOR_SIZE;
     if (full_block_count > 0) {
-        if (!readEncryptedSector(buf, full_block_count, offset_in_sector)) {
+        if (!readEncryptedSector(buf, full_block_count, block_offset)) {
             return false;
         }
     }
-
     auto remainingSize = size - (full_block_count * SECTOR_SIZE);
     if (remainingSize > 0) {
-        auto newOffset = offset_in_sector + full_block_count;
+        std::lock_guard<std::mutex> lock(sector_buf_mutex);
+        auto newOffset = block_offset + full_block_count;
+
         if (!readEncryptedSector(sector_buf, 1, newOffset)) {
             return false;
         }
@@ -136,40 +136,48 @@ bool DiscReader::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) {
     auto curOffset                 = offset;
     uint32_t offsetInBuf           = 0;
     uint32_t totalRead             = 0;
+
     if (missingFromPrevSector > 0) {
+        std::lock_guard<std::mutex> lock(sector_buf_mutex);
         auto offset_in_sectors = offset / SECTOR_SIZE;
+
         if (!readEncryptedSector(sector_buf, 1, offset_in_sectors)) {
             return false;
         }
+
         uint32_t toCopy = SECTOR_SIZE - missingFromPrevSector;
         if (toCopy > size) {
             toCopy = size;
         }
         memcpy(buf, sector_buf + missingFromPrevSector, toCopy);
         totalRead += toCopy;
-        curOffset += missingFromPrevSector;
-        offsetInBuf += missingFromPrevSector;
+        curOffset += toCopy;
+        offsetInBuf += toCopy;
     }
-
     if (totalRead >= size) {
         return true;
     }
 
     if (curOffset % SECTOR_SIZE == 0) {
-        if (!readEncryptedAligned(buf + offsetInBuf, offset / SECTOR_SIZE, size)) {
+        if (!readEncryptedAligned(buf + offsetInBuf, curOffset / SECTOR_SIZE, size)) {
             return false;
         }
     } else {
-        OSFatal("Failed to read encrypted");
+        return false;
     }
 
     return true;
 }
 
 DiscReader::DiscReader() {
-    this->sector_buf = (uint8_t *) malloc(READ_SECTOR_SIZE);
+    this->sector_buf = static_cast<uint8_t *>(memalign(0x40, READ_SECTOR_SIZE));
+    if (!this->sector_buf) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to allocate sector_buf");
+        OSFatal("Failed to allocate sector_buf");
+    }
 }
 
 DiscReader::~DiscReader() {
     free(this->sector_buf);
+    this->sector_buf = nullptr;
 }

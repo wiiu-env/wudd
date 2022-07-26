@@ -51,12 +51,12 @@ SOURCES		:=	source \
 				source/WUD/entities/TMD
 
 DATA		:=	data
-INCLUDES	:=	include source
+INCLUDES	:=	source
 
 #-------------------------------------------------------------------------------
 # options for code generation
 #-------------------------------------------------------------------------------
-CFLAGS	:=	-g -Wall -O0 -ffunction-sections \
+CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(MACHDEP)
 
 CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__
@@ -66,7 +66,7 @@ CXXFLAGS	:= $(CFLAGS) -std=gnu++20
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lwut -lntfs -liosuhax
+LIBS	:= -lwut -lntfs -lmocha
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level
@@ -74,6 +74,17 @@ LIBS	:= -lwut -lntfs -liosuhax
 #-------------------------------------------------------------------------------
 LIBDIRS	:= $(PORTLIBS) $(WUT_ROOT) $(WUT_ROOT)/usr
 
+ifeq ($(DEBUG),1)
+export DEBUG=1
+CXXFLAGS += -DDEBUG -g
+CFLAGS += -DDEBUG -g
+endif
+
+ifeq ($(DEBUG),VERBOSE)
+export DEBUG=VERBOSE
+CXXFLAGS += -DDEBUG -DVERBOSE_DEBUG -g
+CFLAGS += -DDEBUG -DVERBOSE_DEBUG -g
+endif
 
 #-------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -177,6 +188,8 @@ $(OUTPUT).rpx	:	$(OUTPUT).elf
 $(OUTPUT).elf	:	$(OFILES)
 
 $(OFILES_SRC)	: $(HFILES_BIN)
+
+-include $(DEPENDS)
 
 #-------------------------------------------------------------------------------
 endif

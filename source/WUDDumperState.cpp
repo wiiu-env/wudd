@@ -18,8 +18,9 @@
 #include <WUD/content/WiiUDiscContentsHeader.h>
 #include <common/common.h>
 #include <fs/FSUtils.h>
-#include <iosuhax.h>
 #include <malloc.h>
+#include <mocha/fsa.h>
+#include <mocha/mocha.h>
 #include <utils/StringTools.h>
 #include <utils/WiiUScreen.h>
 #include <utils/utils.h>
@@ -28,14 +29,16 @@ WUDDumperState::WUDDumperState(WUDDumperState::eDumpTargetFormat pTargetFormat, 
     : targetFormat(pTargetFormat), targetDevice(pTargetDevice) {
     this->sectorBufSize = READ_SECTOR_SIZE * READ_NUM_SECTORS;
     this->state         = STATE_OPEN_ODD1;
+    gBlockHomeButton    = true;
 }
 
 WUDDumperState::~WUDDumperState() {
     if (this->oddFd >= 0) {
-        IOSUHAX_FSA_RawClose(gFSAfd, oddFd);
+        FSAEx_RawClose(__wut_devoptab_fs_client, oddFd);
     }
     free(sectorBuf);
     free(emptySector);
+    gBlockHomeButton = false;
 }
 
 ApplicationState::eSubState WUDDumperState::update(Input *input) {
@@ -47,7 +50,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
     }
     if (this->state == STATE_OPEN_ODD1) {
         if (this->currentSector > 0) {
-            auto ret = IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &(this->oddFd));
+            auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &(this->oddFd));
             if (ret >= 0) {
                 // continue!
                 this->state = STATE_DUMP_DISC;
@@ -61,7 +64,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             this->state = STATE_PLEASE_INSERT_DISC;
             return ApplicationState::SUBSTATE_RUNNING;
         }
-        auto ret = IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &(this->oddFd));
+        auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &(this->oddFd));
         if (ret >= 0) {
             if (this->sectorBuf == nullptr) {
                 this->sectorBuf = (void *) memalign(0x100, this->sectorBufSize);
@@ -79,7 +82,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             return SUBSTATE_RETURN;
         }
     } else if (this->state == STATE_READ_DISC_INFO) {
-        if (IOSUHAX_FSA_RawRead(gFSAfd, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
+        if (FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
             this->discId[10] = '\0';
             memcpy(this->discId.data(), sectorBuf, 10);
             if (this->discId[0] == 0) {
@@ -96,39 +99,39 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         this->state = STATE_DUMP_DISC_KEY;
     } else if (this->state == STATE_DUMP_DISC_KEY) {
         // Read the WiiUDiscContentsHeader to determine if we need disckey and if it's the correct one.
-        auto res = IOSUHAX_FSA_RawRead(gFSAfd, this->sectorBuf, READ_SECTOR_SIZE, 1, 3, this->oddFd);
-        uint8_t discKey[16];
+        auto res = FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 3, this->oddFd);
+        WUDDiscKey discKey;
         bool hasDiscKey = false;
         if (res >= 0) {
             if (((uint32_t *) this->sectorBuf)[0] != WiiUDiscContentsHeader::MAGIC) {
-                auto discKeyRes = IOSUHAX_ODM_GetDiscKey(discKey);
-                if (discKeyRes >= 0) {
+                auto discKeyRes = Mocha_ODMGetDiscKey(&discKey);
+                if (discKeyRes == MOCHA_RESULT_SUCCESS) {
                     hasDiscKey = true;
                 }
             }
         }
 
         if (hasDiscKey) {
-            if (!FSUtils::CreateSubfolder(StringTools::fmt("%swudump/%s", getPathForDevice(targetDevice).c_str(), discId))) {
+            if (!FSUtils::CreateSubfolder(string_format("%swudump/%s", getPathForDevice(targetDevice).c_str(), discId).c_str())) {
                 setError(ERROR_WRITE_FAILED);
                 return SUBSTATE_RUNNING;
             }
-            if (!FSUtils::saveBufferToFile(StringTools::fmt("%swudump/%s/game.key", getPathForDevice(targetDevice).c_str(), discId), discKey, 16)) {
+            if (!FSUtils::saveBufferToFile(string_format("%swudump/%s/game.key", getPathForDevice(targetDevice).c_str(), discId).c_str(), discKey.key, 16)) {
                 setError(ERROR_WRITE_FAILED);
                 return SUBSTATE_RUNNING;
             }
         }
         this->state = STATE_DUMP_DISC_START;
     } else if (this->state == STATE_DUMP_DISC_START) {
-        if (!FSUtils::CreateSubfolder(StringTools::fmt("%swudump/%s", getPathForDevice(targetDevice).c_str(), discId))) {
+        if (!FSUtils::CreateSubfolder(string_format("%swudump/%s", getPathForDevice(targetDevice).c_str(), discId).c_str())) {
             setError(ERROR_WRITE_FAILED);
             return ApplicationState::SUBSTATE_RUNNING;
         }
         if (targetFormat == DUMP_AS_WUX) {
-            this->fileHandle = std::make_unique<WUXFileWriter>(StringTools::fmt("%swudump/%s/game.wux", getPathForDevice(targetDevice).c_str(), discId), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
+            this->fileHandle = std::make_unique<WUXFileWriter>(string_format("%swudump/%s/game.wux", getPathForDevice(targetDevice).c_str(), discId).c_str(), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
                                                                SECTOR_SIZE, targetDevice == TARGET_SD);
         } else {
-            this->fileHandle = std::make_unique<WUDFileWriter>(StringTools::fmt("%swudump/%s/game.wud", getPathForDevice(targetDevice).c_str(), discId), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
+            this->fileHandle = std::make_unique<WUDFileWriter>(string_format("%swudump/%s/game.wud", getPathForDevice(targetDevice).c_str(), discId).c_str(), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
                                                                SECTOR_SIZE, targetDevice == TARGET_SD);
         }
         if (!this->fileHandle->isOpen()) {
@@ -145,8 +148,13 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         this->writtenSectors   = 0;
         this->retryCount       = 10;
     } else if (this->state == STATE_DUMP_DISC) {
+        if (buttonPressed(input, Input::BUTTON_B)) {
+            this->state = STATE_ABORT_CONFIRMATION;
+            return ApplicationState::SUBSTATE_RUNNING;
+        }
+
         size_t numSectors = this->currentSector + READ_NUM_SECTORS > this->totalSectorCount ? this->totalSectorCount - this->currentSector : READ_NUM_SECTORS;
-        if ((this->readResult = IOSUHAX_FSA_RawRead(gFSAfd, sectorBuf, READ_SECTOR_SIZE, numSectors, this->currentSector, this->oddFd)) >= 0) {
+        if ((this->readResult = FSAEx_RawRead(__wut_devoptab_fs_client, sectorBuf, READ_SECTOR_SIZE, numSectors, this->currentSector, this->oddFd)) >= 0) {
             auto curWrittenSectors = fileHandle->writeSector((const uint8_t *) this->sectorBuf, numSectors);
             if (curWrittenSectors < 0) {
                 this->setError(ERROR_WRITE_FAILED);
@@ -171,15 +179,30 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         } else {
             this->state = STATE_WAIT_USER_ERROR_CONFIRM;
             if (this->oddFd >= 0) {
-                IOSUHAX_FSA_RawClose(gFSAfd, this->oddFd);
+                FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
                 this->oddFd = -1;
             }
             return ApplicationState::SUBSTATE_RUNNING;
         }
+    } else if (this->state == STATE_ABORT_CONFIRMATION) {
+
+        if (buttonPressed(input, Input::BUTTON_B)) {
+            this->state = STATE_DUMP_DISC;
+            return ApplicationState::SUBSTATE_RUNNING;
+        }
+        proccessMenuNavigationX(input, 2);
+        if (buttonPressed(input, Input::BUTTON_A)) {
+            if (selectedOptionX == 0) {
+                this->state = STATE_DUMP_DISC;
+                return ApplicationState::SUBSTATE_RUNNING;
+            } else {
+                return ApplicationState::SUBSTATE_RETURN;
+            }
+        }
     } else if (this->state == STATE_WAIT_USER_ERROR_CONFIRM) {
         if (this->autoSkipOnError) {
             if (this->oddFd >= 0) {
-                IOSUHAX_FSA_RawClose(gFSAfd, this->oddFd);
+                FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
                 this->oddFd = -1;
             }
         }
@@ -206,10 +229,10 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             this->currentSector += 1;
             this->writtenSectors += curWrittenSectors;
             this->readResult = 0;
-        } else if (input->data.buttons_d & Input::BUTTON_B) {
+        } else if (buttonPressed(input, Input::BUTTON_B)) {
             this->state      = STATE_OPEN_ODD1;
             this->readResult = 0;
-        } else if (input->data.buttons_d & Input::BUTTON_Y) {
+        } else if (buttonPressed(input, Input::BUTTON_Y)) {
             this->autoSkipOnError = true;
         }
     } else if (this->state == STATE_DUMP_DISC_DONE) {
@@ -278,9 +301,19 @@ void WUDDumperState::render() {
         WiiUScreen::drawLine();
         if (!this->skippedSectors.empty()) {
             WiiUScreen::drawLinef("Skipped dumping %d sectors", this->skippedSectors.size());
+            WiiUScreen::drawLine();
         }
+        WiiUScreen::drawLinef("Press B to abort");
     } else if (this->state == STATE_DUMP_DISC_DONE) {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
+    } else if (this->state == STATE_ABORT_CONFIRMATION) {
+        WiiUScreen::drawLinef("Do you really want to abort the disc dumping?");
+        WiiUScreen::drawLinef("");
+        if (selectedOptionX == 0) {
+            WiiUScreen::drawLinef("> Continue dumping     Abort dumping");
+        } else {
+            WiiUScreen::drawLinef("  Continue dumping   > Abort dumping");
+        }
     }
 
     ApplicationState::printFooter();

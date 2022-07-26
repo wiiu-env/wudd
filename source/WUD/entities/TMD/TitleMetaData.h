@@ -28,8 +28,9 @@ public:
 
     std::optional<std::shared_ptr<Content>> getContentByIndex(uint16_t index);
 
-    static std::optional<std::shared_ptr<TitleMetaData>> make_shared(const std::vector<uint8_t> &data);
+    static std::optional<std::unique_ptr<TitleMetaData>> make_unique(const std::vector<uint8_t> &data);
+    uint64_t titleId;
 
 private:
-    explicit TitleMetaData(std::vector<std::shared_ptr<Content>> pContentList);
+    explicit TitleMetaData(uint64_t titleId, std::vector<std::shared_ptr<Content>> pContentList);
 };

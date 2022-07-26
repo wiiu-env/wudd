@@ -19,24 +19,24 @@
 
 uint32_t WiiUContentsInformation::LENGTH = 32768;
 
-std::optional<std::unique_ptr<WiiUContentsInformation>> WiiUContentsInformation::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
+std::optional<std::unique_ptr<WiiUContentsInformation>> WiiUContentsInformation::make_unique(std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
     uint32_t curOffset        = offset;
     auto discContentHeaderOpt = WiiUDiscContentsHeader::make_unique(discReader, curOffset);
     if (!discContentHeaderOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to read WiiUDiscContentsHeader");
+        DEBUG_FUNCTION_LINE_ERR("Failed to read WiiUDiscContentsHeader");
         return {};
     }
     curOffset += WiiUDiscContentsHeader::LENGTH;
 
     auto partitionsOpt = WiiUPartitions::make_unique(discReader, curOffset, discContentHeaderOpt.value()->numberOfPartition, discContentHeaderOpt.value()->blockSize);
     if (!partitionsOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to read Partitions");
+        DEBUG_FUNCTION_LINE_ERR("Failed to read Partitions");
         return {};
     }
     curOffset += WiiUPartitions::LENGTH;
 
     if (curOffset - offset != LENGTH) {
-        DEBUG_FUNCTION_LINE("Unexpected offset");
+        DEBUG_FUNCTION_LINE_ERR("Unexpected offset");
         return {};
     }
 
@@ -45,9 +45,7 @@ std::optional<std::unique_ptr<WiiUContentsInformation>> WiiUContentsInformation:
             std::move(partitionsOpt.value())));
 }
 
-
 WiiUContentsInformation::WiiUContentsInformation(std::unique_ptr<WiiUDiscContentsHeader> pDiscContentHeader,
                                                  std::unique_ptr<WiiUPartitions> pPartitions) : discContentHeader(std::move(pDiscContentHeader)),
-                                                                                                partitions(std::move(pPartitions)){
-
-                                                                                                };
+                                                                                                partitions(std::move(pPartitions)) {
+}

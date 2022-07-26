@@ -32,13 +32,13 @@ FileEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
 
     auto stringNameOpt = stringTable->getStringEntry(param.uint24);
     if (!stringNameOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to get string name");
+        DEBUG_FUNCTION_LINE_ERR("Failed to get string name");
         return {};
     }
 
     auto sectionEntryOpt = sectionEntries->getSection(param.sectionNumber);
     if (!sectionEntryOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to get section entry");
+        DEBUG_FUNCTION_LINE_ERR("Failed to get section entry");
         return {};
     }
 

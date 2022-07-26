@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #pragma once
+
 #include <stdint.h>
 
 //! Defines the ID of a display usable with OSScreen.
@@ -36,7 +37,7 @@ public:
         \param y defines on which line the text should be printed
         \param msg C string that contains the text to be printed.
     **/
-    static void printTextOnScreen(ConsoleScreenID screen, int x, int y, const char *msg);
+    static void printTextOnScreen(ConsoleScreenID screen, uint32_t x, uint32_t y, const char *msg);
 
     /**
         Clears the screen for the given screens

@@ -34,18 +34,20 @@ public:
     static bool getFSTEntryAsByte(std::string &filePath,
                                   const std::shared_ptr<FST> &fst,
                                   const AddressInDiscBlocks &volumeAddress,
-                                  const std::shared_ptr<DiscReader> &discReader,
+                                  std::shared_ptr<DiscReader> &discReader,
                                   std::vector<uint8_t> &out_data);
 
     std::vector<std::shared_ptr<WiiUPartition>> partitions;
     static constexpr uint32_t LENGTH = 30720;
 
     static std::optional<std::unique_ptr<WiiUPartitions>> make_unique(
-            const std::shared_ptr<DiscReader> &discReader,
+            std::shared_ptr<DiscReader> &discReader,
             uint32_t offset,
             uint32_t numberOfPartitions,
             const DiscBlockSize &blockSize);
 
 private:
     explicit WiiUPartitions(std::vector<std::shared_ptr<WiiUPartition>> pPartitions);
+
+    static std::optional<std::unique_ptr<WiiUPartition>> movePartitionFromList(std::vector<std::unique_ptr<WiiUPartition>> &list, std::string partitionName);
 };

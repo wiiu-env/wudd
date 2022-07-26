@@ -15,33 +15,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "NUSDataProviderWUD.h"
+#include "utils/WUDUtils.h"
 
-NUSDataProviderWUD::NUSDataProviderWUD(const std::shared_ptr<WiiUGMPartition> &pGamePartition, const std::shared_ptr<DiscReader> &pDiscReader) {
-    gamePartition = pGamePartition;
-    discReader    = pDiscReader;
+NUSDataProviderWUD::NUSDataProviderWUD(std::shared_ptr<WiiUGMPartition> pGamePartition, std::shared_ptr<DiscReader> pDiscReader) {
+    gamePartition = std::move(pGamePartition);
+    discReader    = std::move(pDiscReader);
 }
 
 NUSDataProviderWUD::~NUSDataProviderWUD() = default;
 
 bool NUSDataProviderWUD::readRawContent(const std::shared_ptr<Content> &content, uint8_t *buffer, uint64_t offset, uint32_t size) {
     if (buffer == nullptr) {
+        DEBUG_FUNCTION_LINE_ERR("buffer was NULL");
         return false;
     }
-    auto offsetInWUDOpt = getOffsetInWUD(content);
-    if (!offsetInWUDOpt.has_value()) {
+    if (!discReader) {
+        DEBUG_FUNCTION_LINE_ERR("No valid disc reader");
+        return false;
+    }
+
+    auto offsetInWUDOpt = WUDUtils::getOffsetOfContent(this->gamePartition, this->fst, content);
+    if (!offsetInWUDOpt) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to get offset for content");
         return false;
     }
     auto offsetInWUD = offsetInWUDOpt.value() + offset;
+    if (!discReader) {
+        return false;
+    }
     return discReader->readEncrypted(buffer, offsetInWUD, size);
 }
 
 bool NUSDataProviderWUD::getContentH3Hash(const std::shared_ptr<Content> &content, std::vector<uint8_t> &out_data) {
-    auto cur = gamePartition->getVolumes().begin()->second->h3HashArrayList[content->index];
+    auto &cur = gamePartition->getVolumes().begin()->second->h3HashArrayList[content->index];
     if (cur == nullptr || cur->size == 0) {
         return false;
     }
     out_data.resize(cur->size);
-    memcpy(out_data.data(), cur->data, cur->size);
+    memcpy(out_data.data(), cur->data.get(), cur->size);
     return true;
 }
 
@@ -56,29 +67,16 @@ void NUSDataProviderWUD::setFST(const std::shared_ptr<FST> &pFST) {
 }
 
 bool NUSDataProviderWUD::getRawCert(std::vector<uint8_t> &out_data) {
-    out_data = gamePartition->rawCert;
+    out_data = gamePartition->getRawCert();
     return true;
 }
 
 bool NUSDataProviderWUD::getRawTicket(std::vector<uint8_t> &out_data) {
-    out_data = gamePartition->rawTicket;
+    out_data = gamePartition->getRawTicket();
     return true;
 }
 
 bool NUSDataProviderWUD::getRawTMD(std::vector<uint8_t> &out_data) {
-    out_data = gamePartition->rawTMD;
+    out_data = gamePartition->getRawTMD();
     return true;
-}
-
-std::optional<uint64_t> NUSDataProviderWUD::getOffsetInWUD(const std::shared_ptr<Content> &content) const {
-    if (content->index == 0) { // Index 0 is the FST which is at the beginning of the partition;
-        auto vh = gamePartition->getVolumes().begin()->second;
-        return gamePartition->getSectionOffsetOnDefaultPartition() + vh->FSTAddress.getAddressInBytes();
-    }
-    auto info = FSTUtils::getSectionEntryForIndex(fst, content->index);
-    if (!info.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to get section for Content");
-        return {};
-    }
-    return gamePartition->getSectionOffsetOnDefaultPartition() + info.value()->address.getAddressInBytes();
 }

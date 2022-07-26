@@ -14,24 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include "WiiUManufactorDiscId.h"
-#include <coreinit/debug.h>
-#include <utils/logger.h>
+#pragma once
 
-std::optional<std::unique_ptr<WiiUManufactorDiscId>> WiiUManufactorDiscId::make_unique(const std::shared_ptr<DiscReader> &discReader) {
-    if (!discReader->IsReady()) {
-        DEBUG_FUNCTION_LINE("DiscReader is not ready");
-        return {};
-    }
-    std::array<uint8_t, WiiUManufactorDiscId::LENGTH> data{};
+#include <WUD/DiscReader.h>
+#include <array>
+#include <cstdint>
+#include <memory>
+#include <optional>
 
-    if (!discReader->readEncrypted(data.data(), 0, WiiUManufactorDiscId::LENGTH)) {
-        DEBUG_FUNCTION_LINE("Failed to read data");
-        return {};
-    }
-    return std::unique_ptr<WiiUManufactorDiscId>(new WiiUManufactorDiscId(data));
-}
+class WiiUManufacturerDiscId {
 
-WiiUManufactorDiscId::WiiUManufactorDiscId(const std::array<uint8_t, WiiUManufactorDiscId::LENGTH> &pData) : data(pData) {
-    this->data = pData;
-}
+public:
+    static std::optional<std::unique_ptr<WiiUManufacturerDiscId>> make_unique(std::shared_ptr<DiscReader> &discReader);
+
+    static constexpr uint32_t LENGTH = 65536;
+
+    std::array<uint8_t, WiiUManufacturerDiscId::LENGTH> data;
+
+private:
+    explicit WiiUManufacturerDiscId(const std::array<uint8_t, WiiUManufacturerDiscId::LENGTH> &pData);
+};

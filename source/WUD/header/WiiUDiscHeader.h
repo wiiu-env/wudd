@@ -17,7 +17,7 @@
 #pragma once
 
 #include "WiiUDiscId.h"
-#include "WiiUManufactorDiscId.h"
+#include "WiiUManufacturerDiscId.h"
 #include <WUD/DiscReader.h>
 #include <WUD/DiscReaderDiscDrive.h>
 #include <WUD/content/WiiUContentsInformation.h>
@@ -26,9 +26,9 @@
 
 class WiiUDiscHeader {
 public:
-    static std::optional<std::unique_ptr<WiiUDiscHeader>> make_unique(const std::shared_ptr<DiscReader> &discReader);
+    static std::optional<std::unique_ptr<WiiUDiscHeader>> make_unique(std::shared_ptr<DiscReader> &discReader);
 
-    std::unique_ptr<WiiUManufactorDiscId> manufactorDiscId;
+    std::unique_ptr<WiiUManufacturerDiscId> manufacturerDiscId;
     std::unique_ptr<WiiUDiscId> discId;
     std::unique_ptr<WiiUContentsInformation> wiiUContentsInformation;
 
@@ -36,7 +36,7 @@ public:
 
 private:
     explicit WiiUDiscHeader(
-            std::unique_ptr<WiiUManufactorDiscId> pManufactorDiscId,
+            std::unique_ptr<WiiUManufacturerDiscId> pManufacturerDiscId,
             std::unique_ptr<WiiUDiscId> pDiscId,
             std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation);
 };

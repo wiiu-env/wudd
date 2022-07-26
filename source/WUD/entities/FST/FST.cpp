@@ -25,7 +25,7 @@ std::optional<std::shared_ptr<FST>> FST::make_shared(const std::vector<uint8_t> 
     uint32_t curOffset = offset;
 
     if (curOffset + FSTHeader::LENGTH > data.size()) {
-        DEBUG_FUNCTION_LINE("Not enough data to parse the FSTHeader");
+        DEBUG_FUNCTION_LINE_ERR("Not enough data to parse the FSTHeader");
         return {};
     }
 
@@ -34,14 +34,14 @@ std::optional<std::shared_ptr<FST>> FST::make_shared(const std::vector<uint8_t> 
 
     auto headerOpt = FSTHeader::make_unique(fstData);
     if (!headerOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to parse FSTHeader");
+        DEBUG_FUNCTION_LINE_ERR("Failed to parse FSTHeader");
         return {};
     }
     curOffset += FSTHeader::LENGTH;
 
     uint32_t sectionEntriesDataSize = headerOpt.value()->numberOfSections * SectionEntry::LENGTH;
     if (curOffset + sectionEntriesDataSize > data.size()) {
-        DEBUG_FUNCTION_LINE("Not enough data to parse the SectionEntries");
+        DEBUG_FUNCTION_LINE_ERR("Not enough data to parse the SectionEntries");
         return {};
     }
 
@@ -51,7 +51,7 @@ std::optional<std::shared_ptr<FST>> FST::make_shared(const std::vector<uint8_t> 
 
     auto sectionEntriesOpt = SectionEntries::make_shared(sectionEntriesData, headerOpt.value()->numberOfSections, blockSize);
     if (!sectionEntriesOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to parse FSTHeader");
+        DEBUG_FUNCTION_LINE_ERR("Failed to parse FSTHeader");
         return {};
     }
     curOffset += sectionEntriesOpt.value()->getSizeInBytes();
@@ -65,13 +65,13 @@ std::optional<std::shared_ptr<FST>> FST::make_shared(const std::vector<uint8_t> 
 
     auto stringTableOpt = StringTable::make_shared(data, stringTableOffset, lastEntryNumber);
     if (!stringTableOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to parse StringTable");
+        DEBUG_FUNCTION_LINE_ERR("Failed to parse StringTable");
         return {};
     }
 
     auto nodeEntriesOpt = NodeEntries::make_unique(data, curOffset, sectionEntriesOpt.value(), stringTableOpt.value(), headerOpt.value()->blockSize);
     if (!nodeEntriesOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to parse NodeEntries");
+        DEBUG_FUNCTION_LINE_ERR("Failed to parse NodeEntries");
         return {};
     }
 

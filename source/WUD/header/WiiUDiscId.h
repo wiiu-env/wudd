@@ -31,8 +31,8 @@ public:
     uint8_t majorVersion;
     std::string footprint;
 
-    static std::optional<std::unique_ptr<WiiUDiscId>> make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset);
+    static std::optional<std::unique_ptr<WiiUDiscId>> make_unique(std::shared_ptr<DiscReader> &discReader, uint32_t offset);
 
 private:
-    WiiUDiscId(uint8_t pMinorVersion, uint8_t pMajorVersion, const std::string &pFootprint);
+    WiiUDiscId(uint8_t pMinorVersion, uint8_t pMajorVersion, std::string pFootprint);
 };

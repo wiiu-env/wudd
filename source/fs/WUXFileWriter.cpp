@@ -16,6 +16,7 @@
  ****************************************************************************/
 #include "WUXFileWriter.h"
 #include "WUDDumperState.h"
+#include "utils/StringTools.h"
 #include <utils/logger.h>
 
 WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sectorSize, bool split) : WUDFileWriter(path, cacheSize, sectorSize, split) {
@@ -30,7 +31,7 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     this->sectorTableStart = this->tell();
     this->totalSectorCount = WUD_FILE_SIZE / this->sectorSize;
 
-    this->sectorIndexTable = (void *) malloc(totalSectorCount * 4);
+    this->sectorIndexTable = (void *) memalign(0x40, ROUNDUP(totalSectorCount * 4, 0x40));
     if (sectorIndexTable == nullptr) {
         DEBUG_FUNCTION_LINE("Failed to alloc");
         WUDFileWriter::close();
@@ -50,7 +51,7 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     this->sectorTableEnd -= (this->sectorTableEnd % this->sectorSize);
 
     uint64_t padding  = this->sectorTableEnd - tableEnd;
-    auto *paddingData = (uint8_t *) malloc(padding);
+    auto *paddingData = (uint8_t *) memalign(0x40, ROUNDUP(padding, 0x40));
     memset(paddingData, 0, padding);
     this->write(reinterpret_cast<const uint8_t *>(paddingData), padding);
     free(paddingData);
@@ -58,25 +59,22 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     flush();
 }
 
+
 int32_t WUXFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSectors) {
-    char hashOut[32];
     int32_t curWrittenSectors = 0;
     for (uint32_t i = 0; i < numberOfSectors; i++) {
         uint32_t addr = ((uint32_t) buffer) + (i * this->sectorSize);
-        calculateHash256(reinterpret_cast<unsigned char *>(addr), this->sectorSize, reinterpret_cast<unsigned char *>(hashOut));
-        char tmp[34];
-        auto *test = (uint32_t *) hashOut;
-        snprintf(tmp, 33, "%08X%08X%08X%08X", test[0], test[1], test[2], test[3]);
-        std::string hash(tmp);
+        std::array<uint8_t, 32> hashOut{};
+        calculateHash256(reinterpret_cast<unsigned char *>(addr), this->sectorSize, reinterpret_cast<unsigned char *>(hashOut.data()));
 
         auto *indexTable = (uint32_t *) this->sectorIndexTable;
 
-        auto it = hashMap.find(hash);
+        auto it = hashMap.find(hashOut);
         if (it != hashMap.end()) {
-            indexTable[this->currentSector] = swap_uint32(this->hashMap[hash]);
+            indexTable[this->currentSector] = swap_uint32(this->hashMap[hashOut]);
         } else {
             indexTable[this->currentSector] = swap_uint32(this->writtenSector);
-            hashMap[hash]                   = writtenSector;
+            hashMap[hashOut]                = writtenSector;
             if (isOpen()) {
                 if (!write((uint8_t *) addr, this->sectorSize)) {
                     DEBUG_FUNCTION_LINE("Write failed");
