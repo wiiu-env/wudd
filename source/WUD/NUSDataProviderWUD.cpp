@@ -18,7 +18,7 @@
 
 NUSDataProviderWUD::NUSDataProviderWUD(const std::shared_ptr<WiiUGMPartition> &pGamePartition, const std::shared_ptr<DiscReader> &pDiscReader) {
     gamePartition = pGamePartition;
-    discReader = pDiscReader;
+    discReader    = pDiscReader;
 }
 
 NUSDataProviderWUD::~NUSDataProviderWUD() = default;
@@ -48,9 +48,9 @@ bool NUSDataProviderWUD::getContentH3Hash(const std::shared_ptr<Content> &conten
 void NUSDataProviderWUD::setFST(const std::shared_ptr<FST> &pFST) {
     // We need to set the correct blocksizes
     auto blockSize = gamePartition->getVolumes().begin()->second->blockSize;
-    for (const auto &e: pFST->sectionEntries->getSections()) {
+    for (const auto &e : pFST->sectionEntries->getSections()) {
         e->address = AddressInVolumeBlocks(blockSize, e->address.value);
-        e->size = SizeInVolumeBlocks(blockSize, e->size.value);
+        e->size    = SizeInVolumeBlocks(blockSize, e->size.value);
     }
     fst = pFST;
 }

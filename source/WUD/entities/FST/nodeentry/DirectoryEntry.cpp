@@ -14,15 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <coreinit/debug.h>
 #include "DirectoryEntry.h"
+#include <coreinit/debug.h>
 
 std::optional<std::shared_ptr<DirectoryEntry>>
 DirectoryEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data, const NodeEntryParam &param, const std::shared_ptr<SectionEntries> &sectionEntries,
                           const std::shared_ptr<StringTable> &stringTable) {
     auto parentEntryNumber = ((uint32_t *) &data[4])[0];
-    auto lastEntryNumber = ((uint32_t *) &data[8])[0];
-    auto stringNameOpt = stringTable->getStringEntry(param.uint24);
+    auto lastEntryNumber   = ((uint32_t *) &data[8])[0];
+    auto stringNameOpt     = stringTable->getStringEntry(param.uint24);
     if (!stringNameOpt.has_value()) {
         DEBUG_FUNCTION_LINE("Failed to get string name");
         return {};
@@ -40,7 +40,7 @@ DirectoryEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data, co
 
 std::vector<std::shared_ptr<DirectoryEntry>> DirectoryEntry::getDirChildren() const {
     std::vector<std::shared_ptr<DirectoryEntry>> res;
-    for (auto &cur: children) {
+    for (auto &cur : children) {
         if (cur->isDirectory()) {
             res.push_back(std::dynamic_pointer_cast<DirectoryEntry>(cur));
         }
@@ -50,7 +50,7 @@ std::vector<std::shared_ptr<DirectoryEntry>> DirectoryEntry::getDirChildren() co
 
 std::vector<std::shared_ptr<FileEntry>> DirectoryEntry::getFileChildren() const {
     std::vector<std::shared_ptr<FileEntry>> res;
-    for (auto &cur: children) {
+    for (auto &cur : children) {
         if (cur->isFile()) {
             res.push_back(std::dynamic_pointer_cast<FileEntry>(cur));
         }
@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<NodeEntry>> DirectoryEntry::getChildren() const {
 
 void DirectoryEntry::printPathRecursive() {
     DEBUG_FUNCTION_LINE("%s", getFullPath().c_str());
-    for (auto &child: children) {
+    for (auto &child : children) {
         child->printPathRecursive();
     }
 }
@@ -77,25 +77,22 @@ DirectoryEntry::DirectoryEntry(const NodeEntryParam &param,
                                const std::shared_ptr<StringEntry> &pStringEntry,
                                const std::shared_ptr<SectionEntry> &pSectionEntry,
                                uint32_t pParentEntryNumber,
-                               uint32_t pLastEntryNumber) :
-        NodeEntry(param.permission,
-                  pStringEntry,
-                  pSectionEntry,
-                  param.parent,
-                  param.type,
-                  param.entryNumber),
-        parentEntryNumber(pParentEntryNumber),
-        lastEntryNumber(pLastEntryNumber) {
+                               uint32_t pLastEntryNumber) : NodeEntry(param.permission,
+                                                                      pStringEntry,
+                                                                      pSectionEntry,
+                                                                      param.parent,
+                                                                      param.type,
+                                                                      param.entryNumber),
+                                                            parentEntryNumber(pParentEntryNumber),
+                                                            lastEntryNumber(pLastEntryNumber) {
 }
 
-DirectoryEntry::DirectoryEntry(const std::shared_ptr<DirectoryEntry> &input) :
-        NodeEntry(input->permission,
-                  input->nameString,
-                  input->sectionEntry,
-                  input->parent,
-                  input->entryType,
-                  input->entryNumber),
-        parentEntryNumber(input->parentEntryNumber),
-        lastEntryNumber(input->lastEntryNumber) {
-
+DirectoryEntry::DirectoryEntry(const std::shared_ptr<DirectoryEntry> &input) : NodeEntry(input->permission,
+                                                                                         input->nameString,
+                                                                                         input->sectionEntry,
+                                                                                         input->parent,
+                                                                                         input->entryType,
+                                                                                         input->entryNumber),
+                                                                               parentEntryNumber(input->parentEntryNumber),
+                                                                               lastEntryNumber(input->lastEntryNumber) {
 }

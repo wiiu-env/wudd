@@ -16,12 +16,12 @@
  ****************************************************************************/
 #pragma once
 
-#include <optional>
-#include <memory>
-#include <vector>
-#include <string>
-#include <map>
 #include "StringEntry.h"
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 class StringTable {
 

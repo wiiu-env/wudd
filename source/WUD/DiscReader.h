@@ -38,6 +38,7 @@ public:
 
     uint8_t discKey[16]{};
     bool hasDiscKey = false;
+
 private:
     uint8_t *sector_buf;
 };

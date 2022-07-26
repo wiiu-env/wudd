@@ -16,17 +16,18 @@
  ****************************************************************************/
 #pragma once
 
+#include "ApplicationState.h"
+#include "common/common.h"
+#include "fs/WUXFileWriter.h"
+#include "fs/WriteOnlyFileWithCache.h"
+#include <WUD/NUSTitle.h>
+#include <WUD/entities/TMD/Content.h>
+#include <WUD/header/WiiUDiscHeader.h>
+#include <input/Input.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <input/Input.h>
-#include "ApplicationState.h"
-#include "fs/WriteOnlyFileWithCache.h"
-#include "fs/WUXFileWriter.h"
-#include <WUD/entities/TMD/Content.h>
-#include <WUD/NUSTitle.h>
-#include <WUD/header/WiiUDiscHeader.h>
 
 class GMPartitionsDumperState : public ApplicationState {
 public:
@@ -88,22 +89,22 @@ public:
     std::array<uint8_t, 11> discId{};
     std::array<uint8_t, 0x10> cKey{};
 
-    int32_t oddFd = -1;
+    int32_t oddFd   = -1;
     void *sectorBuf = nullptr;
     uint32_t sectorBufSize;
     std::shared_ptr<DiscReaderDiscDrive> discReader = nullptr;
-    std::unique_ptr<WiiUDiscHeader> discHeader = nullptr;
+    std::unique_ptr<WiiUDiscHeader> discHeader      = nullptr;
 
     std::shared_ptr<WiiUGMPartition> curPartition = nullptr;
     std::shared_ptr<NUSDataProvider> dataProvider = nullptr;
     std::string targetPath;
     std::shared_ptr<NUSTitle> curNUSTitle = nullptr;
 
-    uint16_t curContentIndex = 0;
-    std::unique_ptr<CFile> contentFile = nullptr;
+    uint16_t curContentIndex            = 0;
+    std::unique_ptr<CFile> contentFile  = nullptr;
     std::shared_ptr<Content> curContent = nullptr;
-    uint8_t *readBuffer = nullptr;
-    uint32_t curOffsetInContent = 0;
+    uint8_t *readBuffer                 = nullptr;
+    uint32_t curOffsetInContent         = 0;
 
     [[nodiscard]] std::string ErrorMessage() const;
 

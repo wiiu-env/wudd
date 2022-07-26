@@ -16,15 +16,15 @@
  ****************************************************************************/
 #pragma once
 
+#include <WUD/entities/FST/sectionentry/SectionEntries.h>
 #include <WUD/entities/FST/stringtable/StringTable.h>
 #include <utils/blocksize/SectionBlockSize.h>
-#include <WUD/entities/FST/sectionentry/SectionEntries.h>
 
-#include <utility>
 #include "DirectoryEntry.h"
-#include "RootEntry.h"
-#include "NodeEntry.h"
 #include "NodeEntries.h"
+#include "NodeEntry.h"
+#include "RootEntry.h"
+#include <utility>
 
 class NodeEntries {
 

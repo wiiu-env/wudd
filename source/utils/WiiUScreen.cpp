@@ -4,13 +4,13 @@
 #include <cstdarg>
 #include <cstdio>
 
-void *WiiUScreen::sBufferTV = nullptr;
-void *WiiUScreen::sBufferDRC = nullptr;
-uint32_t WiiUScreen::sBufferSizeTV = 0;
-uint32_t WiiUScreen::sBufferSizeDRC = 0;
+void *WiiUScreen::sBufferTV            = nullptr;
+void *WiiUScreen::sBufferDRC           = nullptr;
+uint32_t WiiUScreen::sBufferSizeTV     = 0;
+uint32_t WiiUScreen::sBufferSizeDRC    = 0;
 bool WiiUScreen::sConsoleHasForeground = true;
-uint32_t WiiUScreen::consoleColor = 0x041F60FF;
-uint32_t WiiUScreen::consoleCursorY = 0;
+uint32_t WiiUScreen::consoleColor      = 0x041F60FF;
+uint32_t WiiUScreen::consoleCursorY    = 0;
 
 
 uint32_t WiiUScreen::ProcCallbackAcquired(void *context) {
@@ -38,7 +38,7 @@ uint32_t WiiUScreen::ProcCallbackReleased(void *context) {
 
 bool WiiUScreen::Init() {
     OSScreenInit();
-    sBufferSizeTV = OSScreenGetBufferSizeEx(SCREEN_TV);
+    sBufferSizeTV  = OSScreenGetBufferSizeEx(SCREEN_TV);
     sBufferSizeDRC = OSScreenGetBufferSizeEx(SCREEN_DRC);
 
     WiiUScreen::ProcCallbackAcquired(nullptr);

@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <cstring>
-#include <coreinit/debug.h>
-#include <utils/logger.h>
 #include "StringTable.h"
+#include <coreinit/debug.h>
+#include <cstring>
+#include <utils/logger.h>
 
 
 std::optional<std::shared_ptr<StringTable>> StringTable::make_shared(const std::vector<uint8_t> &data, uint32_t offset, uint32_t stringCount) {
@@ -25,7 +25,7 @@ std::optional<std::shared_ptr<StringTable>> StringTable::make_shared(const std::
         DEBUG_FUNCTION_LINE("Invalid offset for reading StringTable");
         return {};
     }
-    auto stringTable = std::shared_ptr<StringTable>(new StringTable());
+    auto stringTable   = std::shared_ptr<StringTable>(new StringTable());
     uint32_t curOffset = 0;
     uint32_t i;
     for (i = 0; curOffset < data.size() && i < stringCount; ++curOffset) {
@@ -41,9 +41,9 @@ std::optional<std::shared_ptr<StringTable>> StringTable::make_shared(const std::
 
     uint32_t curLength = 0;
     for (i = 0; i < stringCount; ++i) {
-        curOffset = offset + curLength;
+        curOffset                         = offset + curLength;
         stringTable->stringMap[curLength] = std::make_shared<StringEntry>(stringTable, curLength);
-        stringTable->strings[curLength] = (char *) &data[curOffset];
+        stringTable->strings[curLength]   = (char *) &data[curOffset];
 
         curLength += strlen((char *) &data[curOffset]) + 1;
     }
@@ -67,14 +67,14 @@ std::optional<std::shared_ptr<StringEntry>> StringTable::getStringEntry(uint32_t
 
 uint32_t StringTable::getSize() {
     uint32_t capacity = 1; // root entry
-    for (auto &cur: strings) {
+    for (auto &cur : strings) {
         capacity += cur.second.length() + 1;
     }
     return capacity;
 }
 
 std::optional<std::shared_ptr<StringEntry>> StringTable::getEntry(std::string &str) {
-    for (auto &cur: strings) {
+    for (auto &cur : strings) {
         if (cur.second == str) {
             return stringMap[cur.first];
         }

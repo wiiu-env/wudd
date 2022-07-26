@@ -16,9 +16,9 @@
  ****************************************************************************/
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
-#include <array>
 #include <utils/blocksize/AddressInVolumeBlocks.h>
 #include <utils/blocksize/SizeInVolumeBlocks.h>
 

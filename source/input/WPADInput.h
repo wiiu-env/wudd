@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
+#include "Input.h"
 #include <padscore/kpad.h>
 #include <padscore/wpad.h>
-#include "Input.h"
 
 class WPADInput : public Input {
 public:

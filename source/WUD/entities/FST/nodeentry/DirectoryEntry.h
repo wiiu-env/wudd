@@ -16,11 +16,11 @@
  ****************************************************************************/
 #pragma once
 
+#include "FileEntry.h"
+#include "NodeEntry.h"
+#include "NodeEntryParam.h"
 #include <WUD/entities/FST/sectionentry/SectionEntries.h>
 #include <WUD/entities/FST/stringtable/StringTable.h>
-#include "NodeEntryParam.h"
-#include "NodeEntry.h"
-#include "FileEntry.h"
 
 class DirectoryEntry : public NodeEntry {
 public:

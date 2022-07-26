@@ -23,17 +23,16 @@
  *
  * for WiiXplorer 2010
  ***************************************************************************/
-#include <vector>
-#include <string>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <strings.h>
-#include <wut_types.h>
-#include <stdio.h>
 #include "StringTools.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string>
+#include <strings.h>
+#include <vector>
+#include <wchar.h>
+#include <wut_types.h>
 
 
 BOOL StringTools::EndsWith(const std::string &a, const std::string &b) {
@@ -85,7 +84,7 @@ const wchar_t *StringTools::wfmt(const char *format, ...) {
     static char tmp[512];
     static wchar_t strWChar[512];
     strWChar[0] = 0;
-    tmp[0] = 0;
+    tmp[0]      = 0;
 
     if (!format)
         return (const wchar_t *) strWChar;
@@ -98,7 +97,7 @@ const wchar_t *StringTools::wfmt(const char *format, ...) {
     if ((vsprintf(tmp, format, va) >= 0)) {
         int32_t bt;
         int32_t strlength = strlen(tmp);
-        bt = mbstowcs(strWChar, tmp, (strlength < 512) ? strlength : 512);
+        bt                = mbstowcs(strWChar, tmp, (strlength < 512) ? strlength : 512);
 
         if (bt > 0) {
             strWChar[bt] = 0;
@@ -112,13 +111,13 @@ const wchar_t *StringTools::wfmt(const char *format, ...) {
 
 int32_t StringTools::strprintf(std::string &str, const char *format, ...) {
     static char tmp[512];
-    tmp[0] = 0;
+    tmp[0]         = 0;
     int32_t result = 0;
 
     va_list va;
     va_start(va, format);
     if ((vsprintf(tmp, format, va) >= 0)) {
-        str = tmp;
+        str    = tmp;
         result = str.size();
     }
     va_end(va);
@@ -214,8 +213,7 @@ bool StringTools::findStringIC(const std::string &strHaystack, const std::string
     auto it = std::search(
             strHaystack.begin(), strHaystack.end(),
             strNeedle.begin(), strNeedle.end(),
-            [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
-    );
+            [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
     return (it != strHaystack.end());
 }
 

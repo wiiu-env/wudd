@@ -16,23 +16,22 @@
  ****************************************************************************/
 #pragma once
 
+#include "ApplicationState.h"
+#include "fs/WUXFileWriter.h"
+#include "fs/WriteOnlyFileWithCache.h"
+#include <common/common.h>
+#include <input/Input.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <input/Input.h>
-#include <common/common.h>
-#include "ApplicationState.h"
-#include "fs/WriteOnlyFileWithCache.h"
-#include "fs/WUXFileWriter.h"
 
-#define READ_NUM_SECTORS 128
+#define READ_NUM_SECTORS         128
 #define WRITE_BUFFER_NUM_SECTORS 128
-#define WUD_FILE_SIZE 0x5D3A00000L
+#define WUD_FILE_SIZE            0x5D3A00000L
 
 class WUDDumperState : public ApplicationState {
 public:
-
     enum eDumpTargetFormat {
         DUMP_AS_WUX,
         DUMP_AS_WUD,
@@ -86,7 +85,7 @@ public:
     void *sectorBuf = nullptr;
 
     int readResult = 0;
-    int oddFd = -1;
+    int oddFd      = -1;
     int retryCount = 10;
 
     OSTime startTime{};
@@ -109,5 +108,4 @@ public:
     int32_t writtenSectors{};
 
     void *emptySector = nullptr;
-
 };

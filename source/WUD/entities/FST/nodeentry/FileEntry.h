@@ -23,7 +23,6 @@
 
 class FileEntry : public NodeEntry {
 public:
-
     static std::optional<std::shared_ptr<NodeEntry>>
     parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
               const NodeEntryParam &param,

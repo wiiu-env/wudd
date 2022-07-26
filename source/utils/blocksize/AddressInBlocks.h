@@ -16,13 +16,12 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
 #include "BlockSize.h"
+#include <cstdint>
 
 class AddressInBlocks {
 public:
     explicit AddressInBlocks(const BlockSize &pBlockSize, uint32_t pValue) : blockSize(pBlockSize), value(pValue) {
-
     }
 
     AddressInBlocks() = default;

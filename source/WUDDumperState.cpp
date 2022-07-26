@@ -14,20 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <malloc.h>
-#include <utils/WiiUScreen.h>
-#include <common/common.h>
-#include <iosuhax.h>
-#include <fs/FSUtils.h>
-#include <utils/StringTools.h>
-#include <utils/utils.h>
-#include <WUD/content/WiiUDiscContentsHeader.h>
 #include "WUDDumperState.h"
+#include <WUD/content/WiiUDiscContentsHeader.h>
+#include <common/common.h>
+#include <fs/FSUtils.h>
+#include <iosuhax.h>
+#include <malloc.h>
+#include <utils/StringTools.h>
+#include <utils/WiiUScreen.h>
+#include <utils/utils.h>
 
 WUDDumperState::WUDDumperState(WUDDumperState::eDumpTargetFormat pTargetFormat, eDumpTarget pTargetDevice)
-        : targetFormat(pTargetFormat), targetDevice(pTargetDevice) {
+    : targetFormat(pTargetFormat), targetDevice(pTargetDevice) {
     this->sectorBufSize = READ_SECTOR_SIZE * READ_NUM_SECTORS;
-    this->state = STATE_OPEN_ODD1;
+    this->state         = STATE_OPEN_ODD1;
 }
 
 WUDDumperState::~WUDDumperState() {
@@ -139,11 +139,11 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
 
         this->startTime = OSGetTime();
 
-        this->state = STATE_DUMP_DISC;
+        this->state            = STATE_DUMP_DISC;
         this->totalSectorCount = (WUD_FILE_SIZE / SECTOR_SIZE);
-        this->currentSector = 0;
-        this->writtenSectors = 0;
-        this->retryCount = 10;
+        this->currentSector    = 0;
+        this->writtenSectors   = 0;
+        this->retryCount       = 10;
     } else if (this->state == STATE_DUMP_DISC) {
         size_t numSectors = this->currentSector + READ_NUM_SECTORS > this->totalSectorCount ? this->totalSectorCount - this->currentSector : READ_NUM_SECTORS;
         if ((this->readResult = IOSUHAX_FSA_RawRead(gFSAfd, sectorBuf, READ_SECTOR_SIZE, numSectors, this->currentSector, this->oddFd)) >= 0) {
@@ -207,7 +207,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             this->writtenSectors += curWrittenSectors;
             this->readResult = 0;
         } else if (input->data.buttons_d & Input::BUTTON_B) {
-            this->state = STATE_OPEN_ODD1;
+            this->state      = STATE_OPEN_ODD1;
             this->readResult = 0;
         } else if (input->data.buttons_d & Input::BUTTON_Y) {
             this->autoSkipOnError = true;
@@ -264,13 +264,13 @@ void WUDDumperState::render() {
             WiiUScreen::drawLine("Press A to skip this sector (will be replaced by 0's)");
             WiiUScreen::drawLine("Press B to try again");
         } else {
-            OSTime curTime = OSGetTime();
-            float remaining = (WUD_FILE_SIZE - (READ_SECTOR_SIZE * this->currentSector)) / 1024.0f / 1024.0f;
-            float curSpeed = READ_SECTOR_SIZE * ((this->currentSector / 1000.0f) / OSTicksToMilliseconds(curTime - startTime));
+            OSTime curTime       = OSGetTime();
+            float remaining      = (WUD_FILE_SIZE - (READ_SECTOR_SIZE * this->currentSector)) / 1024.0f / 1024.0f;
+            float curSpeed       = READ_SECTOR_SIZE * ((this->currentSector / 1000.0f) / OSTicksToMilliseconds(curTime - startTime));
             int32_t remainingSec = remaining / curSpeed;
-            int32_t minutes = (remainingSec / 60) % 60;
-            int32_t seconds = remainingSec % 60;
-            int32_t hours = remainingSec / 3600;
+            int32_t minutes      = (remainingSec / 60) % 60;
+            int32_t seconds      = remainingSec % 60;
+            int32_t hours        = remainingSec / 3600;
 
             WiiUScreen::drawLinef("Speed: %.2f MiB/s ETA: %02dh %02dm %02ds", curSpeed, remaining, hours, minutes, seconds);
         }
@@ -288,7 +288,7 @@ void WUDDumperState::render() {
 }
 
 void WUDDumperState::setError(WUDDumperState::eErrorState err) {
-    this->state = STATE_ERROR;
+    this->state      = STATE_ERROR;
     this->errorState = err;
     //OSEnableHomeButtonMenu(true);
 }

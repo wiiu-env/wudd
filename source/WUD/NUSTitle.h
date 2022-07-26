@@ -16,15 +16,15 @@
  ****************************************************************************/
 #pragma once
 
-#include <WUD/NUSDataProvider.h>
-#include <WUD/entities/TMD/TitleMetaData.h>
-#include <WUD/content/partitions/WiiUGMPartition.h>
-#include "Ticket.h"
-#include "NUSDataProcessor.h"
-#include "NUSDecryption.h"
 #include "DefaultNUSDataProcessor.h"
 #include "DiscReaderDiscDrive.h"
+#include "NUSDataProcessor.h"
 #include "NUSDataProviderWUD.h"
+#include "NUSDecryption.h"
+#include "Ticket.h"
+#include <WUD/NUSDataProvider.h>
+#include <WUD/content/partitions/WiiUGMPartition.h>
+#include <WUD/entities/TMD/TitleMetaData.h>
 
 class NUSTitle {
 
@@ -52,5 +52,4 @@ private:
              std::shared_ptr<NUSDecryption> pDecryption,
              std::shared_ptr<Ticket> pTicket,
              std::shared_ptr<FST> pFST);
-
 };

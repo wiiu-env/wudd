@@ -16,11 +16,11 @@
  ****************************************************************************/
 #pragma once
 
+#include <WUD/DiscReader.h>
 #include <algorithm>
 #include <memory>
-#include <WUD/DiscReader.h>
-#include <utils/blocksize/DiscBlockSize.h>
 #include <optional>
+#include <utils/blocksize/DiscBlockSize.h>
 
 class WiiUDiscContentsHeader {
 
@@ -30,7 +30,7 @@ public:
     std::array<uint8_t, 20> tocHash;
 
     static constexpr uint32_t LENGTH = 2048;
-    static constexpr uint32_t MAGIC = 0xCCA6E67B;
+    static constexpr uint32_t MAGIC  = 0xCCA6E67B;
 
     static std::optional<std::unique_ptr<WiiUDiscContentsHeader>> make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset);
 

@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <memory>
-#include <coreinit/debug.h>
 #include "WiiUPartition.h"
+#include <coreinit/debug.h>
+#include <memory>
 
 uint64_t WiiUPartition::getSectionOffsetOnDefaultPartition() {
     if (volumes.size() != 1) {
@@ -52,14 +52,14 @@ std::optional<std::shared_ptr<WiiUPartition>> WiiUPartition::make_shared(const s
     memset(name, 0, sizeof(name));
     memcpy(name, buffer, 31);
     auto volumeId = name;
-    uint8_t num = buffer[31];
+    uint8_t num   = buffer[31];
 
     std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> volumes;
 
     for (int i = 0; i < num; i++) {
-        auto address = *((uint32_t *) &buffer[32 + (i * 4)]);
+        auto address                       = *((uint32_t *) &buffer[32 + (i * 4)]);
         AddressInDiscBlocks discLbaAddress = AddressInDiscBlocks(blockSize, address);
-        auto vh = VolumeHeader::make_shared(discReader, discLbaAddress.getAddressInBytes());
+        auto vh                            = VolumeHeader::make_shared(discReader, discLbaAddress.getAddressInBytes());
         if (!vh.has_value()) {
             free(buffer);
             return {};
@@ -77,11 +77,11 @@ std::optional<std::shared_ptr<WiiUPartition>> WiiUPartition::make_shared(const s
             fileSystemDescriptor));
 }
 
-std::string WiiUPartition::getVolumeId() const &{
+std::string WiiUPartition::getVolumeId() const & {
     return volumeId;
 }
 
-std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUPartition::getVolumes() const &{
+std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUPartition::getVolumes() const & {
     return volumes;
 }
 
@@ -90,7 +90,3 @@ uint16_t WiiUPartition::getFileSystemDescriptor() const {
 }
 
 WiiUPartition::~WiiUPartition() = default;
-
-
-
-

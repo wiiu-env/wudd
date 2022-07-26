@@ -16,17 +16,16 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
-#include <WUD/DiscReader.h>
-#include <WUD/content/WiiUContentsInformation.h>
-#include <WUD/DiscReaderDiscDrive.h>
-#include <memory>
-#include "WiiUManufactorDiscId.h"
 #include "WiiUDiscId.h"
+#include "WiiUManufactorDiscId.h"
+#include <WUD/DiscReader.h>
+#include <WUD/DiscReaderDiscDrive.h>
+#include <WUD/content/WiiUContentsInformation.h>
+#include <cstdint>
+#include <memory>
 
 class WiiUDiscHeader {
 public:
-
     static std::optional<std::unique_ptr<WiiUDiscHeader>> make_unique(const std::shared_ptr<DiscReader> &discReader);
 
     std::unique_ptr<WiiUManufactorDiscId> manufactorDiscId;
@@ -39,6 +38,5 @@ private:
     explicit WiiUDiscHeader(
             std::unique_ptr<WiiUManufactorDiscId> pManufactorDiscId,
             std::unique_ptr<WiiUDiscId> pDiscId,
-            std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation
-    );
+            std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation);
 };

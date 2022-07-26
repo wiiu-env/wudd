@@ -14,22 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
+#include "GMPartitionsDumperState.h"
+#include <WUD/DiscReaderDiscDrive.h>
+#include <WUD/NUSTitle.h>
+#include <WUD/content/partitions/WiiUGMPartition.h>
+#include <WUD/header/WiiUDiscHeader.h>
 #include <common/common.h>
+#include <fs/FSUtils.h>
 #include <iosuhax.h>
 #include <memory>
-#include <WUD/DiscReaderDiscDrive.h>
-#include <WUD/header/WiiUDiscHeader.h>
-#include <fs/FSUtils.h>
-#include <WUD/content/partitions/WiiUGMPartition.h>
-#include <WUD/NUSTitle.h>
-#include "GMPartitionsDumperState.h"
 #include <utils/StringTools.h>
 
 #define READ_BUFFER_SIZE (SECTOR_SIZE * 128)
 
 GMPartitionsDumperState::GMPartitionsDumperState(eDumpTarget pTargetDevice) : targetDevice(pTargetDevice) {
     this->sectorBufSize = SECTOR_SIZE;
-    this->state = STATE_OPEN_ODD1;
+    this->state         = STATE_OPEN_ODD1;
 }
 
 GMPartitionsDumperState::~GMPartitionsDumperState() {
@@ -72,9 +72,9 @@ void GMPartitionsDumperState::render() {
             WiiUScreen::drawLine("This disc has no dumpable GM partitions ");
         } else {
             uint32_t index = 0;
-            for (auto &partitionPair: gmPartitionPairs) {
+            for (auto &partitionPair : gmPartitionPairs) {
                 uint32_t size = 0;
-                for (auto &content: partitionPair.second->tmd->contentList) {
+                for (auto &content : partitionPair.second->tmd->contentList) {
                     size += ROUNDUP(content->encryptedFileSize, 16);
                 }
                 WiiUScreen::drawLinef("%s %s (~%0.2f MiB)", index == (uint32_t) selectedOptionY ? ">" : " ", partitionPair.first->getVolumeId().c_str(), (float) size / 1024.0f / 1024.0f);
@@ -98,10 +98,10 @@ void GMPartitionsDumperState::render() {
             WiiUScreen::drawLine("Dumping Partition");
         }
 
-        uint64_t partitionSize = 0;
+        uint64_t partitionSize   = 0;
         uint64_t partitionOffset = curOffsetInContent;
         if (curNUSTitle != nullptr) {
-            for (auto &content: curNUSTitle->tmd->contentList) {
+            for (auto &content : curNUSTitle->tmd->contentList) {
                 partitionSize += ROUNDUP(content->encryptedFileSize, 16);
                 if (content->index < curContentIndex) {
                     partitionOffset += ROUNDUP(content->encryptedFileSize, 16);
@@ -122,7 +122,7 @@ void GMPartitionsDumperState::render() {
         }
 
         auto offset = curOffsetInContent;
-        auto size = curContent != nullptr ? ROUNDUP(curContent->encryptedFileSize, 16) : 0;
+        auto size   = curContent != nullptr ? ROUNDUP(curContent->encryptedFileSize, 16) : 0;
 
         if (size > 0) {
             WiiUScreen::drawLinef("Progress: %.2f MiB / %.2f MiB (%0.2f%%)", offset / 1024.0f / 1024.0f,
@@ -205,10 +205,10 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
             return SUBSTATE_RUNNING;
         }
         this->discHeader = std::move(discHeaderOpt.value());
-        this->state = STATE_PROCESS_GM_PARTITIONS;
+        this->state      = STATE_PROCESS_GM_PARTITIONS;
     } else if (this->state == STATE_PROCESS_GM_PARTITIONS) {
         this->gmPartitionPairs.clear();
-        for (auto &partition: discHeader->wiiUContentsInformation->partitions->partitions) {
+        for (auto &partition : discHeader->wiiUContentsInformation->partitions->partitions) {
             auto gmPartition = std::dynamic_pointer_cast<WiiUGMPartition>(partition);
             if (gmPartition != nullptr) {
                 auto nusTitleOpt = NUSTitle::loadTitleFromGMPartition(gmPartition, discReader, cKey);
@@ -235,7 +235,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
             auto gmPartitionPair = gmPartitionPairs[selectedOptionY];
             if (gmPartitionPair.first != nullptr) {
                 this->curPartition = gmPartitionPair.first;
-                this->curNUSTitle = gmPartitionPair.second;
+                this->curNUSTitle  = gmPartitionPair.second;
                 this->dataProvider = this->curNUSTitle->dataProcessor->getDataProvider();
             } else {
                 DEBUG_FUNCTION_LINE("Failed to find a GM partition");
@@ -290,7 +290,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
             return SUBSTATE_RUNNING;
         }
         this->curContentIndex = 0;
-        this->state = STATE_DUMP_PARTITION_CONTENTS;
+        this->state           = STATE_DUMP_PARTITION_CONTENTS;
     } else if (this->state == STATE_DUMP_PARTITION_CONTENTS) {
         // Get current content by index.
         if (curContent == nullptr) {
@@ -386,13 +386,13 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
 }
 
 void GMPartitionsDumperState::setError(GMPartitionsDumperState::eErrorState err) {
-    this->state = STATE_ERROR;
+    this->state      = STATE_ERROR;
     this->errorState = err;
     //OSEnableHomeButtonMenu(true);
 }
 
 std::string GMPartitionsDumperState::getPathForDevice(eDumpTarget target) const {
-    if (target == TARGET_NTFS){
+    if (target == TARGET_NTFS) {
         return "ntfs0:/";
     }
     return "fs:/vol/external01/";
@@ -504,5 +504,3 @@ std::string GMPartitionsDumperState::ErrorDescription() const {
     }
     return "UNKNOWN_ERROR";
 }
-
-

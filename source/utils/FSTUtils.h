@@ -16,10 +16,10 @@
  ****************************************************************************/
 #pragma once
 
-#include <string>
-#include <WUD/entities/FST/nodeentry/NodeEntry.h>
-#include <WUD/entities/FST/nodeentry/DirectoryEntry.h>
 #include <WUD/entities/FST/FST.h>
+#include <WUD/entities/FST/nodeentry/DirectoryEntry.h>
+#include <WUD/entities/FST/nodeentry/NodeEntry.h>
+#include <string>
 
 class FSTUtils {
 public:
@@ -29,4 +29,3 @@ public:
 
     static std::optional<std::shared_ptr<SectionEntry>> getSectionEntryForIndex(const std::shared_ptr<FST> &pFst, uint16_t index);
 };
-

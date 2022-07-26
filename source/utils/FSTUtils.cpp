@@ -25,16 +25,16 @@ std::optional<std::shared_ptr<NodeEntry>> FSTUtils::getFSTEntryByFullPath(const 
         fullPath = "/" + fullPath;
     }
 
-    auto pathOpt = std::optional(root);
+    auto pathOpt                 = std::optional(root);
     std::filesystem::path asPath = fullPath;
-    std::string dirPath = asPath.parent_path().string();
+    std::string dirPath          = asPath.parent_path().string();
     if (dirPath != "/") {
         pathOpt = getFileEntryDir(root, dirPath);
     }
     if (!pathOpt.has_value()) {
         return {};
     }
-    for (auto &child: pathOpt.value()->getChildren()) {
+    for (auto &child : pathOpt.value()->getChildren()) {
         if (child->getFullPath() == fullPath) {
             return child;
         }
@@ -48,7 +48,7 @@ std::optional<std::shared_ptr<DirectoryEntry>> FSTUtils::getFileEntryDir(const s
     if (!string.ends_with("/")) {
         string += "/";
     }
-    for (auto &curChild: curEntry->getDirChildren()) {
+    for (auto &curChild : curEntry->getDirChildren()) {
         std::string compareTo = curChild->getFullPath();
         if (!compareTo.ends_with("/")) {
             compareTo += "/";
@@ -64,7 +64,7 @@ std::optional<std::shared_ptr<DirectoryEntry>> FSTUtils::getFileEntryDir(const s
 }
 
 std::optional<std::shared_ptr<SectionEntry>> FSTUtils::getSectionEntryForIndex(const std::shared_ptr<FST> &pFst, uint16_t index) {
-    for (const auto &entry: pFst->sectionEntries->getSections()) {
+    for (const auto &entry : pFst->sectionEntries->getSections()) {
         if (entry->sectionNumber == index) {
             return entry;
         }

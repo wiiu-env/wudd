@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "H3HashArray.h"
-#include <cstring>
 #include <coreinit/debug.h>
+#include <cstring>
 
 H3HashArray::H3HashArray(uint8_t *pData, uint32_t pSize) {
     size = pSize;

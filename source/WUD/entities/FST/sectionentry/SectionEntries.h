@@ -16,14 +16,14 @@
  ****************************************************************************/
 #pragma once
 
-#include <optional>
-#include <memory>
+#include "SectionEntry.h"
 #include <cstdint>
+#include <memory>
+#include <optional>
 #include <utility>
-#include <vector>
 #include <utils/blocksize/VolumeBlockSize.h>
 #include <utils/logger.h>
-#include "SectionEntry.h"
+#include <vector>
 
 class SectionEntries {
 

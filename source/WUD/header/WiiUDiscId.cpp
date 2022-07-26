@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "WiiUDiscId.h"
-#include <memory>
 #include <coreinit/debug.h>
+#include <memory>
 #include <utils/logger.h>
 
 std::optional<std::unique_ptr<WiiUDiscId>> WiiUDiscId::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
@@ -46,9 +46,7 @@ std::optional<std::unique_ptr<WiiUDiscId>> WiiUDiscId::make_unique(const std::sh
     return std::unique_ptr<WiiUDiscId>(new WiiUDiscId(minorVersion, majorVersion, footprint));
 }
 
-WiiUDiscId::WiiUDiscId(uint8_t pMinorVersion, uint8_t pMajorVersion, const std::string &pFootprint) :
-        minorVersion(pMinorVersion),
-        majorVersion(pMajorVersion),
-        footprint(pFootprint) {
-
+WiiUDiscId::WiiUDiscId(uint8_t pMinorVersion, uint8_t pMajorVersion, const std::string &pFootprint) : minorVersion(pMinorVersion),
+                                                                                                      majorVersion(pMajorVersion),
+                                                                                                      footprint(pFootprint) {
 }

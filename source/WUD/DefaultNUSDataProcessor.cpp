@@ -53,7 +53,6 @@ std::shared_ptr<NUSDataProvider> DefaultNUSDataProcessor::getDataProvider() {
 
 DefaultNUSDataProcessor::DefaultNUSDataProcessor(
         std::shared_ptr<NUSDataProvider> pDataProvider,
-        std::shared_ptr<NUSDecryption> pNUSDecryption) :
-        dataProvider(std::move(pDataProvider)),
-        nusDecryption(std::move(pNUSDecryption)) {
+        std::shared_ptr<NUSDecryption> pNUSDecryption) : dataProvider(std::move(pDataProvider)),
+                                                         nusDecryption(std::move(pNUSDecryption)) {
 }

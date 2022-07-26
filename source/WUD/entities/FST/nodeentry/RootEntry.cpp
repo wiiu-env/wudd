@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <coreinit/debug.h>
 #include "RootEntry.h"
+#include <coreinit/debug.h>
 
 RootEntry::RootEntry(const std::shared_ptr<DirectoryEntry> &input) : DirectoryEntry(input) {
-
 }
 
 uint32_t RootEntry::parseLastEntryNumber(const std::array<uint8_t, NodeEntry::LENGTH> &data) {
@@ -26,11 +25,10 @@ uint32_t RootEntry::parseLastEntryNumber(const std::array<uint8_t, NodeEntry::LE
 }
 
 std::optional<std::shared_ptr<NodeEntry>>
-RootEntry::parseData
-        (const std::array<uint8_t, NodeEntry::LENGTH> &data,
-         const NodeEntryParam &param,
-         const std::shared_ptr<SectionEntries> &sectionEntries,
-         const std::shared_ptr<StringTable> &stringTable) {
+RootEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
+                     const NodeEntryParam &param,
+                     const std::shared_ptr<SectionEntries> &sectionEntries,
+                     const std::shared_ptr<StringTable> &stringTable) {
     auto dir = DirectoryEntry::parseData(data, param, sectionEntries, stringTable);
     if (dir.has_value()) {
         if ((dir.value()->entryType & ENTRY_TYPE_Directory) != ENTRY_TYPE_Directory || dir.value()->entryNumber != 0) {

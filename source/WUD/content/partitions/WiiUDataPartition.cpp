@@ -22,17 +22,15 @@ WiiUDataPartition::~WiiUDataPartition() = default;
 
 WiiUDataPartition::WiiUDataPartition(
         std::shared_ptr<WiiUPartition> pPartition,
-        std::shared_ptr<FST> pFST) :
-        fst(std::move(pFST)),
-        basePartition(std::move(pPartition)) {
-
+        std::shared_ptr<FST> pFST) : fst(std::move(pFST)),
+                                     basePartition(std::move(pPartition)) {
 }
 
-std::string WiiUDataPartition::getVolumeId() const &{
+std::string WiiUDataPartition::getVolumeId() const & {
     return basePartition->getVolumeId();
 }
 
-std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUDataPartition::getVolumes() const &{
+std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUDataPartition::getVolumes() const & {
     return basePartition->getVolumes();
 }
 

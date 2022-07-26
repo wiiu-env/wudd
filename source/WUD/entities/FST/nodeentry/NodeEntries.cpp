@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <coreinit/debug.h>
 #include "NodeEntries.h"
+#include <coreinit/debug.h>
 
 std::optional<std::shared_ptr<NodeEntry>> NodeEntries::DeserializeImpl(const std::vector<uint8_t> &pData,
                                                                        uint32_t pOffset,

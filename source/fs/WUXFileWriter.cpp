@@ -14,18 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <utils/logger.h>
 #include "WUXFileWriter.h"
 #include "WUDDumperState.h"
+#include <utils/logger.h>
 
-WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sectorSize, bool split) :
-        WUDFileWriter(path, cacheSize, sectorSize, split) {
-    wuxHeader_t wuxHeader = {0};
-    wuxHeader.magic0 = WUX_MAGIC_0;
-    wuxHeader.magic1 = WUX_MAGIC_1;
-    wuxHeader.sectorSize = swap_uint32(this->sectorSize);
+WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sectorSize, bool split) : WUDFileWriter(path, cacheSize, sectorSize, split) {
+    wuxHeader_t wuxHeader      = {0};
+    wuxHeader.magic0           = WUX_MAGIC_0;
+    wuxHeader.magic1           = WUX_MAGIC_1;
+    wuxHeader.sectorSize       = swap_uint32(this->sectorSize);
     wuxHeader.uncompressedSize = swap_uint64(WUD_FILE_SIZE);
-    wuxHeader.flags = 0;
+    wuxHeader.flags            = 0;
 
     this->write((uint8_t *) &wuxHeader, sizeof(wuxHeader_t));
     this->sectorTableStart = this->tell();
@@ -45,12 +44,12 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     }
 
     this->sectorTableEnd = this->tell();
-    uint64_t tableEnd = this->sectorTableEnd;
+    uint64_t tableEnd    = this->sectorTableEnd;
 
     this->sectorTableEnd += this->sectorSize - 1;
     this->sectorTableEnd -= (this->sectorTableEnd % this->sectorSize);
 
-    uint64_t padding = this->sectorTableEnd - tableEnd;
+    uint64_t padding  = this->sectorTableEnd - tableEnd;
     auto *paddingData = (uint8_t *) malloc(padding);
     memset(paddingData, 0, padding);
     this->write(reinterpret_cast<const uint8_t *>(paddingData), padding);
@@ -77,7 +76,7 @@ int32_t WUXFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
             indexTable[this->currentSector] = swap_uint32(this->hashMap[hash]);
         } else {
             indexTable[this->currentSector] = swap_uint32(this->writtenSector);
-            hashMap[hash] = writtenSector;
+            hashMap[hash]                   = writtenSector;
             if (isOpen()) {
                 if (!write((uint8_t *) addr, this->sectorSize)) {
                     DEBUG_FUNCTION_LINE("Write failed");
@@ -111,5 +110,4 @@ void WUXFileWriter::finalize() {
     WUDFileWriter::finalize();
     writeSectorIndexTable();
     WUXFileWriter::close();
-
 }

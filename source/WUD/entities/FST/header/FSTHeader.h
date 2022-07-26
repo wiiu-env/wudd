@@ -16,9 +16,9 @@
  ****************************************************************************/
 #pragma once
 
-#include <optional>
-#include <memory>
 #include <cstdint>
+#include <memory>
+#include <optional>
 #include <utils/blocksize/SectionBlockSize.h>
 
 class FSTHeader {
@@ -35,5 +35,4 @@ public:
 
 private:
     FSTHeader(uint8_t pFSTVersion, SectionBlockSize pBlockSize, uint32_t pNumberOfSections, uint8_t pHashDisabled);
-
 };

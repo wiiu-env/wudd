@@ -45,7 +45,7 @@ std::optional<std::shared_ptr<NUSTitle>> NUSTitle::loadTitle(const std::shared_p
 
     dataBuffer.clear();
     auto decryption = std::make_shared<NUSDecryption>(std::move(ticketOpt.value()));
-    auto dpp = std::shared_ptr<NUSDataProcessor>(new DefaultNUSDataProcessor(dataProvider, decryption));
+    auto dpp        = std::shared_ptr<NUSDataProcessor>(new DefaultNUSDataProcessor(dataProvider, decryption));
 
     // If we have more than one content, the index 0 is the FST.
     auto fstContentOpt = tmdOpt.value()->getContentByIndex(0);
@@ -78,13 +78,12 @@ NUSTitle::NUSTitle(std::shared_ptr<TitleMetaData> pTMD,
                    std::shared_ptr<Ticket> pTicket,
                    std::shared_ptr<FST> pFST) :
 
-        dataProcessor(std::move(pProcessor)),
-        tmd(std::move(pTMD)),
-        ticket(std::move(pTicket)),
-        fst(std::move(pFST)),
-        decryption(std::move(pDecryption)),
-        dataProvider(std::move(pDataProvider)) {
-
+                                                dataProcessor(std::move(pProcessor)),
+                                                tmd(std::move(pTMD)),
+                                                ticket(std::move(pTicket)),
+                                                fst(std::move(pFST)),
+                                                decryption(std::move(pDecryption)),
+                                                dataProvider(std::move(pDataProvider)) {
 }
 
 std::optional<std::shared_ptr<NUSTitle>>

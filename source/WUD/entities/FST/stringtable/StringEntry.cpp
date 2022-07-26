@@ -16,9 +16,9 @@
  ****************************************************************************/
 #include "StringEntry.h"
 
+#include "StringTable.h"
 #include <utility>
 #include <utils/logger.h>
-#include "StringTable.h"
 
 std::optional<std::string> StringEntry::toString() const {
     return stringTable->getByAddress(offset);

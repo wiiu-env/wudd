@@ -17,7 +17,7 @@
 #include "SectionEntries.h"
 
 std::optional<std::shared_ptr<SectionEntry>> SectionEntries::getSection(uint16_t sectionNumber) const {
-    for (auto const &e: list) {
+    for (auto const &e : list) {
         if (e->sectionNumber == sectionNumber) {
             return e;
         }
@@ -42,15 +42,15 @@ std::optional<std::shared_ptr<SectionEntries>> SectionEntries::make_shared(const
         }
         std::array<uint8_t, SectionEntry::LENGTH> sectionEntryData{};
         memcpy(sectionEntryData.data(), data.data() + (i * SectionEntry::LENGTH), SectionEntry::LENGTH);
-        list.push_back(std::make_shared<SectionEntry>(sectionEntryData, i, pBlockSize));;
+        list.push_back(std::make_shared<SectionEntry>(sectionEntryData, i, pBlockSize));
+        ;
     }
     return std::shared_ptr<SectionEntries>(new SectionEntries(list));
 }
 
-std::vector<std::shared_ptr<SectionEntry>> SectionEntries::getSections() const &{
+std::vector<std::shared_ptr<SectionEntry>> SectionEntries::getSections() const & {
     return list;
 }
 
 SectionEntries::SectionEntries(std::vector<std::shared_ptr<SectionEntry>> pList) : list(std::move(pList)) {
-
 }

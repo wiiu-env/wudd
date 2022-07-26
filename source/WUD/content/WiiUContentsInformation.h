@@ -16,10 +16,10 @@
  ****************************************************************************/
 #pragma once
 
-#include <memory>
-#include <WUD/DiscReader.h>
 #include "WiiUDiscContentsHeader.h"
 #include "partitions/WiiUPartitions.h"
+#include <WUD/DiscReader.h>
+#include <memory>
 
 class WiiUContentsInformation {
 

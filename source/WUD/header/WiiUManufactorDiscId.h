@@ -16,9 +16,9 @@
  ****************************************************************************/
 #pragma once
 
-#include <memory>
-#include <cstdint>
 #include <WUD/DiscReader.h>
+#include <cstdint>
+#include <memory>
 #include <optional>
 
 class WiiUManufactorDiscId {

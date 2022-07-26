@@ -16,16 +16,17 @@
  ****************************************************************************/
 #pragma once
 
-#include <utility>
-#include <vector>
-#include <cstdint>
+#include "H3HashArray.h"
 #include <WUD/DiscReader.h>
-#include <utils/blocksize/VolumeBlockSize.h>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
 #include <utils/blocksize/AddressInVolumeBlocks.h>
 #include <utils/blocksize/SizeInVolumeBlocks.h>
-#include <optional>
+#include <utils/blocksize/VolumeBlockSize.h>
 #include <utils/utils.h>
-#include "H3HashArray.h"
+#include <vector>
 
 class VolumeHeader {
 
@@ -63,5 +64,4 @@ private:
             std::vector<std::shared_ptr<H3HashArray>> pH3HashArrayList,
             uint32_t pH3HashArrayListSize,
             uint32_t pNumberOfH3HashArray);
-
 };

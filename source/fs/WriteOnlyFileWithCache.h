@@ -43,6 +43,6 @@ public:
     size_t writeBufferPos;
 
     bool splitFile = false;
-    int32_t part = 1;
+    int32_t part   = 1;
     std::string originalPath;
 };

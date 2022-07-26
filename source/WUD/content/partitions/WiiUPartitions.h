@@ -16,17 +16,17 @@
  ****************************************************************************/
 #pragma once
 
-#include <memory>
-#include <cstdint>
-#include <utils/blocksize/DiscBlockSize.h>
-#include <utils/blocksize/AddressInDiscBlocks.h>
-#include <WUD/entities/FST/FST.h>
-#include <WUD/DiscReader.h>
 #include "WiiUPartition.h"
+#include <WUD/DiscReader.h>
+#include <WUD/entities/FST/FST.h>
+#include <cstdint>
+#include <memory>
+#include <utils/blocksize/AddressInDiscBlocks.h>
+#include <utils/blocksize/DiscBlockSize.h>
 
-#define WUD_TMD_FILENAME        "title.tmd"
-#define WUD_TICKET_FILENAME     "title.tik"
-#define WUD_CERT_FILENAME       "title.cert"
+#define WUD_TMD_FILENAME    "title.tmd"
+#define WUD_TICKET_FILENAME "title.tik"
+#define WUD_CERT_FILENAME   "title.cert"
 
 class WiiUPartitions {
 

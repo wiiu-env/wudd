@@ -1,10 +1,10 @@
-#include <cstring>
-#include <cstddef>
-#include <whb/log.h>
-#include "logger.h"
 #include "utils.h"
-#include "TinySHA1.hpp"
 #include "../fs/FSUtils.h"
+#include "TinySHA1.hpp"
+#include "logger.h"
+#include <cstddef>
+#include <cstring>
+#include <whb/log.h>
 
 // https://gist.github.com/ccbrown/9722406
 void Utils::dumpHex(const void *data, size_t size) {

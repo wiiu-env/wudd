@@ -16,11 +16,11 @@
  ****************************************************************************/
 #pragma once
 
+#include "WiiUPartition.h"
+#include <WUD/entities/FST/FST.h>
 #include <cstdint>
 #include <cstdlib>
-#include <WUD/entities/FST/FST.h>
 #include <utils/blocksize/AddressInDiscBlocks.h>
-#include "WiiUPartition.h"
 
 class WiiUDataPartition : public WiiUPartition {
 
@@ -43,4 +43,3 @@ public:
 private:
     std::shared_ptr<WiiUPartition> basePartition;
 };
-

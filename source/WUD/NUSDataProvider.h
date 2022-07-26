@@ -16,9 +16,9 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
-#include <WUD/entities/TMD/Content.h>
 #include <WUD/entities/FST/FST.h>
+#include <WUD/entities/TMD/Content.h>
+#include <cstdint>
 
 class NUSDataProvider {
 
@@ -36,6 +36,5 @@ public:
     virtual bool getRawCert(std::vector<uint8_t> &out_data) = 0;
 
     virtual void setFST(const std::shared_ptr<FST> &fst) {
-
     }
 };

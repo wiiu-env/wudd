@@ -16,11 +16,11 @@
  ****************************************************************************/
 #pragma once
 
-#include <WUD/content/partitions/WiiUGMPartition.h>
-#include "NUSDataProvider.h"
 #include "DiscReader.h"
-#include <utils/FSTUtils.h>
+#include "NUSDataProvider.h"
+#include <WUD/content/partitions/WiiUGMPartition.h>
 #include <coreinit/debug.h>
+#include <utils/FSTUtils.h>
 
 class NUSDataProviderWUD : public NUSDataProvider {
 

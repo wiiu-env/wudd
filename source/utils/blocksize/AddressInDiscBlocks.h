@@ -38,4 +38,4 @@ namespace std {
             return lhs.getAddressInBytes() < rhs.getAddressInBytes();
         }
     };
-}
+} // namespace std

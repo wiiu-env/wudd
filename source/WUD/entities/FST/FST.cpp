@@ -85,10 +85,8 @@ std::optional<std::shared_ptr<FST>> FST::make_shared(const std::vector<uint8_t> 
 FST::FST(std::unique_ptr<FSTHeader> pHeader,
          std::shared_ptr<SectionEntries> pSectionEntries,
          std::shared_ptr<StringTable> pStringTable,
-         std::unique_ptr<NodeEntries> pNodeEntries) :
-        sectionEntries(std::move(pSectionEntries)),
-        stringTable(std::move(pStringTable)),
-        nodeEntries(std::move(pNodeEntries)),
-        header(std::move(pHeader)) {
-
+         std::unique_ptr<NodeEntries> pNodeEntries) : sectionEntries(std::move(pSectionEntries)),
+                                                      stringTable(std::move(pStringTable)),
+                                                      nodeEntries(std::move(pNodeEntries)),
+                                                      header(std::move(pHeader)) {
 }
