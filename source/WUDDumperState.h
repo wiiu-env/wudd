@@ -19,6 +19,7 @@
 #include "ApplicationState.h"
 #include "fs/WUXFileWriter.h"
 #include "fs/WriteOnlyFileWithCache.h"
+#include <array>
 #include <common/common.h>
 #include <input/Input.h>
 #include <map>

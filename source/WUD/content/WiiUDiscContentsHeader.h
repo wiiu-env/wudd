@@ -18,6 +18,7 @@
 
 #include <WUD/DiscReader.h>
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <optional>
 #include <utils/blocksize/DiscBlockSize.h>
