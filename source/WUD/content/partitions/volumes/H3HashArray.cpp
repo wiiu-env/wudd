@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "H3HashArray.h"
+#include "utils/utils.h"
 #include <coreinit/debug.h>
 #include <cstring>
 
@@ -22,16 +23,12 @@ H3HashArray::H3HashArray(uint8_t *pData, uint32_t pSize) {
     size = pSize;
     data = nullptr;
     if (pSize > 0) {
-        data = (uint8_t *) malloc(pSize);
-        if (data == nullptr) {
+        data = make_unique_nothrow<uint8_t[]>(pSize);
+        if (!data) {
             OSFatal("H3HashArray: Failed to alloc");
         }
-        memcpy(data, pData, pSize);
+        memcpy(data.get(), pData, pSize);
     }
 }
 
-H3HashArray::~H3HashArray() {
-    if (data) {
-        free(data);
-    }
-}
+H3HashArray::~H3HashArray() = default;

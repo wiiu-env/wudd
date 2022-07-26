@@ -14,18 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <coreinit/debug.h>
-#include <utils/FSTUtils.h>
-
+#include "WiiUPartitions.h"
 #include "WiiUDataPartition.h"
 #include "WiiUGMPartition.h"
-#include "WiiUPartitions.h"
+#include <algorithm>
+#include <coreinit/debug.h>
 #include <utility>
+#include <utils/FSTUtils.h>
 
 bool WiiUPartitions::getFSTEntryAsByte(std::string &filePath,
                                        const std::shared_ptr<FST> &fst,
                                        const AddressInDiscBlocks &volumeAddress,
-                                       const std::shared_ptr<DiscReader> &discReader,
+                                       std::shared_ptr<DiscReader> &discReader,
                                        std::vector<uint8_t> &out_data) {
     auto entryOpt = FSTUtils::getFSTEntryByFullPath(fst->getRootEntry(), filePath);
     if (!entryOpt.has_value()) {
@@ -56,136 +56,148 @@ bool WiiUPartitions::getFSTEntryAsByte(std::string &filePath,
 }
 
 std::optional<std::unique_ptr<WiiUPartitions>>
-WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize &blockSize) {
-    std::vector<std::shared_ptr<WiiUPartition>> tmp;
-    std::vector<std::shared_ptr<WiiUPartition>> partitions;
-    partitions.reserve(numberOfPartitions);
+WiiUPartitions::make_unique(std::shared_ptr<DiscReader> &discReader, uint32_t offset, uint32_t numberOfPartitions, const DiscBlockSize &blockSize) {
+    std::vector<std::unique_ptr<WiiUPartition>> tmp;
+    std::vector<std::shared_ptr<WiiUPartition>> result;
+    result.reserve(numberOfPartitions);
     tmp.reserve(numberOfPartitions);
     for (uint32_t i = 0; i < numberOfPartitions; i++) {
-        auto partitionOpt = WiiUPartition::make_shared(discReader, offset + (i * 128), blockSize);
+        auto partitionOpt = WiiUPartition::make_unique(discReader, offset + (i * 128), blockSize);
         if (!partitionOpt.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to read partition");
+            DEBUG_FUNCTION_LINE_ERR("Failed to read partition");
             return {};
         }
-        tmp.push_back(partitionOpt.value());
-    }
-    std::optional<std::shared_ptr<WiiUPartition>> SIPartition;
-    for (auto &partition : tmp) {
-        if (partition->getVolumeId().starts_with("SI")) {
-            SIPartition = partition;
-            break;
-        }
+        tmp.push_back(std::move(partitionOpt.value()));
     }
 
-    if (SIPartition.has_value()) {
-        for (auto const &[key, val] : SIPartition.value()->getVolumes()) {
-            auto volumeAddress        = key;
-            auto volumeAddressInBytes = volumeAddress.getAddressInBytes();
-            auto volumeHeader         = val;
+    auto SIPartitionOpt = movePartitionFromList(tmp, "SI");
 
-            std::vector<uint8_t> fstData;
-            fstData.resize(volumeHeader->FSTSize);
+    if (!SIPartitionOpt) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to find SI partition");
+        return {};
+    }
 
-            if (!discReader->hasDiscKey) {
-                if (!discReader->readEncrypted(fstData.data(), volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(),
-                                               volumeHeader->FSTSize)) {
-                    DEBUG_FUNCTION_LINE("Failed to read FST");
-                    return {};
-                }
-            } else {
-                if (!discReader->readDecrypted(fstData.data(), volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(), 0, volumeHeader->FSTSize,
-                                               discReader->discKey, nullptr, true)) {
-                    DEBUG_FUNCTION_LINE("Failed to read FST");
-                    return {};
-                }
+    auto SIPartition = std::move(SIPartitionOpt.value());
+
+    for (auto const &[key, val] : SIPartition->getVolumes()) {
+        auto volumeAddress        = key;
+        auto volumeAddressInBytes = volumeAddress.getAddressInBytes();
+        auto &volumeHeader        = val;
+
+        std::vector<uint8_t> fstData;
+        fstData.resize(volumeHeader->FSTSize);
+
+        if (!discReader->hasDiscKey) {
+            if (!discReader->readEncrypted(fstData.data(), volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(),
+                                           volumeHeader->FSTSize)) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to read FST");
+                return {};
             }
+        } else {
+            if (!discReader->readDecrypted(fstData.data(), volumeAddressInBytes + volumeHeader->FSTAddress.getAddressInBytes(), 0, volumeHeader->FSTSize,
+                                           discReader->discKey, nullptr, true)) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to read FST");
+                return {};
+            }
+        }
 
-            auto siFST = FST::make_shared(fstData, 0, volumeHeader->blockSize);
-            if (!siFST.has_value()) {
-                DEBUG_FUNCTION_LINE("Failed to parse FST");
+        auto siFST = FST::make_shared(fstData, 0, volumeHeader->blockSize);
+        if (!siFST.has_value()) {
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse FST");
+            return {};
+        }
+
+        for (auto &child : siFST.value()->getRootEntry()->getDirChildren()) {
+            std::vector<uint8_t> bufferTicket;
+            std::string tikFilePath = std::string(child->getFullPath() + '/' + WUD_TICKET_FILENAME);
+            if (!getFSTEntryAsByte(tikFilePath, siFST.value(), volumeAddress, discReader, bufferTicket)) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to read FSTEntry");
                 return {};
             }
 
-            for (auto &child : siFST.value()->getRootEntry()->getDirChildren()) {
-                std::vector<uint8_t> bufferTicket;
-                std::string tikFilePath = std::string(child->getFullPath() + '/' + WUD_TICKET_FILENAME);
-                if (!getFSTEntryAsByte(tikFilePath, siFST.value(), volumeAddress, discReader, bufferTicket)) {
-                    DEBUG_FUNCTION_LINE("Failted to read FSTEntry");
-                    return {};
-                }
-
-                std::vector<uint8_t> bufferTMD;
-                std::string tmdFilePath = std::string(child->getFullPath() + '/' + WUD_TMD_FILENAME);
-                if (!getFSTEntryAsByte(tmdFilePath, siFST.value(), volumeAddress, discReader, bufferTMD)) {
-                    DEBUG_FUNCTION_LINE("Failted to read FSTEntry");
-                    return {};
-                }
-
-                std::vector<uint8_t> bufferCert;
-                std::string certFilePath = std::string(child->getFullPath() + '/' + WUD_CERT_FILENAME);
-                if (!getFSTEntryAsByte(certFilePath, siFST.value(), volumeAddress, discReader, bufferCert)) {
-                    DEBUG_FUNCTION_LINE("Failted to read FSTEntry");
-                    return {};
-                }
-
-                char partitionNameRaw[0x12];
-                memset(partitionNameRaw, 0, 0x12);
-                snprintf(partitionNameRaw, 0x11, "%016llX", *((uint64_t *) &bufferTicket[0x1DC]));
-
-                std::string partitionName = std::string("GM") + partitionNameRaw;
-
-                std::optional<std::shared_ptr<WiiUPartition>> curPartition;
-                for (auto &partition : tmp) {
-                    if (partition->getVolumeId().starts_with(partitionName)) {
-                        curPartition = partition;
-                        break;
-                    }
-                }
-
-                if (!curPartition.has_value()) {
-                    DEBUG_FUNCTION_LINE("Failed to find partition");
-                    return {};
-                }
-
-                auto gmPartition = std::shared_ptr<WiiUPartition>(new WiiUGMPartition(curPartition.value(), bufferTicket, bufferTMD, bufferCert));
-                partitions.push_back(gmPartition);
+            std::vector<uint8_t> bufferTMD;
+            std::string tmdFilePath = std::string(child->getFullPath() + '/' + WUD_TMD_FILENAME);
+            if (!getFSTEntryAsByte(tmdFilePath, siFST.value(), volumeAddress, discReader, bufferTMD)) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to read FSTEntry");
+                return {};
             }
+
+            std::vector<uint8_t> bufferCert;
+            std::string certFilePath = std::string(child->getFullPath() + '/' + WUD_CERT_FILENAME);
+            if (!getFSTEntryAsByte(certFilePath, siFST.value(), volumeAddress, discReader, bufferCert)) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to read FSTEntry");
+                return {};
+            }
+
+            char partitionNameRaw[0x12];
+            memset(partitionNameRaw, 0, 0x12);
+            snprintf(partitionNameRaw, 0x11, "%016llX", *((uint64_t *) &bufferTicket[0x1DC]));
+
+            std::string partitionName = std::string("GM") + partitionNameRaw;
+
+
+            auto partitionOpt = movePartitionFromList(tmp, partitionName);
+            if (!partitionOpt) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to find partition %s", partitionName.c_str());
+                return {};
+            }
+
+            auto gmPartition = std::unique_ptr<WiiUPartition>(new WiiUGMPartition(std::move(partitionOpt.value()), bufferTicket, bufferTMD, bufferCert, child->getFullPath()));
+            result.push_back(std::move(gmPartition));
         }
     }
 
-    for (auto &partition : tmp) {
+    auto it = tmp.begin();
+    while (it != tmp.end()) {
+        auto &partition = *it;
         if (partition->getVolumeId().starts_with("GM")) {
             continue;
         }
         if (partition->getVolumes().size() != 1) {
-            OSFatal("We can't handle more or less than one partion address yet.");
+            DEBUG_FUNCTION_LINE_ERR("We can't handle more or less than one partition address yet.");
+            OSFatal("We can't handle more or less than one partition address yet.");
         }
-        auto volumeAddress = partition->getVolumes().begin()->first;
-        auto vh            = partition->getVolumes().begin()->second;
+        auto &volumeAddress = partition->getVolumes().begin()->first;
+        auto &vh            = partition->getVolumes().begin()->second;
 
         std::vector<uint8_t> fstData;
         fstData.resize(vh->FSTSize);
 
         if (!discReader->hasDiscKey) {
             if (!discReader->readEncrypted(fstData.data(), volumeAddress.getAddressInBytes() + vh->FSTAddress.getAddressInBytes(), vh->FSTSize)) {
+                DEBUG_FUNCTION_LINE_ERR("WiiUPartition: Failed to read encrypted");
                 OSFatal("WiiUPartition: Failed to read encrypted");
             }
         } else {
             if (!discReader->readDecrypted(fstData.data(), volumeAddress.getAddressInBytes() + vh->FSTAddress.getAddressInBytes(), 0, vh->FSTSize,
                                            discReader->discKey, nullptr, true)) {
+                DEBUG_FUNCTION_LINE_ERR("WiiUPartition: Failed to read encrypted");
                 OSFatal("WiiUPartition: Failed to read encrypted");
             }
         }
 
         auto fstOpt = FST::make_shared(fstData, 0, vh->blockSize);
         if (!fstOpt.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to parse FST");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse FST");
             return {};
         }
-        partitions.push_back(std::shared_ptr<WiiUPartition>(new WiiUDataPartition(partition, fstOpt.value())));
+
+        auto partitionCopy = std::move(*it);
+        it                 = tmp.erase(it);
+        result.push_back(std::unique_ptr<WiiUPartition>(new WiiUDataPartition(std::move(partitionCopy), fstOpt.value())));
     }
-    return std::unique_ptr<WiiUPartitions>(new WiiUPartitions(partitions));
+    return std::unique_ptr<WiiUPartitions>(new WiiUPartitions(std::move(result)));
 }
 
 WiiUPartitions::WiiUPartitions(std::vector<std::shared_ptr<WiiUPartition>> pPartitions) : partitions(std::move(pPartitions)) {
+}
+
+std::optional<std::unique_ptr<WiiUPartition>> WiiUPartitions::movePartitionFromList(std::vector<std::unique_ptr<WiiUPartition>> &list, std::string partitionName) {
+    auto siPartitionIt = std::find_if(std::begin(list), std::end(list), [partitionName](auto &partition) { return partition->getVolumeId().starts_with(partitionName); });
+    if (siPartitionIt == std::end(list)) {
+        return {};
+    }
+    auto SIPartition = std::move(*siPartitionIt);
+    list.erase(siPartitionIt);
+    return SIPartition;
 }

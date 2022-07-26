@@ -49,19 +49,19 @@ NodeEntry::AutoDeserialize(const std::vector<uint8_t> &data,
     if ((param.type & ENTRY_TYPE_Directory) == ENTRY_TYPE_Directory && param.uint24 == 0) { // Root
         auto res = RootEntry::parseData(curEntryData, param, sectionEntries, stringTable);
         if (!res.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to parse node");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse node");
             return {};
         }
         return res;
     } else if ((param.type & ENTRY_TYPE_Directory) == ENTRY_TYPE_Directory) {
         auto res = DirectoryEntry::parseData(curEntryData, param, sectionEntries, stringTable);
         if (!res.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to parse node");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse node");
             return {};
         }
         auto resAsNodeEntry = std::dynamic_pointer_cast<NodeEntry>(res.value());
         if (resAsNodeEntry == nullptr) {
-            DEBUG_FUNCTION_LINE("Failed to cast to NodeEntry");
+            DEBUG_FUNCTION_LINE_ERR("Failed to cast to NodeEntry");
             return {};
         }
         return resAsNodeEntry;
@@ -69,18 +69,18 @@ NodeEntry::AutoDeserialize(const std::vector<uint8_t> &data,
         auto res = FileEntry::parseData(curEntryData, param, sectionEntries, stringTable, blockSize);
 
         if (!res.has_value()) {
-            DEBUG_FUNCTION_LINE("Failed to parse node");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse node");
             return {};
         }
         auto resAsNodeEntry = std::dynamic_pointer_cast<NodeEntry>(res.value());
         if (resAsNodeEntry == nullptr) {
-            DEBUG_FUNCTION_LINE("Failed to cast to NodeEntry");
+            DEBUG_FUNCTION_LINE_ERR("Failed to cast to NodeEntry");
             return {};
         }
         return resAsNodeEntry;
     }
 
-    DEBUG_FUNCTION_LINE("FST Unknown Node Type");
+    DEBUG_FUNCTION_LINE_ERR("FST Unknown Node Type");
     return {};
 }
 

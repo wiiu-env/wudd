@@ -30,7 +30,7 @@ public:
 
     static uint32_t LENGTH;
 
-    static std::optional<std::unique_ptr<WiiUContentsInformation>> make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset);
+    static std::optional<std::unique_ptr<WiiUContentsInformation>> make_unique(std::shared_ptr<DiscReader> &discReader, uint32_t offset);
 
 private:
     WiiUContentsInformation(std::unique_ptr<WiiUDiscContentsHeader> pDiscContentsHeader, std::unique_ptr<WiiUPartitions> pPartitions);

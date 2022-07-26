@@ -26,7 +26,7 @@ public:
             this->selectedOptionY++;
         }
         if (this->selectedOptionY < 0) {
-            this->selectedOptionY = maxOptionValue;
+            this->selectedOptionY = maxOptionValue - 1;
         } else if (this->selectedOptionY >= maxOptionValue) {
             this->selectedOptionY = 0;
         }
@@ -46,6 +46,10 @@ public:
         }
     }
 
+    virtual bool buttonPressed(Input *input, Input::eButtons button) {
+        return input->data.buttons_d & button;
+    }
+
     virtual bool entrySelected(Input *input) {
         return input->data.buttons_d & Input::BUTTON_A;
     }
@@ -57,9 +61,13 @@ public:
     }
 
     virtual void printFooter() {
-        if (gRunFromHBL) {
+        if (gRunFromHBL && !gBlockHomeButton) {
             ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 25, "Press HOME to exit to HBL");
             ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 15, "Press HOME to exit to HBL");
+        } else if (gRunFromHBL && gBlockHomeButtonCooldown > 0) {
+            ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 25, "You can not exit while dumping.");
+            ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 15, "You can not exit while dumping.");
+            gBlockHomeButtonCooldown--;
         }
         ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 27, "Created by Maschell, inspired by wudump from FIX94");
         ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 17, "Created by Maschell, inspired by wudump from FIX94");

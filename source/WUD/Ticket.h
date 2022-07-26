@@ -29,7 +29,7 @@ public:
     std::array<uint8_t, 16> ticketKeyEnc;
     std::array<uint8_t, 16> ticketKeyDec;
 
-    static std::optional<std::shared_ptr<Ticket>> make_shared(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey);
+    static std::optional<std::unique_ptr<Ticket>> make_unique(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey);
 
 private:
     Ticket(const std::array<uint8_t, 16> &encryptedKey, const std::array<uint8_t, 16> &decryptedKey);

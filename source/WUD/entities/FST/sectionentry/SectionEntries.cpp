@@ -37,13 +37,12 @@ std::optional<std::shared_ptr<SectionEntries>> SectionEntries::make_shared(const
     std::vector<std::shared_ptr<SectionEntry>> list;
     for (uint32_t i = 0; i < numberOfSections; i++) {
         if (data.size() < (i + 1) * SectionEntry::LENGTH) {
-            DEBUG_FUNCTION_LINE("Failed to parse SectionEntries");
+            DEBUG_FUNCTION_LINE_ERR("Failed to parse SectionEntries");
             return {};
         }
         std::array<uint8_t, SectionEntry::LENGTH> sectionEntryData{};
         memcpy(sectionEntryData.data(), data.data() + (i * SectionEntry::LENGTH), SectionEntry::LENGTH);
         list.push_back(std::make_shared<SectionEntry>(sectionEntryData, i, pBlockSize));
-        ;
     }
     return std::shared_ptr<SectionEntries>(new SectionEntries(list));
 }

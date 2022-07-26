@@ -23,23 +23,40 @@
 
 class WiiUGMPartition : public WiiUPartition {
 public:
-    WiiUGMPartition(std::shared_ptr<WiiUPartition> partition,
+    WiiUGMPartition(std::unique_ptr<WiiUPartition> partition,
                     std::vector<uint8_t> pRawTicket,
                     std::vector<uint8_t> pRawTMD,
-                    std::vector<uint8_t> pRawCert);
+                    std::vector<uint8_t> pRawCert,
+                    std::string pathOnSIPartition);
 
-    [[nodiscard]] std::string getVolumeId() const & override;
+    [[nodiscard]] const std::string &getVolumeId() const override;
 
-    [[nodiscard]] std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> getVolumes() const & override;
+    [[nodiscard]] const std::map<AddressInDiscBlocks, std::unique_ptr<VolumeHeader>> &getVolumes() const override;
 
     [[nodiscard]] uint16_t getFileSystemDescriptor() const override;
 
     [[nodiscard]] uint64_t getSectionOffsetOnDefaultPartition() override;
 
+    [[nodiscard]] const std::string &getPathOnSIPartition() const {
+        return pathOnSIPartition;
+    }
+
+    [[nodiscard]] const std::vector<uint8_t> &getRawCert() const {
+        return rawCert;
+    }
+
+    [[nodiscard]] const std::vector<uint8_t> &getRawTicket() const {
+        return rawTicket;
+    }
+
+    [[nodiscard]] const std::vector<uint8_t> &getRawTMD() const {
+        return rawTMD;
+    }
+
+private:
     std::vector<uint8_t> rawTicket;
     std::vector<uint8_t> rawTMD;
     std::vector<uint8_t> rawCert;
-
-private:
-    std::shared_ptr<WiiUPartition> basePartition;
+    std::string pathOnSIPartition;
+    std::unique_ptr<WiiUPartition> basePartition;
 };

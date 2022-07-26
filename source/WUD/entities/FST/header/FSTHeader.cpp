@@ -21,7 +21,7 @@
 std::optional<std::unique_ptr<FSTHeader>> FSTHeader::make_unique(const std::array<uint8_t, FSTHeader::LENGTH> &data) {
     auto *dataAsUint = (uint32_t *) data.data();
     if ((dataAsUint[0] & 0xFFFFFF00) != 0x46535400) {
-        DEBUG_FUNCTION_LINE("FST Header magic was wrong");
+        DEBUG_FUNCTION_LINE_ERR("FST Header magic was wrong");
         return {};
     }
     auto FSTVersion       = data[3];

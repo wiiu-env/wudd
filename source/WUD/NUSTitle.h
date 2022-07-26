@@ -22,34 +22,43 @@
 #include "NUSDataProviderWUD.h"
 #include "NUSDecryption.h"
 #include "Ticket.h"
+#include "utils/StringTools.h"
 #include <WUD/NUSDataProvider.h>
 #include <WUD/content/partitions/WiiUGMPartition.h>
 #include <WUD/entities/TMD/TitleMetaData.h>
+#include <nn/acp/title.h>
 
 class NUSTitle {
 
 public:
     ~NUSTitle();
 
-    std::shared_ptr<NUSDataProcessor> dataProcessor;
-    std::shared_ptr<TitleMetaData> tmd;
-    std::shared_ptr<Ticket> ticket;
+    std::unique_ptr<NUSDataProcessor> dataProcessor;
+    std::unique_ptr<TitleMetaData> tmd;
+    std::unique_ptr<Ticket> ticket;
     std::shared_ptr<FST> fst;
     std::shared_ptr<NUSDecryption> decryption;
     std::shared_ptr<NUSDataProvider> dataProvider;
 
-    static std::optional<std::shared_ptr<NUSTitle>> loadTitleFromGMPartition(
-            const std::shared_ptr<WiiUGMPartition> &pPartition,
-            const std::shared_ptr<DiscReader> &pDrive,
+    static std::optional<std::unique_ptr<NUSTitle>> loadTitleFromGMPartition(
+            std::shared_ptr<WiiUGMPartition> pPartition,
+            std::shared_ptr<DiscReader> pDiscReader,
             const std::array<uint8_t, 16> &commonKey);
 
-private:
-    static std::optional<std::shared_ptr<NUSTitle>> loadTitle(const std::shared_ptr<NUSDataProvider> &dataProvider, const std::array<uint8_t, 16> &commonKey);
+    std::string getLongnameEn();
 
-    NUSTitle(std::shared_ptr<TitleMetaData> pTMD,
-             std::shared_ptr<NUSDataProcessor> pProcessor,
+    std::string getShortnameEn();
+
+private:
+    std::optional<std::string> longname_en;
+    std::optional<std::string> shortname_en;
+
+    static std::optional<std::unique_ptr<NUSTitle>> make_unique(std::unique_ptr<NUSDataProvider> dataProvider, const std::array<uint8_t, 16> &commonKey);
+
+    NUSTitle(std::unique_ptr<TitleMetaData> pTMD,
+             std::unique_ptr<NUSDataProcessor> pProcessor,
              std::shared_ptr<NUSDataProvider> pDataProvider,
              std::shared_ptr<NUSDecryption> pDecryption,
-             std::shared_ptr<Ticket> pTicket,
+             std::unique_ptr<Ticket> pTicket,
              std::shared_ptr<FST> pFST);
 };

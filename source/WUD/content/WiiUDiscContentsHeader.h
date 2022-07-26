@@ -33,7 +33,7 @@ public:
     static constexpr uint32_t LENGTH = 2048;
     static constexpr uint32_t MAGIC  = 0xCCA6E67B;
 
-    static std::optional<std::unique_ptr<WiiUDiscContentsHeader>> make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset);
+    static std::optional<std::unique_ptr<WiiUDiscContentsHeader>> make_unique(std::shared_ptr<DiscReader> &discReader, uint32_t offset);
 
 private:
     WiiUDiscContentsHeader(DiscBlockSize pSize, const std::array<uint8_t, 20> &pTocHash, uint32_t pNumberOfPartitions);

@@ -26,11 +26,11 @@ WiiUDataPartition::WiiUDataPartition(
                                      basePartition(std::move(pPartition)) {
 }
 
-std::string WiiUDataPartition::getVolumeId() const & {
+const std::string &WiiUDataPartition::getVolumeId() const {
     return basePartition->getVolumeId();
 }
 
-std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUDataPartition::getVolumes() const & {
+const std::map<AddressInDiscBlocks, std::unique_ptr<VolumeHeader>> &WiiUDataPartition::getVolumes() const {
     return basePartition->getVolumes();
 }
 

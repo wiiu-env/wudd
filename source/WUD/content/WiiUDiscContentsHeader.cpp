@@ -15,36 +15,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "WiiUDiscContentsHeader.h"
+#include "utils/utils.h"
 #include <coreinit/debug.h>
 #include <utils/blocksize/DiscBlockSize.h>
 
-std::optional<std::unique_ptr<WiiUDiscContentsHeader>> WiiUDiscContentsHeader::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
-    auto *buffer = (uint8_t *) malloc(LENGTH);
+std::optional<std::unique_ptr<WiiUDiscContentsHeader>> WiiUDiscContentsHeader::make_unique(std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
+    auto buffer = make_unique_nothrow<uint8_t[]>(LENGTH);
     if (!buffer) {
-        DEBUG_FUNCTION_LINE("Failed to alloc buffer");
+        DEBUG_FUNCTION_LINE_ERR("Failed to alloc buffer");
         return {};
     }
     if (!discReader->hasDiscKey) {
-        if (!discReader->readEncrypted(buffer, offset, LENGTH)) {
-            DEBUG_FUNCTION_LINE("Failed to read data");
+        DEBUG_FUNCTION_LINE_ERR();
+        if (!discReader->readEncrypted(buffer.get(), offset, LENGTH)) {
+            DEBUG_FUNCTION_LINE_ERR("Failed to read data");
             return {};
         }
     } else {
-        if (!discReader->readDecrypted(buffer, offset, 0, LENGTH, discReader->discKey, nullptr, true)) {
-            DEBUG_FUNCTION_LINE("Failed to read data");
+        if (!discReader->readDecrypted(buffer.get(), offset, 0, LENGTH, discReader->discKey, nullptr, true)) {
+            DEBUG_FUNCTION_LINE_ERR("Failed to read data");
             return {};
         }
     }
 
-    if (((uint32_t *) buffer)[0] != MAGIC) {
-        DEBUG_FUNCTION_LINE("MAGIC mismatch");
+    if (((uint32_t *) buffer.get())[0] != MAGIC) {
+        DEBUG_FUNCTION_LINE_ERR("MAGIC mismatch");
         return {};
     }
-    auto blockSize = DiscBlockSize(((uint32_t *) buffer)[1]);
+    auto blockSize = DiscBlockSize(((uint32_t *) buffer.get())[1]);
     std::array<uint8_t, 20> tocHash{};
     memcpy(tocHash.data(), &buffer[8], 20);
-    auto numberOfPartition = ((uint32_t *) buffer)[7];
-    free(buffer);
+    auto numberOfPartition = ((uint32_t *) buffer.get())[7];
 
     return std::unique_ptr<WiiUDiscContentsHeader>(new WiiUDiscContentsHeader(blockSize, tocHash, numberOfPartition));
 }

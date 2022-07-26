@@ -18,6 +18,7 @@
 
 #include "DiscReader.h"
 #include <cstdint>
+#include <memory>
 #include <optional>
 
 class DiscReaderDiscDrive : public DiscReader {
@@ -26,15 +27,14 @@ public:
 
     ~DiscReaderDiscDrive() override;
 
-    static std::optional<DiscReaderDiscDrive *> Create();
+    static std::optional<std::unique_ptr<DiscReaderDiscDrive>> make_unique();
 
-    bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sector) const override;
-
-    bool IsReady() override;
+    bool readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint32_t block_offset) const override;
 
     bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;
 
 private:
+    bool IsReady() override;
     bool init_done        = false;
     int32_t device_handle = -1;
 };

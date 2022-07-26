@@ -26,7 +26,7 @@ std::optional<std::shared_ptr<NodeEntry>> NodeEntries::DeserializeImpl(const std
                                                                        const SectionBlockSize &pBlockSize) {
     auto nodeEntry = NodeEntry::AutoDeserialize(pData, pOffset, pParent, pEntryNumber, pSectionEntries, pStringTable, pBlockSize);
     if (!nodeEntry.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to AutoDeserialize NodeEntry");
+        DEBUG_FUNCTION_LINE_ERR("Failed to AutoDeserialize NodeEntry");
         return {};
     }
     auto asDirEntry = std::dynamic_pointer_cast<DirectoryEntry>(nodeEntry.value());
@@ -36,7 +36,7 @@ std::optional<std::shared_ptr<NodeEntry>> NodeEntries::DeserializeImpl(const std
             auto entry = NodeEntries::DeserializeImpl(pData, pOffset + (curEntryNumber - asDirEntry->entryNumber) * NodeEntry::LENGTH,
                                                       asDirEntry, curEntryNumber, pSectionEntries, pStringTable, pBlockSize);
             if (!entry.has_value()) {
-                DEBUG_FUNCTION_LINE("Failed to Deserialize child of NodeEntry");
+                DEBUG_FUNCTION_LINE_ERR("Failed to Deserialize child of NodeEntry");
                 return {};
             }
             asDirEntry->addChild(entry.value());
@@ -56,14 +56,14 @@ NodeEntries::make_unique(const std::vector<uint8_t> &data, uint32_t offset, cons
                          const SectionBlockSize &blockSize) {
     auto rootEntry = NodeEntries::DeserializeImpl(data, offset, std::nullopt, 0, pSectionEntries, pStringTable, blockSize);
     if (!rootEntry.has_value()) {
-        DEBUG_FUNCTION_LINE("DeserializeImpl for root entry has failed");
+        DEBUG_FUNCTION_LINE_ERR("DeserializeImpl for root entry has failed");
         return {};
     }
     auto rootEntryCasted = std::dynamic_pointer_cast<RootEntry>(rootEntry.value());
     if (rootEntryCasted != nullptr) {
         return std::unique_ptr<NodeEntries>(new NodeEntries(rootEntryCasted));
     }
-    DEBUG_FUNCTION_LINE("Failed to parse Root");
+    DEBUG_FUNCTION_LINE_ERR("Failed to parse Root");
     return {};
 }
 

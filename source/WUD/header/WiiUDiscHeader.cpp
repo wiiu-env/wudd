@@ -19,42 +19,42 @@
 
 uint32_t WiiUDiscHeader::LENGTH = 131072L;
 
-WiiUDiscHeader::WiiUDiscHeader(std::unique_ptr<WiiUManufactorDiscId> pManufactorDiscId,
+WiiUDiscHeader::WiiUDiscHeader(std::unique_ptr<WiiUManufacturerDiscId> pManufacturerDiscId,
                                std::unique_ptr<WiiUDiscId> pDiscId,
-                               std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation) : manufactorDiscId(std::move(pManufactorDiscId)),
+                               std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation) : manufacturerDiscId(std::move(pManufacturerDiscId)),
                                                                                                     discId(std::move(pDiscId)),
                                                                                                     wiiUContentsInformation(std::move(pWiiUContentsInformation)) {
 }
 
-std::optional<std::unique_ptr<WiiUDiscHeader>> WiiUDiscHeader::make_unique(const std::shared_ptr<DiscReader> &discReader) {
+std::optional<std::unique_ptr<WiiUDiscHeader>> WiiUDiscHeader::make_unique(std::shared_ptr<DiscReader> &discReader) {
     if (!discReader->IsReady()) {
-        DEBUG_FUNCTION_LINE("DiscReader is not ready");
+        DEBUG_FUNCTION_LINE_ERR("DiscReader is not ready");
         return {};
     }
     uint32_t offset          = 0;
     uint32_t curOffset       = offset;
-    auto manufactorDiscIDOpt = WiiUManufactorDiscId::make_unique(discReader);
+    auto manufactorDiscIDOpt = WiiUManufacturerDiscId::make_unique(discReader);
     if (!manufactorDiscIDOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to read ManufactorDiscId");
+        DEBUG_FUNCTION_LINE_ERR("Failed to read ManufactorDiscId");
         return {};
     }
 
-    curOffset += WiiUManufactorDiscId::LENGTH;
+    curOffset += WiiUManufacturerDiscId::LENGTH;
     auto discIdOpt = WiiUDiscId::make_unique(discReader, curOffset);
-    if (!discIdOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to read DiscId");
+    if (!discIdOpt) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to read DiscId");
         return {};
     }
     curOffset += WiiUDiscId::LENGTH;
     auto wiiUContentsInformationOpt = WiiUContentsInformation::make_unique(discReader, curOffset);
-    if (!wiiUContentsInformationOpt.has_value()) {
-        DEBUG_FUNCTION_LINE("Failed to read WiiUContentsInformation");
+    if (!wiiUContentsInformationOpt) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to read WiiUContentsInformation");
         return {};
     }
     curOffset += WiiUContentsInformation::LENGTH;
 
     if (curOffset - offset != LENGTH) {
-        DEBUG_FUNCTION_LINE("Unexpected offset");
+        DEBUG_FUNCTION_LINE_ERR("Unexpected offset");
         return {};
     }
     return std::unique_ptr<WiiUDiscHeader>(new WiiUDiscHeader(

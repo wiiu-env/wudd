@@ -27,9 +27,9 @@
 class WiiUScreen {
 
 public:
-    static uint32_t ProcCallbackAcquired(void *context);
+    static uint32_t ProcCallbackAcquired([[maybe_unused]] void *context);
 
-    static uint32_t ProcCallbackReleased(void *context);
+    static uint32_t ProcCallbackReleased([[maybe_unused]] void *context);
 
     static bool Init();
 

@@ -29,17 +29,15 @@ public:
 
     ~WiiUDataPartition() override;
 
-    [[nodiscard]] std::string getVolumeId() const & override;
+    [[nodiscard]] const std::string &getVolumeId() const override;
 
-    [[nodiscard]] std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> getVolumes() const & override;
+    [[nodiscard]] const std::map<AddressInDiscBlocks, std::unique_ptr<VolumeHeader>> &getVolumes() const override;
 
     [[nodiscard]] uint16_t getFileSystemDescriptor() const override;
 
-
     [[nodiscard]] uint64_t getSectionOffsetOnDefaultPartition() override;
 
-    std::shared_ptr<FST> fst;
-
 private:
+    std::shared_ptr<FST> fst;
     std::shared_ptr<WiiUPartition> basePartition;
 };

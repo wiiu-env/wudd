@@ -21,9 +21,9 @@
 
 class NUSDecryption {
 public:
-    explicit NUSDecryption(std::shared_ptr<Ticket> pTicket);
+    explicit NUSDecryption(std::unique_ptr<Ticket> pTicket);
 
     void decryptData(const std::array<uint8_t, 0x10> &IV, uint8_t *inData, uint8_t *outData, uint32_t size) const;
 
-    std::shared_ptr<Ticket> ticket;
+    std::unique_ptr<Ticket> ticket;
 };

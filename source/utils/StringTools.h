@@ -25,71 +25,31 @@
  ***************************************************************************/
 #pragma once
 
+#include "logger.h"
+#include "utils.h"
 #include <algorithm>
 #include <cctype>
+#include <coreinit/debug.h>
+#include <memory>
 #include <string>
 #include <vector>
 #include <wut_types.h>
 
+template<typename... Args>
+std::string string_format(const std::string &format, Args... args) {
+    int size_s = std::snprintf(nullptr, 0, format.c_str(), args...) + 1; // Extra space for '\0'
+    auto size  = static_cast<size_t>(size_s);
+    auto buf   = make_unique_nothrow<char[]>(size);
+    if (!buf) {
+        DEBUG_FUNCTION_LINE_ERR("string_format failed, not enough memory");
+        OSFatal("string_format failed, not enough memory");
+        return std::string("");
+    }
+    std::snprintf(buf.get(), size, format.c_str(), args...);
+    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+}
+
 class StringTools {
 public:
-    static BOOL EndsWith(const std::string &a, const std::string &b);
-
-    static const char *byte_to_binary(int32_t x);
-
-    static std::string removeCharFromString(std::string &input, char toBeRemoved);
-
-    static const char *fmt(const char *format, ...);
-
-    static const wchar_t *wfmt(const char *format, ...);
-
-    static int32_t strprintf(std::string &str, const char *format, ...);
-
-    static std::string strfmt(const char *format, ...);
-
-    static BOOL char2wchar_t(const char *src, wchar_t *dest);
-
-    static int32_t strtokcmp(const char *string, const char *compare, const char *separator);
-
-    static int32_t strextcmp(const char *string, const char *extension, char seperator);
-
-    static const char *FullpathToFilename(const char *path) {
-        if (!path)
-            return path;
-
-        const char *ptr      = path;
-        const char *Filename = ptr;
-
-        while (*ptr != '\0') {
-            if (ptr[0] == '/' && ptr[1] != '\0')
-                Filename = ptr + 1;
-
-            ++ptr;
-        }
-
-        return Filename;
-    }
-
-    static void RemoveDoubleSlashs(std::string &str) {
-        uint32_t length = str.size();
-
-        //! clear path of double slashes
-        for (uint32_t i = 1; i < length; ++i) {
-            if (str[i - 1] == '/' && str[i] == '/') {
-                str.erase(i, 1);
-                i--;
-                length--;
-            }
-        }
-    }
-
-    static std::vector<std::string> stringSplit(const std::string &value, const std::string &splitter);
-
-    // https://stackoverflow.com/a/19839371
-    static bool findStringIC(const std::string &strHaystack, const std::string &strNeedle);
-
-    // https://stackoverflow.com/a/3418285
-    static bool replace(std::string &str, const std::string &from, const std::string &to);
-
-    static bool strCompareIC(const std::string &str1, const std::string &str2);
+    static void StripUnicodeAndLineBreak(std::string &str);
 };

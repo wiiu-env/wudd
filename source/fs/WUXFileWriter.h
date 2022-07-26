@@ -50,7 +50,7 @@ private:
     uint64_t sectorTableEnd;
     void *sectorIndexTable = nullptr;
 
-    std::map<std::string, uint32_t> hashMap;
+    std::map<std::array<uint8_t, 32>, uint32_t> hashMap;
     uint32_t currentSector = 0;
     uint32_t writtenSector = 0;
 };

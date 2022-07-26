@@ -49,6 +49,7 @@ public:
         STATE_DUMP_DISC_DONE,
         STATE_WAIT_USER_ERROR_CONFIRM,
         STATE_DUMP_DISC,
+        STATE_ABORT_CONFIRMATION,
     };
 
     enum eErrorState {

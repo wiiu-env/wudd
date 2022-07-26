@@ -22,8 +22,8 @@
 
 uint32_t VolumeHeader::MAGIC = 0xCC93A4F5;
 
-std::vector<std::shared_ptr<H3HashArray>> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_t pNumberOfH3HashArray, uint32_t pH3HashArrayListSize) {
-    std::vector<std::shared_ptr<H3HashArray>> arrayList;
+std::vector<std::unique_ptr<H3HashArray>> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_t pNumberOfH3HashArray, uint32_t pH3HashArrayListSize) {
+    std::vector<std::unique_ptr<H3HashArray>> arrayList;
     if (pNumberOfH3HashArray == 0) {
         return arrayList;
     }
@@ -37,30 +37,28 @@ std::vector<std::shared_ptr<H3HashArray>> VolumeHeader::getH3HashArray(uint8_t *
             curEnd = offsetPtr[1];
         }
 
-        arrayList.push_back(std::make_shared<H3HashArray>(h3Data + curOffset, curEnd - curOffset));
+        arrayList.push_back(std::make_unique<H3HashArray>(h3Data + curOffset, curEnd - curOffset));
     }
 
     return arrayList;
 }
 
-std::optional<std::shared_ptr<VolumeHeader>> VolumeHeader::make_shared(const std::shared_ptr<DiscReader> &discReader, uint64_t offset) {
-    auto buffer = (uint8_t *) malloc(64);
-    if (buffer == nullptr) {
-        DEBUG_FUNCTION_LINE("Failed to alloc buffer");
+std::optional<std::unique_ptr<VolumeHeader>> VolumeHeader::make_unique(std::shared_ptr<DiscReader> &discReader, uint64_t offset) {
+    auto buffer = make_unique_nothrow<uint8_t[]>((size_t) 64);
+    if (!buffer) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to alloc buffer");
         return {};
     }
 
-    if (!discReader->readEncrypted(buffer, offset, 64)) {
-        free(buffer);
-        DEBUG_FUNCTION_LINE("Failed to read data");
+    if (!discReader->readEncrypted(buffer.get(), offset, 64)) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to read data");
         return {};
     }
 
-    auto *bufferUint = (uint32_t *) buffer;
+    auto *bufferUint = (uint32_t *) buffer.get();
 
     if (bufferUint[0] != MAGIC) {
-        DEBUG_FUNCTION_LINE("MAGIC mismatch");
-        free(buffer);
+        DEBUG_FUNCTION_LINE_ERR("MAGIC mismatch");
         return {};
     }
 
@@ -76,26 +74,22 @@ std::optional<std::shared_ptr<VolumeHeader>> VolumeHeader::make_shared(const std
     auto minorVersion         = buffer[39];
     auto expiringMajorVersion = buffer[40];
 
-    free(buffer);
-
-    auto bufferH3 = (uint8_t *) malloc(ROUNDUP(h3HashArrayListSize, 16));
-    if (bufferH3 == nullptr) {
-        DEBUG_FUNCTION_LINE("Failed to alloc h3 buffer");
+    auto alignedH3ArrayListSize = ROUNDUP(h3HashArrayListSize, 16);
+    auto bufferH3               = make_unique_nothrow<uint8_t[]>(alignedH3ArrayListSize);
+    if (!bufferH3) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to alloc h3 buffer");
         return {};
     }
 
-    if (!discReader->readEncrypted(bufferH3, offset + 64, ROUNDUP(h3HashArrayListSize, 16))) {
-        DEBUG_FUNCTION_LINE("Failed to read h3 data");
-        free(bufferH3);
+    if (!discReader->readEncrypted(bufferH3.get(), offset + 64, alignedH3ArrayListSize)) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to read h3 data");
         return {};
     }
 
-    auto h3HashArrayList = getH3HashArray(bufferH3, numberOfH3HashArray, h3HashArrayListSize);
-
-    free(bufferH3);
+    auto h3HashArrayList = getH3HashArray(bufferH3.get(), numberOfH3HashArray, h3HashArrayListSize);
 
     return std::unique_ptr<VolumeHeader>(
-            new VolumeHeader(blockSize, volumeSize, FSTSize, FSTAddress, FSTHashMode, encryptType, majorVersion, minorVersion, expiringMajorVersion, h3HashArrayList, h3HashArrayListSize,
+            new VolumeHeader(blockSize, volumeSize, FSTSize, FSTAddress, FSTHashMode, encryptType, majorVersion, minorVersion, expiringMajorVersion, std::move(h3HashArrayList), h3HashArrayListSize,
                              numberOfH3HashArray));
 }
 
@@ -108,7 +102,7 @@ VolumeHeader::VolumeHeader(const VolumeBlockSize &pBlockSize,
                            uint8_t pMajorVersion,
                            uint8_t pMinorVersion,
                            uint8_t pExpiringMajorVersion,
-                           std::vector<std::shared_ptr<H3HashArray>> pH3HashArrayList,
+                           std::vector<std::unique_ptr<H3HashArray>> pH3HashArrayList,
                            uint32_t pH3HashArrayListSize,
                            uint32_t pNumberOfH3HashArray) : blockSize(pBlockSize),
                                                             volumeSize(std::move(pVolumeSize)),

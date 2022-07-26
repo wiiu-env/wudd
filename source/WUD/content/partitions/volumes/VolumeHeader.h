@@ -31,7 +31,7 @@
 class VolumeHeader {
 
 public:
-    static std::vector<std::shared_ptr<H3HashArray>> getH3HashArray(uint8_t *h3Data, uint32_t numberOfH3HashArray, uint32_t h3HashArrayListSize);
+    static std::vector<std::unique_ptr<H3HashArray>> getH3HashArray(uint8_t *h3Data, uint32_t numberOfH3HashArray, uint32_t h3HashArrayListSize);
 
     static uint32_t MAGIC;
     VolumeBlockSize blockSize;
@@ -43,12 +43,12 @@ public:
     uint8_t majorVersion;
     uint8_t minorVersion;
     uint8_t expiringMajorVersion;
-    std::vector<std::shared_ptr<H3HashArray>> h3HashArrayList;
+    std::vector<std::unique_ptr<H3HashArray>> h3HashArrayList;
 
     uint32_t h3HashArrayListSize;
     uint32_t numberOfH3HashArray;
 
-    static std::optional<std::shared_ptr<VolumeHeader>> make_shared(const std::shared_ptr<DiscReader> &discReader, uint64_t offset);
+    static std::optional<std::unique_ptr<VolumeHeader>> make_unique(std::shared_ptr<DiscReader> &discReader, uint64_t offset);
 
 private:
     VolumeHeader(
@@ -61,7 +61,7 @@ private:
             uint8_t pMajorVersion,
             uint8_t pMinorVersion,
             uint8_t pExpiringMajorVersion,
-            std::vector<std::shared_ptr<H3HashArray>> pH3HashArrayList,
+            std::vector<std::unique_ptr<H3HashArray>> pH3HashArrayList,
             uint32_t pH3HashArrayListSize,
             uint32_t pNumberOfH3HashArray);
 };

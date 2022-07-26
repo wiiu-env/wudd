@@ -15,56 +15,67 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "DiscReaderDiscDrive.h"
-#include <MainApplicationState.h>
+#include "utils/utils.h"
 #include <WUD/content/WiiUDiscContentsHeader.h>
 #include <common/common.h>
-#include <iosuhax.h>
+#include <malloc.h>
+#include <mocha/fsa.h>
+#include <mocha/mocha.h>
 #include <utils/logger.h>
 #include <utils/rijndael.h>
 
-
 DiscReaderDiscDrive::DiscReaderDiscDrive() : DiscReader() {
-    auto *sector_buf = (uint8_t *) malloc(READ_SECTOR_SIZE);
-    if (sector_buf == nullptr) {
+    auto sector_buf = (uint8_t *) memalign(0x40, (size_t) READ_SECTOR_SIZE);
+    if (!sector_buf) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to allocate buffer");
         return;
     }
 
-    auto ret = IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &device_handle);
+    auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &device_handle);
     if (ret < 0) {
+        free(sector_buf);
         return;
     }
 
-    auto res = IOSUHAX_FSA_RawRead(gFSAfd, sector_buf, READ_SECTOR_SIZE, 1, 3, device_handle);
-
+    auto res = FSAEx_RawRead(__wut_devoptab_fs_client, sector_buf, READ_SECTOR_SIZE, 1, 3, device_handle);
     if (res >= 0) {
         if (((uint32_t *) sector_buf)[0] != WiiUDiscContentsHeader::MAGIC) {
             uint8_t iv[16];
             memset(iv, 0, 16);
 
-            auto discKeyRes = IOSUHAX_ODM_GetDiscKey(discKey);
-            if (discKeyRes >= 0) {
-                hasDiscKey                = true;
-                auto sector_buf_decrypted = (uint8_t *) malloc(READ_SECTOR_SIZE);
-                if (sector_buf_decrypted != nullptr) {
-                    aes_set_key((uint8_t *) discKey);
-                    aes_decrypt((uint8_t *) iv, (uint8_t *) sector_buf, (uint8_t *) &sector_buf_decrypted[0], READ_SECTOR_SIZE);
-                    if (((uint32_t *) sector_buf_decrypted)[0] == WiiUDiscContentsHeader::MAGIC) {
-                        DEBUG_FUNCTION_LINE("Key was correct");
-                        this->init_done = true;
-                    }
-                    free(sector_buf_decrypted);
+            WUDDiscKey discKeyLocal;
+
+            auto discKeyRes = Mocha_ODMGetDiscKey(&discKeyLocal);
+            if (discKeyRes == MOCHA_RESULT_SUCCESS) {
+                hasDiscKey = true;
+                memcpy(this->discKey, discKeyLocal.key, 16);
+                auto sector_buf_decrypted = make_unique_nothrow<uint8_t[]>((size_t) READ_SECTOR_SIZE);
+                if (!sector_buf_decrypted) {
+                    DEBUG_FUNCTION_LINE_ERR("Failed to allocate memory");
+                    free(sector_buf);
+                    return;
                 }
+                aes_set_key((uint8_t *) discKey);
+                aes_decrypt((uint8_t *) iv, (uint8_t *) &sector_buf[0], (uint8_t *) &sector_buf_decrypted[0], READ_SECTOR_SIZE);
+                if (((uint32_t *) sector_buf_decrypted.get())[0] == WiiUDiscContentsHeader::MAGIC) {
+                    this->init_done = true;
+                } else {
+                    DEBUG_FUNCTION_LINE_ERR("Invalid disc key");
+                }
+            } else {
+                DEBUG_FUNCTION_LINE_ERR("Failed to get the DiscKey");
+                this->init_done = false;
             }
         } else {
             this->init_done = true;
         }
+    } else {
+        DEBUG_FUNCTION_LINE_ERR("Raw read failed %d", ret);
     }
-    free(sector_buf);
 }
 
-bool DiscReaderDiscDrive::readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint64_t offset_in_sectors) const {
-    if (IOSUHAX_FSA_RawRead(gFSAfd, buffer, READ_SECTOR_SIZE, block_cnt, offset_in_sectors, device_handle) < 0) {
-        DEBUG_FUNCTION_LINE("Failed to read from Disc");
+bool DiscReaderDiscDrive::readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint32_t block_offset) const {
+    if (FSAEx_RawRead(__wut_devoptab_fs_client, buffer, READ_SECTOR_SIZE, block_cnt, block_offset, device_handle) < 0) {
         return false;
     }
     return true;
@@ -76,7 +87,8 @@ bool DiscReaderDiscDrive::IsReady() {
 
 DiscReaderDiscDrive::~DiscReaderDiscDrive() {
     if (device_handle != -1) {
-        IOSUHAX_FSA_RawOpen(gFSAfd, "/dev/odd01", &device_handle);
+        FSAEx_RawClose(__wut_devoptab_fs_client, device_handle);
+        device_handle = -1;
     }
 }
 
@@ -84,22 +96,23 @@ bool DiscReaderDiscDrive::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t 
     if (size == 0) {
         return true;
     }
-    if ((offset & 0x7FFF) != 0 || (size & 0x7FFF) != 0) {
+
+    if ((offset & (SECTOR_SIZE - 0x1)) != 0 || (size & (SECTOR_SIZE - 0x1)) != 0) {
         return DiscReader::readEncrypted(buf, offset, size);
     }
     uint32_t block_cnt         = size >> 15;
     uint32_t offset_in_sectors = offset >> 15;
-    if (IOSUHAX_FSA_RawRead(gFSAfd, buf, 0x8000, block_cnt, offset_in_sectors, device_handle) < 0) {
+    if (FSAEx_RawRead(__wut_devoptab_fs_client, buf, 0x8000, block_cnt, offset_in_sectors, device_handle) < 0) {
         DEBUG_FUNCTION_LINE("Failed to read from Disc");
         return false;
     }
     return true;
 }
 
-std::optional<DiscReaderDiscDrive *> DiscReaderDiscDrive::Create() {
-    auto discReader = new DiscReaderDiscDrive();
-    if (!discReader->IsReady()) {
-        delete discReader;
+std::optional<std::unique_ptr<DiscReaderDiscDrive>> DiscReaderDiscDrive::make_unique() {
+    auto discReader = make_unique_nothrow<DiscReaderDiscDrive>();
+    if (!discReader || !discReader->IsReady()) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to init DiscReader %d %d", !discReader, discReader->IsReady());
         return {};
     }
     return discReader;
