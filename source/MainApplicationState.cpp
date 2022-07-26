@@ -52,7 +52,9 @@ void MainApplicationState::render() {
             WiiUScreen::drawLinef("     [%s] SD    ???  NTFS (USB) (not connected)", dumpTarget == TARGET_SD ? "*" : " ");
         }
         WiiUScreen::drawLine();
-        WiiUScreen::drawLinef("%s Exit", this->selectedOptionY == 4 ? ">" : " ");
+        if (!gRunFromHBL) {
+            WiiUScreen::drawLinef("%s Exit", this->selectedOptionY == 4 ? ">" : " ");
+        }
     }
 
     printFooter();
@@ -61,7 +63,8 @@ void MainApplicationState::render() {
 
 ApplicationState::eSubState MainApplicationState::update(Input *input) {
     if (this->state == STATE_WELCOME_SCREEN) {
-        proccessMenuNavigationY(input, 5);
+        int optionCount = gRunFromHBL ? 4 : 5;
+        proccessMenuNavigationY(input, optionCount);
         if (selectedOptionY == 3) {
             if (ntfs_mount_count > 0) {
                 proccessMenuNavigationX(input, 2);
@@ -85,7 +88,9 @@ ApplicationState::eSubState MainApplicationState::update(Input *input) {
             } else if (this->selectedOptionY == 3) {
                 //
             } else {
-                SYSLaunchMenu();
+                if (gRunFromHBL) {
+                    SYSLaunchMenu();
+                }
             }
             this->selectedOptionY = 0;
         }

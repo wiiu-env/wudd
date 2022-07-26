@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/common.h"
 #include "input/Input.h"
 #include "utils/ScreenUtils.h"
 #include "utils/WiiUScreen.h"
@@ -37,8 +38,9 @@ public:
         } else if (input->data.buttons_d & Input::BUTTON_RIGHT) {
             this->selectedOptionX++;
         }
+
         if (this->selectedOptionX < 0) {
-            this->selectedOptionX = maxOptionValue;
+            this->selectedOptionX = maxOptionValue - 1;
         } else if (this->selectedOptionX >= maxOptionValue) {
             this->selectedOptionX = 0;
         }
@@ -55,6 +57,10 @@ public:
     }
 
     virtual void printFooter() {
+        if (gRunFromHBL) {
+            ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 25, "Press HOME to exit to HBL");
+            ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 15, "Press HOME to exit to HBL");
+        }
         ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_TV, 0, 27, "Created by Maschell, inspired by wudump from FIX94");
         ScreenUtils::printTextOnScreen(CONSOLE_SCREEN_DRC, 0, 17, "Created by Maschell, inspired by wudump from FIX94");
     }
