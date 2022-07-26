@@ -24,8 +24,12 @@ jobs:
         docker run --rm -v ${PWD}:/project builder make
     - uses: actions/upload-artifact@master
       with:
-       name: binary
+       name: wuhb-binary
        path: "*.wuhb"
+    - uses: actions/upload-artifact@master
+      with:
+       name: rpx-binary
+       path: "*.rpx"
   deploy-binary:
     needs: build-binary
     runs-on: ubuntu-18.04
@@ -38,7 +42,11 @@ jobs:
     - uses: actions/download-artifact@master
       with:
         name: binary
-        path: wiiu/apps
+        path: wiiu/apps/wudd
+    - uses: actions/download-artifact@master
+      with:
+        name: binary
+        path: wiiu/apps/wudd
     - name: zip artifact
       run: zip -r ${{ env.REPOSITORY_NAME }}_${{ env.DATETIME }}.zip wiiu
     - name: Create Release
@@ -63,4 +71,4 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./${{ env.REPOSITORY_NAME }}_${{ env.DATETIME }}.zip
         asset_name: ${{ env.REPOSITORY_NAME }}_${{ env.DATETIME }}.zip
-        asset_content_type: application/unknown
+        asset_content_type: application/zip
