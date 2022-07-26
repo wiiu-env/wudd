@@ -1,11 +1,11 @@
-#include <malloc.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include "FSUtils.h"
 #include "CFile.hpp"
 #include "utils/logger.h"
+#include <fcntl.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 int32_t FSUtils::LoadFileToMem(const char *filepath, uint8_t **inbuffer, uint32_t *size) {
     //! always initialze input
@@ -27,8 +27,8 @@ int32_t FSUtils::LoadFileToMem(const char *filepath, uint8_t **inbuffer, uint32_
     }
 
     uint32_t blocksize = 0x4000;
-    uint32_t done = 0;
-    int32_t readBytes = 0;
+    uint32_t done      = 0;
+    int32_t readBytes  = 0;
 
     while (done < filesize) {
         if (done + blocksize > filesize) {
@@ -136,7 +136,7 @@ bool FSUtils::copyFile(const std::string &in, const std::string &out) {
     size_t size;
 
     int source = open(in.c_str(), O_RDONLY, 0);
-    int dest = open(out.c_str(), 0x602, 0644);
+    int dest   = open(out.c_str(), 0x602, 0644);
     if (source < 0) {
         return false;
     }
@@ -146,7 +146,7 @@ bool FSUtils::copyFile(const std::string &in, const std::string &out) {
     }
 
     auto bufferSize = 1024 * 1024;
-    char *buf = (char *) malloc(bufferSize);
+    char *buf       = (char *) malloc(bufferSize);
     if (buf == NULL) {
         return false;
     }
@@ -171,4 +171,3 @@ int32_t FSUtils::saveBufferToFile(const char *path, void *buffer, uint32_t size)
     file.close();
     return written;
 }
-

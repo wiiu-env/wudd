@@ -16,9 +16,9 @@
  ****************************************************************************/
 #pragma once
 
+#include "DiscReader.h"
 #include <cstdint>
 #include <optional>
-#include "DiscReader.h"
 
 class DiscReaderDiscDrive : public DiscReader {
 public:
@@ -35,6 +35,6 @@ public:
     bool readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) override;
 
 private:
-    bool init_done = false;
+    bool init_done        = false;
     int32_t device_handle = -1;
 };

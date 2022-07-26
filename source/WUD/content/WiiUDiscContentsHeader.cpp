@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <utils/blocksize/DiscBlockSize.h>
-#include <coreinit/debug.h>
 #include "WiiUDiscContentsHeader.h"
+#include <coreinit/debug.h>
+#include <utils/blocksize/DiscBlockSize.h>
 
 std::optional<std::unique_ptr<WiiUDiscContentsHeader>> WiiUDiscContentsHeader::make_unique(const std::shared_ptr<DiscReader> &discReader, uint32_t offset) {
     auto *buffer = (uint8_t *) malloc(LENGTH);
@@ -49,10 +49,7 @@ std::optional<std::unique_ptr<WiiUDiscContentsHeader>> WiiUDiscContentsHeader::m
     return std::unique_ptr<WiiUDiscContentsHeader>(new WiiUDiscContentsHeader(blockSize, tocHash, numberOfPartition));
 }
 
-WiiUDiscContentsHeader::WiiUDiscContentsHeader(DiscBlockSize pSize, const std::array<uint8_t, 20> &pTocHash, uint32_t pNumberOfPartitions) :
-        blockSize(pSize),
-        numberOfPartition(pNumberOfPartitions),
-        tocHash(pTocHash) {
-
+WiiUDiscContentsHeader::WiiUDiscContentsHeader(DiscBlockSize pSize, const std::array<uint8_t, 20> &pTocHash, uint32_t pNumberOfPartitions) : blockSize(pSize),
+                                                                                                                                             numberOfPartition(pNumberOfPartitions),
+                                                                                                                                             tocHash(pTocHash) {
 }
-

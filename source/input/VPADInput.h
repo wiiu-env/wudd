@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include <vpad/input.h>
 #include "Input.h"
+#include <vpad/input.h>
 
 class VPadInput : public Input {
 public:
@@ -36,11 +36,11 @@ public:
         VPADRead(VPAD_CHAN_0, &vpad, 1, &vpadError);
 
         if (vpadError == VPAD_READ_SUCCESS) {
-            data.buttons_r = vpad.release;
-            data.buttons_h = vpad.hold;
-            data.buttons_d = vpad.trigger;
+            data.buttons_r    = vpad.release;
+            data.buttons_h    = vpad.hold;
+            data.buttons_d    = vpad.trigger;
             data.validPointer = !vpad.tpNormal.validity;
-            data.touched = vpad.tpNormal.touched;
+            data.touched      = vpad.tpNormal.touched;
 
             VPADGetTPCalibratedPoint(VPAD_CHAN_0, &tpCalib, &vpad.tpFiltered1);
 

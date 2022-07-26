@@ -1,3 +1,4 @@
+// clang-format off
 /* 
  *
  * TinySHA1 - a header only implementation of the SHA1 algorithm in C++. Based

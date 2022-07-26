@@ -16,8 +16,8 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
 #include "BlockSize.h"
+#include <cstdint>
 
 class SectionBlockSize : public BlockSize {
 

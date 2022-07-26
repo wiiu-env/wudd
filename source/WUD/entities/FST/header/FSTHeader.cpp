@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
+#include "FSTHeader.h"
 #include <utils/blocksize/SectionBlockSize.h>
 #include <utils/logger.h>
-#include "FSTHeader.h"
 
 std::optional<std::unique_ptr<FSTHeader>> FSTHeader::make_unique(const std::array<uint8_t, FSTHeader::LENGTH> &data) {
     auto *dataAsUint = (uint32_t *) data.data();
@@ -24,22 +24,20 @@ std::optional<std::unique_ptr<FSTHeader>> FSTHeader::make_unique(const std::arra
         DEBUG_FUNCTION_LINE("FST Header magic was wrong");
         return {};
     }
-    auto FSTVersion = data[3];
-    auto blockSize = SectionBlockSize(dataAsUint[1]);
+    auto FSTVersion       = data[3];
+    auto blockSize        = SectionBlockSize(dataAsUint[1]);
     auto numberOfSections = dataAsUint[2];
-    auto hashDisabled = data[12];
+    auto hashDisabled     = data[12];
 
     return std::unique_ptr<FSTHeader>(new FSTHeader(
             FSTVersion,
             blockSize,
             numberOfSections,
-            hashDisabled
-    ));
+            hashDisabled));
 }
 
 FSTHeader::FSTHeader(uint8_t pFSTVersion, SectionBlockSize pBlockSize, uint32_t pNumberOfSections, uint8_t pHashDisabled) : FSTVersion(pFSTVersion),
                                                                                                                             blockSize(pBlockSize),
                                                                                                                             numberOfSections(pNumberOfSections),
                                                                                                                             hashDisabled(pHashDisabled) {
-
 }

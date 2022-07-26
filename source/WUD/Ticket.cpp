@@ -18,9 +18,8 @@
 #include <algorithm>
 #include <utils/logger.h>
 
-Ticket::Ticket(const std::array<uint8_t, 16> &pEncryptedKey, const std::array<uint8_t, 16> &pDecryptedKey) :
-        ticketKeyEnc(pEncryptedKey),
-        ticketKeyDec(pDecryptedKey) {
+Ticket::Ticket(const std::array<uint8_t, 16> &pEncryptedKey, const std::array<uint8_t, 16> &pDecryptedKey) : ticketKeyEnc(pEncryptedKey),
+                                                                                                             ticketKeyDec(pDecryptedKey) {
 }
 
 std::optional<std::shared_ptr<Ticket>> Ticket::make_shared(const std::vector<uint8_t> &data, std::optional<const std::array<uint8_t, 16>> commonKey) {
@@ -39,7 +38,7 @@ std::optional<std::shared_ptr<Ticket>> Ticket::make_shared(const std::vector<uin
 
     uint8_t IV[0x10];
     for (int i = 0; i < 8; i++) {
-        IV[i] = title_id[i];
+        IV[i]     = title_id[i];
         IV[i + 8] = 0x00;
     }
 

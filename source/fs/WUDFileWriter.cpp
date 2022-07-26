@@ -14,12 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <utils/logger.h>
 #include "WUDFileWriter.h"
+#include <utils/logger.h>
 
-WUDFileWriter::WUDFileWriter(const char *path, int32_t cacheSize, int32_t pSectorSize, bool split) :
-        WriteOnlyFileWithCache(path, cacheSize, split),
-        sectorSize(pSectorSize) {
+WUDFileWriter::WUDFileWriter(const char *path, int32_t cacheSize, int32_t pSectorSize, bool split) : WriteOnlyFileWithCache(path, cacheSize, split),
+                                                                                                     sectorSize(pSectorSize) {
 }
 
 int32_t WUDFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSectors) {
@@ -31,5 +30,4 @@ int32_t WUDFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
 }
 
 void WUDFileWriter::finalize() {
-
 }

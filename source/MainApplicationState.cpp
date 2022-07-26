@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #include "MainApplicationState.h"
-#include "WUDDumperState.h"
 #include "GMPartitionsDumperState.h"
+#include "WUDDumperState.h"
 #include <sysapp/launch.h>
 
 MainApplicationState::MainApplicationState() {
@@ -24,7 +24,8 @@ MainApplicationState::MainApplicationState() {
     this->state = STATE_WELCOME_SCREEN;
 }
 
-MainApplicationState::~MainApplicationState() = default;;
+MainApplicationState::~MainApplicationState() = default;
+;
 
 void MainApplicationState::render() {
     if (this->state == STATE_DO_SUBSTATE) {
@@ -73,13 +74,13 @@ ApplicationState::eSubState MainApplicationState::update(Input *input) {
         }
         if (entrySelected(input)) {
             if (this->selectedOptionY == 0) {
-                this->state = STATE_DO_SUBSTATE;
+                this->state    = STATE_DO_SUBSTATE;
                 this->subState = std::make_unique<WUDDumperState>(WUDDumperState::DUMP_AS_WUX, dumpTarget);
             } else if (this->selectedOptionY == 1) {
-                this->state = STATE_DO_SUBSTATE;
+                this->state    = STATE_DO_SUBSTATE;
                 this->subState = std::make_unique<WUDDumperState>(WUDDumperState::DUMP_AS_WUD, dumpTarget);
             } else if (this->selectedOptionY == 2) {
-                this->state = STATE_DO_SUBSTATE;
+                this->state    = STATE_DO_SUBSTATE;
                 this->subState = std::make_unique<GMPartitionsDumperState>(dumpTarget);
             } else if (this->selectedOptionY == 3) {
                 //

@@ -16,17 +16,17 @@
  ****************************************************************************/
 #pragma once
 
-#include <memory>
-#include <string>
 #include <WUD/DiscReader.h>
+#include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
 class WiiUDiscId {
 
 public:
     static constexpr uint32_t LENGTH = 32768;
-    static constexpr uint32_t MAGIC = 0xCC549EB9;
+    static constexpr uint32_t MAGIC  = 0xCC549EB9;
     uint8_t minorVersion;
     uint8_t majorVersion;
     std::string footprint;

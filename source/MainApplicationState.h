@@ -16,16 +16,16 @@
  ****************************************************************************/
 #pragma once
 
+#include "ApplicationState.h"
+#include "fs/CFile.hpp"
+#include "input/Input.h"
+#include <common/common.h>
+#include <ctime>
 #include <map>
 #include <memory>
-#include <string>
 #include <optional>
 #include <queue>
-#include <ctime>
-#include <common/common.h>
-#include "input/Input.h"
-#include "fs/CFile.hpp"
-#include "ApplicationState.h"
+#include <string>
 
 
 class MainApplicationState : public ApplicationState {

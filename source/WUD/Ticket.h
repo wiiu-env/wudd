@@ -17,10 +17,10 @@
 #pragma once
 
 #include <cstdint>
-#include <utils/rijndael.h>
 #include <cstring>
-#include <optional>
 #include <memory>
+#include <optional>
+#include <utils/rijndael.h>
 #include <vector>
 
 class Ticket {

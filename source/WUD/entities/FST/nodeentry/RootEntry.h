@@ -16,11 +16,11 @@
  ****************************************************************************/
 #pragma once
 
-#include <cstdint>
-#include <WUD/entities/FST/stringtable/StringTable.h>
-#include <utils/blocksize/SectionBlockSize.h>
-#include <WUD/entities/FST/sectionentry/SectionEntries.h>
 #include "DirectoryEntry.h"
+#include <WUD/entities/FST/sectionentry/SectionEntries.h>
+#include <WUD/entities/FST/stringtable/StringTable.h>
+#include <cstdint>
+#include <utils/blocksize/SectionBlockSize.h>
 
 class RootEntry : public DirectoryEntry {
 

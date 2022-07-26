@@ -16,17 +16,17 @@
  ****************************************************************************/
 #pragma once
 
+#include "NodeEntryParam.h"
+#include <WUD/entities/FST/sectionentry/SectionEntries.h>
+#include <WUD/entities/FST/sectionentry/SectionEntry.h>
+#include <WUD/entities/FST/stringtable/StringEntry.h>
 #include <cstdint>
 #include <utils/blocksize/SectionBlockSize.h>
-#include <WUD/entities/FST/stringtable/StringEntry.h>
-#include <WUD/entities/FST/sectionentry/SectionEntry.h>
-#include <WUD/entities/FST/sectionentry/SectionEntries.h>
 #include <utils/logger.h>
-#include "NodeEntryParam.h"
 
-#define ENTRY_TYPE_File        0
-#define ENTRY_TYPE_Directory   1
-#define ENTRY_TYPE_Link        0x80
+#define ENTRY_TYPE_File      0
+#define ENTRY_TYPE_Directory 1
+#define ENTRY_TYPE_Link      0x80
 
 class DirectoryEntry;
 

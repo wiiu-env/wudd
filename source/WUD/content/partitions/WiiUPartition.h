@@ -16,11 +16,12 @@
  ****************************************************************************/
 #pragma once
 
-#include <map>
-#include <utility>
-#include <utils/blocksize/DiscBlockSize.h>
-#include <utils/blocksize/AddressInDiscBlocks.h>
 #include "volumes/VolumeHeader.h"
+#include <map>
+#include <memory>
+#include <utility>
+#include <utils/blocksize/AddressInDiscBlocks.h>
+#include <utils/blocksize/DiscBlockSize.h>
 
 class WiiUPartition {
 
@@ -44,7 +45,7 @@ protected:
 
 private:
     WiiUPartition(char *pVolumeId, std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> pVolumes, uint16_t pFileSystemDescriptor)
-            : volumeId(pVolumeId), volumes(std::move(pVolumes)), fileSystemDescriptor(pFileSystemDescriptor) {
+        : volumeId(pVolumeId), volumes(std::move(pVolumes)), fileSystemDescriptor(pFileSystemDescriptor) {
     }
 
     std::string volumeId;

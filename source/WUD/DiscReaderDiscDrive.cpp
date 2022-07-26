@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
+#include "DiscReaderDiscDrive.h"
+#include <MainApplicationState.h>
 #include <WUD/content/WiiUDiscContentsHeader.h>
 #include <common/common.h>
-#include <MainApplicationState.h>
 #include <iosuhax.h>
-#include <utils/rijndael.h>
 #include <utils/logger.h>
-#include "DiscReaderDiscDrive.h"
+#include <utils/rijndael.h>
 
 
 DiscReaderDiscDrive::DiscReaderDiscDrive() : DiscReader() {
@@ -43,7 +43,7 @@ DiscReaderDiscDrive::DiscReaderDiscDrive() : DiscReader() {
 
             auto discKeyRes = IOSUHAX_ODM_GetDiscKey(discKey);
             if (discKeyRes >= 0) {
-                hasDiscKey = true;
+                hasDiscKey                = true;
                 auto sector_buf_decrypted = (uint8_t *) malloc(READ_SECTOR_SIZE);
                 if (sector_buf_decrypted != nullptr) {
                     aes_set_key((uint8_t *) discKey);
@@ -87,7 +87,7 @@ bool DiscReaderDiscDrive::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t 
     if ((offset & 0x7FFF) != 0 || (size & 0x7FFF) != 0) {
         return DiscReader::readEncrypted(buf, offset, size);
     }
-    uint32_t block_cnt = size >> 15;
+    uint32_t block_cnt         = size >> 15;
     uint32_t offset_in_sectors = offset >> 15;
     if (IOSUHAX_FSA_RawRead(gFSAfd, buf, 0x8000, block_cnt, offset_in_sectors, device_handle) < 0) {
         DEBUG_FUNCTION_LINE("Failed to read from Disc");

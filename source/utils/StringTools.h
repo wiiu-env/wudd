@@ -25,11 +25,11 @@
  ***************************************************************************/
 #pragma once
 
-#include <vector>
-#include <string>
-#include <wut_types.h>
 #include <algorithm>
 #include <cctype>
+#include <string>
+#include <vector>
+#include <wut_types.h>
 
 class StringTools {
 public:
@@ -57,7 +57,7 @@ public:
         if (!path)
             return path;
 
-        const char *ptr = path;
+        const char *ptr      = path;
         const char *Filename = ptr;
 
         while (*ptr != '\0') {

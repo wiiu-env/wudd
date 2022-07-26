@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Input.h"
 class CombinedInput : public Input {
 public:
     void combine(const Input &b) {

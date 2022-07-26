@@ -16,10 +16,10 @@
  ****************************************************************************/
 #pragma once
 
-#include <memory>
+#include "WiiUPartition.h"
 #include <cstdint>
 #include <cstdlib>
-#include "WiiUPartition.h"
+#include <memory>
 
 class WiiUGMPartition : public WiiUPartition {
 public:
@@ -43,4 +43,3 @@ public:
 private:
     std::shared_ptr<WiiUPartition> basePartition;
 };
-

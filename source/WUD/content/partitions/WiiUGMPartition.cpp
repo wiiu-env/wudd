@@ -20,18 +20,18 @@ WiiUGMPartition::WiiUGMPartition(std::shared_ptr<WiiUPartition> partition,
                                  std::vector<uint8_t> pRawTicket,
                                  std::vector<uint8_t> pRawTMD,
                                  std::vector<uint8_t> pRawCert)
-        : WiiUPartition(),
-          rawTicket(std::move(pRawTicket)),
-          rawTMD(std::move(pRawTMD)),
-          rawCert(std::move(pRawCert)),
-          basePartition(std::move(partition)) {
+    : WiiUPartition(),
+      rawTicket(std::move(pRawTicket)),
+      rawTMD(std::move(pRawTMD)),
+      rawCert(std::move(pRawCert)),
+      basePartition(std::move(partition)) {
 }
 
-std::string WiiUGMPartition::getVolumeId() const &{
+std::string WiiUGMPartition::getVolumeId() const & {
     return basePartition->getVolumeId();
 }
 
-std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUGMPartition::getVolumes() const &{
+std::map<AddressInDiscBlocks, std::shared_ptr<VolumeHeader>> WiiUGMPartition::getVolumes() const & {
     return basePartition->getVolumes();
 }
 

@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <utils/FSTUtils.h>
 #include <coreinit/debug.h>
+#include <utils/FSTUtils.h>
 
-#include <utility>
-#include "WiiUPartitions.h"
-#include "WiiUGMPartition.h"
 #include "WiiUDataPartition.h"
+#include "WiiUGMPartition.h"
+#include "WiiUPartitions.h"
+#include <utility>
 
 bool WiiUPartitions::getFSTEntryAsByte(std::string &filePath,
                                        const std::shared_ptr<FST> &fst,
@@ -37,7 +37,7 @@ bool WiiUPartitions::getFSTEntryAsByte(std::string &filePath,
         return false;
     }
 
-    auto info = asFileEntry->getSectionEntry();
+    auto info                    = asFileEntry->getSectionEntry();
     uint64_t sectionOffsetOnDisc = volumeAddress.getAddressInBytes() + info->address.getAddressInBytes();
 
     out_data.resize(asFileEntry->getSize());
@@ -70,7 +70,7 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
         tmp.push_back(partitionOpt.value());
     }
     std::optional<std::shared_ptr<WiiUPartition>> SIPartition;
-    for (auto &partition: tmp) {
+    for (auto &partition : tmp) {
         if (partition->getVolumeId().starts_with("SI")) {
             SIPartition = partition;
             break;
@@ -78,10 +78,10 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
     }
 
     if (SIPartition.has_value()) {
-        for (auto const&[key, val]: SIPartition.value()->getVolumes()) {
-            auto volumeAddress = key;
+        for (auto const &[key, val] : SIPartition.value()->getVolumes()) {
+            auto volumeAddress        = key;
             auto volumeAddressInBytes = volumeAddress.getAddressInBytes();
-            auto volumeHeader = val;
+            auto volumeHeader         = val;
 
             std::vector<uint8_t> fstData;
             fstData.resize(volumeHeader->FSTSize);
@@ -106,7 +106,7 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
                 return {};
             }
 
-            for (auto &child: siFST.value()->getRootEntry()->getDirChildren()) {
+            for (auto &child : siFST.value()->getRootEntry()->getDirChildren()) {
                 std::vector<uint8_t> bufferTicket;
                 std::string tikFilePath = std::string(child->getFullPath() + '/' + WUD_TICKET_FILENAME);
                 if (!getFSTEntryAsByte(tikFilePath, siFST.value(), volumeAddress, discReader, bufferTicket)) {
@@ -135,7 +135,7 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
                 std::string partitionName = std::string("GM") + partitionNameRaw;
 
                 std::optional<std::shared_ptr<WiiUPartition>> curPartition;
-                for (auto &partition: tmp) {
+                for (auto &partition : tmp) {
                     if (partition->getVolumeId().starts_with(partitionName)) {
                         curPartition = partition;
                         break;
@@ -151,10 +151,9 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
                 partitions.push_back(gmPartition);
             }
         }
-
     }
 
-    for (auto &partition: tmp) {
+    for (auto &partition : tmp) {
         if (partition->getVolumeId().starts_with("GM")) {
             continue;
         }
@@ -162,7 +161,7 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
             OSFatal("We can't handle more or less than one partion address yet.");
         }
         auto volumeAddress = partition->getVolumes().begin()->first;
-        auto vh = partition->getVolumes().begin()->second;
+        auto vh            = partition->getVolumes().begin()->second;
 
         std::vector<uint8_t> fstData;
         fstData.resize(vh->FSTSize);
@@ -190,4 +189,3 @@ WiiUPartitions::make_unique(const std::shared_ptr<DiscReader> &discReader, uint3
 
 WiiUPartitions::WiiUPartitions(std::vector<std::shared_ptr<WiiUPartition>> pPartitions) : partitions(std::move(pPartitions)) {
 }
-

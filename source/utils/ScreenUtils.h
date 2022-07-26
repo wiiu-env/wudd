@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 #pragma once
+#include <stdint.h>
 
 //! Defines the ID of a display usable with OSScreen.
 typedef enum ConsoleScreenID {

@@ -16,11 +16,11 @@
  ****************************************************************************/
 #pragma once
 
-#include <optional>
-#include <memory>
-#include <cstdint>
-#include <vector>
 #include "Content.h"
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <vector>
 
 class TitleMetaData {
 public:

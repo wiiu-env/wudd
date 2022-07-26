@@ -18,15 +18,15 @@
 
 SectionEntry::SectionEntry(const std::array<uint8_t, SectionEntry::LENGTH> &data, uint32_t pSectionNumber, const VolumeBlockSize &pBlockSize) {
     auto *dataAsUint = (uint32_t *) data.data();
-    address = AddressInVolumeBlocks(pBlockSize, dataAsUint[0]);
-    size = SizeInVolumeBlocks(pBlockSize, dataAsUint[1]);
+    address          = AddressInVolumeBlocks(pBlockSize, dataAsUint[0]);
+    size             = SizeInVolumeBlocks(pBlockSize, dataAsUint[1]);
 
-    ownerID = ((uint64_t *) (&data[8]))[0];
-    groupID = ((uint64_t *) (&data[16]))[0];
+    ownerID  = ((uint64_t *) (&data[8]))[0];
+    groupID  = ((uint64_t *) (&data[16]))[0];
     hashMode = data[20];
     char buff[32];
     snprintf(buff, sizeof(buff), "Section: %d", pSectionNumber);
 
-    name = std::string(buff);
+    name          = std::string(buff);
     sectionNumber = pSectionNumber;
 }

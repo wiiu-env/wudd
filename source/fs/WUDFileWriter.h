@@ -25,6 +25,7 @@ public:
     virtual int32_t writeSector(const uint8_t *buffer, uint32_t numberOfSectors);
 
     virtual void finalize();
+
 protected:
     int32_t sectorSize;
 };

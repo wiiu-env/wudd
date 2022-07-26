@@ -16,8 +16,8 @@
  ****************************************************************************/
 #pragma once
 
-#include "utils/utils.h"
 #include "WUDFileWriter.h"
+#include "utils/utils.h"
 #include <map>
 
 typedef struct {
@@ -28,8 +28,8 @@ typedef struct {
     unsigned int flags;
 } wuxHeader_t;
 
-#define WUX_MAGIC_0    0x57555830
-#define WUX_MAGIC_1    swap_uint32(0x1099d02e)
+#define WUX_MAGIC_0 0x57555830
+#define WUX_MAGIC_1 swap_uint32(0x1099d02e)
 
 class WUXFileWriter : public WUDFileWriter {
 public:

@@ -16,8 +16,8 @@
  ****************************************************************************/
 #pragma once
 
-#include "utils/logger.h"
 #include "BlockSize.h"
+#include "utils/logger.h"
 
 class DiscBlockSize : public BlockSize {
 
@@ -25,6 +25,5 @@ public:
     DiscBlockSize() = default;
 
     explicit DiscBlockSize(uint32_t blockSize) : BlockSize(blockSize) {
-
     }
 };

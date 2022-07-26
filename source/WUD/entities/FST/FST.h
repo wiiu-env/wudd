@@ -16,15 +16,15 @@
  ****************************************************************************/
 #pragma once
 
-#include <optional>
-#include <memory>
-#include <cstdint>
-#include <utility>
 #include <WUD/entities/FST/header/FSTHeader.h>
-#include <WUD/entities/FST/sectionentry/SectionEntries.h>
-#include <WUD/entities/FST/stringtable/StringTable.h>
 #include <WUD/entities/FST/nodeentry/NodeEntries.h>
 #include <WUD/entities/FST/nodeentry/RootEntry.h>
+#include <WUD/entities/FST/sectionentry/SectionEntries.h>
+#include <WUD/entities/FST/stringtable/StringTable.h>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
 
 class FST {
 public:
@@ -33,12 +33,12 @@ public:
     static std::optional<std::shared_ptr<FST>> make_shared(const std::vector<uint8_t> &data, uint32_t offset, const VolumeBlockSize &blockSize);
 
     std::shared_ptr<SectionEntries> sectionEntries;
+
 private:
     FST(std::unique_ptr<FSTHeader> pHeader,
         std::shared_ptr<SectionEntries> pSectionEntries,
         std::shared_ptr<StringTable> pStringTable,
-        std::unique_ptr<NodeEntries> pNodeEntries
-    );
+        std::unique_ptr<NodeEntries> pNodeEntries);
 
     std::shared_ptr<StringTable> stringTable;
     std::unique_ptr<NodeEntries> nodeEntries;

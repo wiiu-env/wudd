@@ -16,9 +16,9 @@
  ****************************************************************************/
 #pragma once
 
+#include "BlockSize.h"
 #include <iostream>
 #include <type_traits>
-#include "BlockSize.h"
 
 class SizeInBlocks {
 public:

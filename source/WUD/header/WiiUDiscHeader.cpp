@@ -21,10 +21,9 @@ uint32_t WiiUDiscHeader::LENGTH = 131072L;
 
 WiiUDiscHeader::WiiUDiscHeader(std::unique_ptr<WiiUManufactorDiscId> pManufactorDiscId,
                                std::unique_ptr<WiiUDiscId> pDiscId,
-                               std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation) :
-        manufactorDiscId(std::move(pManufactorDiscId)),
-        discId(std::move(pDiscId)),
-        wiiUContentsInformation(std::move(pWiiUContentsInformation)) {
+                               std::unique_ptr<WiiUContentsInformation> pWiiUContentsInformation) : manufactorDiscId(std::move(pManufactorDiscId)),
+                                                                                                    discId(std::move(pDiscId)),
+                                                                                                    wiiUContentsInformation(std::move(pWiiUContentsInformation)) {
 }
 
 std::optional<std::unique_ptr<WiiUDiscHeader>> WiiUDiscHeader::make_unique(const std::shared_ptr<DiscReader> &discReader) {
@@ -32,8 +31,8 @@ std::optional<std::unique_ptr<WiiUDiscHeader>> WiiUDiscHeader::make_unique(const
         DEBUG_FUNCTION_LINE("DiscReader is not ready");
         return {};
     }
-    uint32_t offset = 0;
-    uint32_t curOffset = offset;
+    uint32_t offset          = 0;
+    uint32_t curOffset       = offset;
     auto manufactorDiscIDOpt = WiiUManufactorDiscId::make_unique(discReader);
     if (!manufactorDiscIDOpt.has_value()) {
         DEBUG_FUNCTION_LINE("Failed to read ManufactorDiscId");

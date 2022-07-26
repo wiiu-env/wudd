@@ -16,8 +16,8 @@
  ****************************************************************************/
 #pragma once
 
-#include <utils/utils.h>
 #include "NUSDataProcessor.h"
+#include <utils/utils.h>
 
 class DefaultNUSDataProcessor : public NUSDataProcessor {
 public:

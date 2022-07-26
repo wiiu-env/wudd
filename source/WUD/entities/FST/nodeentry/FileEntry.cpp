@@ -27,7 +27,7 @@ FileEntry::parseData(const std::array<uint8_t, NodeEntry::LENGTH> &data,
                      const std::shared_ptr<SectionEntries> &sectionEntries,
                      const std::shared_ptr<StringTable> &stringTable,
                      const SectionBlockSize &blockSize) {
-    auto size = ((uint32_t *) &data[8])[0];
+    auto size   = ((uint32_t *) &data[8])[0];
     auto offset = SectionAddress(blockSize, ((uint32_t *) &data[4])[0]);
 
     auto stringNameOpt = stringTable->getStringEntry(param.uint24);
@@ -61,14 +61,12 @@ FileEntry::FileEntry(
         const NodeEntryParam &param,
         const std::shared_ptr<StringEntry> &pStringEntry,
         const std::shared_ptr<SectionEntry> &pSectionEntry,
-        uint32_t pSize, SectionAddress pAddress) :
-        NodeEntry(param.permission,
-                  pStringEntry,
-                  pSectionEntry,
-                  param.parent,
-                  param.type,
-                  param.entryNumber),
-        address(std::move(pAddress)),
-        size(pSize) {
-
+        uint32_t pSize, SectionAddress pAddress) : NodeEntry(param.permission,
+                                                             pStringEntry,
+                                                             pSectionEntry,
+                                                             param.parent,
+                                                             param.type,
+                                                             param.entryNumber),
+                                                   address(std::move(pAddress)),
+                                                   size(pSize) {
 }

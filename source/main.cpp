@@ -1,21 +1,21 @@
-#include <whb/proc.h>
 #include <whb/log.h>
 #include <whb/log_udp.h>
+#include <whb/proc.h>
 
 #include <thread>
 
-#include <iosuhax.h>
-#include <ntfs.h>
 #include <coreinit/debug.h>
 #include <coreinit/energysaver.h>
-#include <padscore/kpad.h>
-#include <input/WPADInput.h>
 #include <input/CombinedInput.h>
+#include <input/WPADInput.h>
+#include <iosuhax.h>
+#include <ntfs.h>
+#include <padscore/kpad.h>
 
-#include "utils/logger.h"
-#include "utils/WiiUScreen.h"
-#include "input/VPADInput.h"
 #include "MainApplicationState.h"
+#include "input/VPADInput.h"
+#include "utils/WiiUScreen.h"
+#include "utils/logger.h"
 
 
 void initIOSUHax();
@@ -84,8 +84,7 @@ void main_loop() {
             WPAD_CHAN_0,
             WPAD_CHAN_1,
             WPAD_CHAN_2,
-            WPAD_CHAN_3
-    };
+            WPAD_CHAN_3};
 
     if (gFSAfd < 0 || !sIosuhaxMount) {
         // state.setError(MainApplicationState::eErrorState::ERROR_IOSUHAX_FAILED);
@@ -98,8 +97,8 @@ void main_loop() {
         if (vpadInput.update(1280, 720)) {
             baseInput.combine(vpadInput);
         }
-        for (auto &wpadInput: wpadInputs) {
-            if(wpadInput.update(1280, 720)){
+        for (auto &wpadInput : wpadInputs) {
+            if (wpadInput.update(1280, 720)) {
                 baseInput.combine(wpadInput);
             }
         }
@@ -111,12 +110,12 @@ void main_loop() {
 
 void initIOSUHax() {
     sIosuhaxMount = false;
-    int res = IOSUHAX_Open(nullptr);
+    int res       = IOSUHAX_Open(nullptr);
     if (res < 0) {
         DEBUG_FUNCTION_LINE("IOSUHAX_open failed");
     } else {
         sIosuhaxMount = true;
-        gFSAfd = IOSUHAX_FSA_Open();
+        gFSAfd        = IOSUHAX_FSA_Open();
         if (gFSAfd < 0) {
             DEBUG_FUNCTION_LINE("IOSUHAX_FSA_Open failed");
         } else {

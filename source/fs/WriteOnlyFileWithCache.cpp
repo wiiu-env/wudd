@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
-#include <malloc.h>
-#include <coreinit/memory.h>
-#include <utils/logger.h>
-#include <utils/StringTools.h>
 #include "WriteOnlyFileWithCache.h"
+#include <coreinit/memory.h>
+#include <malloc.h>
+#include <utils/StringTools.h>
+#include <utils/logger.h>
 
 #define SPLIT_SIZE (0x80000000)
 
@@ -29,7 +29,7 @@ WriteOnlyFileWithCache::WriteOnlyFileWithCache(const char *path, int32_t cacheSi
         return;
     }
     this->writeBufferSize = cacheSize;
-    this->writeBuffer = (void *) memalign(0x1000, this->writeBufferSize);
+    this->writeBuffer     = (void *) memalign(0x1000, this->writeBufferSize);
     if (this->writeBuffer == nullptr) {
         this->close();
         return;
@@ -55,7 +55,7 @@ bool WriteOnlyFileWithCache::flush() {
 }
 
 int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
-    auto finalAddr = addr;
+    auto finalAddr        = addr;
     size_t finalWriteSize = writeSize;
     if (splitFile) {
         if (pos + writeBufferPos + finalWriteSize >= SPLIT_SIZE) {
@@ -73,7 +73,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
                 }
             }
             finalWriteSize = writeSize - realWriteSize;
-            finalAddr = (uint8_t *) ((uint32_t) addr + realWriteSize);
+            finalAddr      = (uint8_t *) ((uint32_t) addr + realWriteSize);
             part++;
             if (!flush()) {
                 return -2;

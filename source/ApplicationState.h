@@ -1,8 +1,9 @@
 #pragma once
 
-
-#include <utils/WiiUScreen.h>
-#include <utils/ScreenUtils.h>
+#include "input/Input.h"
+#include "utils/ScreenUtils.h"
+#include "utils/WiiUScreen.h"
+#include <stdint.h>
 
 class ApplicationState {
 public:

@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include <memory>
 #include "VolumeHeader.h"
 #include <coreinit/debug.h>
+#include <memory>
 #include <utils/logger.h>
 
-uint32_t  VolumeHeader::MAGIC = 0xCC93A4F5;
+uint32_t VolumeHeader::MAGIC = 0xCC93A4F5;
 
 std::vector<std::shared_ptr<H3HashArray>> VolumeHeader::getH3HashArray(uint8_t *h3Data, uint32_t pNumberOfH3HashArray, uint32_t pH3HashArrayListSize) {
     std::vector<std::shared_ptr<H3HashArray>> arrayList;
@@ -29,9 +29,9 @@ std::vector<std::shared_ptr<H3HashArray>> VolumeHeader::getH3HashArray(uint8_t *
     }
 
     for (uint32_t i = 1; i < pNumberOfH3HashArray; i++) {
-        auto *offsetPtr = (uint32_t *) &h3Data[i * 4];
+        auto *offsetPtr    = (uint32_t *) &h3Data[i * 4];
         uint32_t curOffset = offsetPtr[0];
-        uint32_t curEnd = pH3HashArrayListSize;
+        uint32_t curEnd    = pH3HashArrayListSize;
         if (i < pNumberOfH3HashArray - 1) {
             // If it's not the last element, the end of our .h3 is the start of the next .h3
             curEnd = offsetPtr[1];
@@ -64,16 +64,16 @@ std::optional<std::shared_ptr<VolumeHeader>> VolumeHeader::make_shared(const std
         return {};
     }
 
-    auto blockSize = VolumeBlockSize(bufferUint[1]);
-    auto volumeSize = SizeInVolumeBlocks(blockSize, bufferUint[2]);
-    auto h3HashArrayListSize = bufferUint[3];
-    auto numberOfH3HashArray = bufferUint[4];
-    auto FSTSize = bufferUint[5];
-    auto FSTAddress = AddressInVolumeBlocks(blockSize, bufferUint[6]);
-    auto FSTHashMode = buffer[36];
-    auto encryptType = buffer[37];
-    auto majorVersion = buffer[38];
-    auto minorVersion = buffer[39];
+    auto blockSize            = VolumeBlockSize(bufferUint[1]);
+    auto volumeSize           = SizeInVolumeBlocks(blockSize, bufferUint[2]);
+    auto h3HashArrayListSize  = bufferUint[3];
+    auto numberOfH3HashArray  = bufferUint[4];
+    auto FSTSize              = bufferUint[5];
+    auto FSTAddress           = AddressInVolumeBlocks(blockSize, bufferUint[6]);
+    auto FSTHashMode          = buffer[36];
+    auto encryptType          = buffer[37];
+    auto majorVersion         = buffer[38];
+    auto minorVersion         = buffer[39];
     auto expiringMajorVersion = buffer[40];
 
     free(buffer);
@@ -123,5 +123,3 @@ VolumeHeader::VolumeHeader(const VolumeBlockSize &pBlockSize,
                                                             h3HashArrayListSize(pH3HashArrayListSize),
                                                             numberOfH3HashArray(pNumberOfH3HashArray) {
 }
-
-

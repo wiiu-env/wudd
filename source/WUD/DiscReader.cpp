@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include <WUD/content/WiiUDiscContentsHeader.h>
 #include <MainApplicationState.h>
-#include <utils/rijndael.h>
-#include <coreinit/debug.h>
+#include <WUD/content/WiiUDiscContentsHeader.h>
 #include <common/common.h>
+#include <coreinit/debug.h>
+#include <utils/rijndael.h>
 
 bool DiscReader::readDecryptedChunk(uint64_t readOffset, uint8_t *out_buffer, uint8_t *key, uint8_t *IV) const {
     int CHUNK_SIZE = 0x10000;
@@ -59,9 +59,9 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
 
     int BLOCK_SIZE = 0x10000;
 
-    uint32_t usedSize = size;
+    uint32_t usedSize       = size;
     uint64_t usedFileOffset = fileOffset;
-    auto *buffer = (uint8_t *) malloc(BLOCK_SIZE);
+    auto *buffer            = (uint8_t *) malloc(BLOCK_SIZE);
     if (buffer == nullptr) {
         return false;
     }
@@ -92,7 +92,7 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
             break;
         }
         maxCopySize = BLOCK_SIZE - blockOffset;
-        copySize = (usedSize > maxCopySize) ? maxCopySize : usedSize;
+        copySize    = (usedSize > maxCopySize) ? maxCopySize : usedSize;
 
         memcpy(out_buffer + totalread, buffer + blockOffset, copySize);
 
@@ -133,9 +133,9 @@ bool DiscReader::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) {
         return true;
     }
     uint32_t missingFromPrevSector = offset % SECTOR_SIZE;
-    auto curOffset = offset;
-    uint32_t offsetInBuf = 0;
-    uint32_t totalRead = 0;
+    auto curOffset                 = offset;
+    uint32_t offsetInBuf           = 0;
+    uint32_t totalRead             = 0;
     if (missingFromPrevSector > 0) {
         auto offset_in_sectors = offset / SECTOR_SIZE;
         if (!readEncryptedSector(sector_buf, 1, offset_in_sectors)) {
@@ -149,7 +149,6 @@ bool DiscReader::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t size) {
         totalRead += toCopy;
         curOffset += missingFromPrevSector;
         offsetInBuf += missingFromPrevSector;
-
     }
 
     if (totalRead >= size) {

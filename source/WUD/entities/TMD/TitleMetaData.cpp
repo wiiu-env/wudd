@@ -22,11 +22,10 @@
 TitleMetaData::TitleMetaData(std::vector<std::shared_ptr<Content>> pContentList) : contentList(std::move(pContentList)) {
 
     // Get Contents
-
 }
 
 std::optional<std::shared_ptr<Content>> TitleMetaData::getContentByIndex(uint16_t i) {
-    for (auto &content: contentList) {
+    for (auto &content : contentList) {
         if (content->index == i) {
             return content;
         }
