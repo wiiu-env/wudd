@@ -17,6 +17,7 @@
 #pragma once
 
 #include <WUD/DiscReader.h>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
