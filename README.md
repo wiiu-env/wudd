@@ -7,7 +7,7 @@ Features:
 - Dump the GM Partitions (Game, Updates, DLCs) of an Wii U Disc as *.app,*.h3, .tmd, .tik, .cert files
 - Supports dumping to SD (FAT32) and USB (NTFS only). When dumping to SD the files get slitted in 2 GiB parts. 
 
-Files will be dumped to `/wudump/[DISC-ID]/`. The DiscID of a game can be found on the disc (e.g. WUP-P-ARDP for the EUR version of Super Mario 3D World).
+Files will be dumped to `/wudump/[DISC-ID]/`. The disc id of a game can be found on the disc (e.g. WUP-P-ARDP for the EUR version of Super Mario 3D World). If WUDD fails to determine the disc id, "DISC" with a timestamp will be used instead.
 
 ## How to merge splitted files
 

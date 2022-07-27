@@ -114,4 +114,8 @@ public:
     std::vector<std::pair<std::shared_ptr<WiiUGMPartition>, std::shared_ptr<NUSTitle>>> gmPartitionPairs;
 
     eDumpTarget targetDevice = TARGET_SD;
+
+    std::string getPathNameForDisc();
+
+    OSTime dumpStartDate;
 };

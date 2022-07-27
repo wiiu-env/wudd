@@ -30,6 +30,7 @@ WUDDumperState::WUDDumperState(WUDDumperState::eDumpTargetFormat pTargetFormat, 
     this->sectorBufSize = READ_SECTOR_SIZE * READ_NUM_SECTORS;
     this->state         = STATE_OPEN_ODD1;
     gBlockHomeButton    = true;
+    this->dumpStartDate = OSGetTime();
 }
 
 WUDDumperState::~WUDDumperState() {
@@ -85,10 +86,6 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         if (FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
             this->discId[10] = '\0';
             memcpy(this->discId.data(), sectorBuf, 10);
-            if (this->discId[0] == 0) {
-                setError(ERROR_NO_DISC_ID);
-                return ApplicationState::SUBSTATE_RUNNING;
-            }
             this->state = STATE_READ_DISC_INFO_DONE;
             return ApplicationState::SUBSTATE_RUNNING;
         }
@@ -112,26 +109,26 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         }
 
         if (hasDiscKey) {
-            if (!FSUtils::CreateSubfolder(string_format("%swudump/%s", getPathForDevice(targetDevice).c_str(), discId).c_str())) {
+            if (!FSUtils::CreateSubfolder(string_format("%swudump/%s", getPathForDevice(targetDevice).c_str(), getPathNameForDisc().c_str()).c_str())) {
                 setError(ERROR_WRITE_FAILED);
                 return SUBSTATE_RUNNING;
             }
-            if (!FSUtils::saveBufferToFile(string_format("%swudump/%s/game.key", getPathForDevice(targetDevice).c_str(), discId).c_str(), discKey.key, 16)) {
+            if (!FSUtils::saveBufferToFile(string_format("%swudump/%s/game.key", getPathForDevice(targetDevice).c_str(), getPathNameForDisc().c_str()).c_str(), discKey.key, 16)) {
                 setError(ERROR_WRITE_FAILED);
                 return SUBSTATE_RUNNING;
             }
         }
         this->state = STATE_DUMP_DISC_START;
     } else if (this->state == STATE_DUMP_DISC_START) {
-        if (!FSUtils::CreateSubfolder(string_format("%swudump/%s", getPathForDevice(targetDevice).c_str(), discId).c_str())) {
+        if (!FSUtils::CreateSubfolder(string_format("%swudump/%s", getPathForDevice(targetDevice).c_str(), getPathNameForDisc().c_str()).c_str())) {
             setError(ERROR_WRITE_FAILED);
             return ApplicationState::SUBSTATE_RUNNING;
         }
         if (targetFormat == DUMP_AS_WUX) {
-            this->fileHandle = std::make_unique<WUXFileWriter>(string_format("%swudump/%s/game.wux", getPathForDevice(targetDevice).c_str(), discId).c_str(), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
+            this->fileHandle = std::make_unique<WUXFileWriter>(string_format("%swudump/%s/game.wux", getPathForDevice(targetDevice).c_str(), getPathNameForDisc().c_str()).c_str(), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
                                                                SECTOR_SIZE, targetDevice == TARGET_SD);
         } else {
-            this->fileHandle = std::make_unique<WUDFileWriter>(string_format("%swudump/%s/game.wud", getPathForDevice(targetDevice).c_str(), discId).c_str(), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
+            this->fileHandle = std::make_unique<WUDFileWriter>(string_format("%swudump/%s/game.wud", getPathForDevice(targetDevice).c_str(), getPathNameForDisc().c_str()).c_str(), READ_SECTOR_SIZE * WRITE_BUFFER_NUM_SECTORS,
                                                                SECTOR_SIZE, targetDevice == TARGET_SD);
         }
         if (!this->fileHandle->isOpen()) {
@@ -264,9 +261,9 @@ void WUDDumperState::render() {
     } else if (this->state == STATE_READ_DISC_INFO) {
         WiiUScreen::drawLine("Read disc information");
     } else if (this->state == STATE_READ_DISC_INFO_DONE) {
-        WiiUScreen::drawLinef("Dumping: %s", this->discId);
+        WiiUScreen::drawLinef("Dumping: %s", getPathNameForDisc().c_str());
     } else if (this->state == STATE_DUMP_DISC_START || this->state == STATE_DUMP_DISC || this->state == STATE_WAIT_USER_ERROR_CONFIRM) {
-        WiiUScreen::drawLinef("Dumping: %s", this->discId);
+        WiiUScreen::drawLinef("Dumping: %s", getPathNameForDisc().c_str());
 
         float percent = this->currentSector / (WUD_FILE_SIZE / READ_SECTOR_SIZE * 1.0f) * 100.0f;
         WiiUScreen::drawLinef("Progress: %0.2f MiB / %5.2f MiB (%2.1f %%)", this->currentSector * (READ_SECTOR_SIZE / 1024.0f / 1024.0f), WUD_FILE_SIZE / 1024.0f / 1024.0f, percent);
@@ -361,4 +358,15 @@ std::string WUDDumperState::getPathForDevice(eDumpTarget target) const {
         return "ntfs0:/";
     }
     return "fs:/vol/external01/";
+}
+
+std::string WUDDumperState::getPathNameForDisc() {
+    if (this->discId[0] == '\0') {
+        OSCalendarTime tm;
+        OSTicksToCalendarTime(this->dumpStartDate, &tm);
+        return string_format("DISC-%04d-%02d-%02d-%02d-%02d-%02d",
+                             tm.tm_year, tm.tm_mon + 1, tm.tm_mday,
+                             tm.tm_hour, tm.tm_min, tm.tm_sec);
+    }
+    return std::string((char *) &discId[0]);
 }
