@@ -110,4 +110,6 @@ public:
     int32_t writtenSectors{};
 
     void *emptySector = nullptr;
+    std::string getPathNameForDisc();
+    OSTime dumpStartDate;
 };

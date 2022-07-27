@@ -32,6 +32,7 @@ GMPartitionsDumperState::GMPartitionsDumperState(eDumpTarget pTargetDevice) : ta
     this->sectorBufSize = SECTOR_SIZE;
     this->state         = STATE_OPEN_ODD1;
     gBlockHomeButton    = true;
+    dumpStartDate       = OSGetTime();
 }
 
 GMPartitionsDumperState::~GMPartitionsDumperState() {
@@ -198,11 +199,6 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
         if (FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
             this->discId[10] = '\0';
             memcpy(this->discId.data(), sectorBuf, 10);
-            if (this->discId[0] == 0) {
-                setError(ERROR_NO_DISC_ID);
-                return ApplicationState::SUBSTATE_RUNNING;
-            }
-
             this->state = STATE_READ_DISC_INFO_DONE;
             return ApplicationState::SUBSTATE_RUNNING;
         }
@@ -278,7 +274,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                 return SUBSTATE_RUNNING;
             }
 
-            this->targetPath = string_format("%swudump/%s/%s", getPathForDevice(targetDevice).c_str(), this->discId, curPartition->getVolumeId().c_str());
+            this->targetPath = string_format("%swudump/%s/%s", getPathForDevice(targetDevice).c_str(), getPathNameForDisc().c_str(), curPartition->getVolumeId().c_str());
             if (!FSUtils::CreateSubfolder(targetPath.c_str())) {
                 this->setError(ERROR_CREATE_DIR);
                 return SUBSTATE_RUNNING;
@@ -556,4 +552,15 @@ std::string GMPartitionsDumperState::ErrorDescription() const {
         return "ERROR_MALLOC_FAILED";
     }
     return "UNKNOWN_ERROR";
+}
+
+std::string GMPartitionsDumperState::getPathNameForDisc() {
+    if (this->discId[0] == '\0') {
+        OSCalendarTime tm;
+        OSTicksToCalendarTime(this->dumpStartDate, &tm);
+        return string_format("DISC-%04d-%02d-%02d-%02d-%02d-%02d",
+                             tm.tm_year, tm.tm_mon + 1, tm.tm_mday,
+                             tm.tm_hour, tm.tm_min, tm.tm_sec);
+    }
+    return std::string((char *) &discId[0]);
 }
