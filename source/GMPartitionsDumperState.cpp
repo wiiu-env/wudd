@@ -226,7 +226,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
         auto discHeaderOpt = WiiUDiscHeader::make_unique(discReader);
         if (!discHeaderOpt.has_value()) {
             DEBUG_FUNCTION_LINE_ERR("Failed to read DiscHeader");
-            this->setError(ERROR_PARSE_DISCHEADER);
+            this->setError(ERROR_PARSE_DISC_HEADER);
             return SUBSTATE_RUNNING;
         }
         this->discHeader = std::move(discHeaderOpt.value());
@@ -448,108 +448,77 @@ std::string GMPartitionsDumperState::getPathForDevice(eDumpTarget target) const 
 }
 
 std::string GMPartitionsDumperState::ErrorMessage() const {
-    if (this->errorState == ERROR_MALLOC_FAILED) {
-        return "ERROR_MALLOC_FAILED";
-    }
-    if (this->errorState == ERROR_NO_DISC_ID) {
-        return "ERROR_NO_DISC_ID";
-    }
-    if (this->errorState == ERROR_READ_FIRST_SECTOR) {
-        return "ERROR_READ_FIRST_SECTOR";
-    }
-    if (this->errorState == ERROR_OPEN_ODD1) {
-        return "ERROR_OPEN_ODD1";
-    }
-    if (this->errorState == ERROR_PARSE_DISCHEADER) {
-        return "ERROR_PARSE_DISCHEADER";
-    }
-    if (this->errorState == ERROR_NO_GM_PARTITION) {
-        return "ERROR_NO_GM_PARTITION";
-    }
-    if (this->errorState == ERROR_CREATE_DIR) {
-        return "ERROR_CREATE_DIR";
-    }
-    if (this->errorState == ERROR_FAILED_TO_GET_NUSTITLE) {
-        return "ERROR_FAILED_TO_GET_NUSTITLE";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_TMD) {
-        return "ERROR_FAILED_WRITE_TMD";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_TICKET) {
-        return "ERROR_FAILED_WRITE_TICKET";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_CERT) {
-        return "ERROR_FAILED_WRITE_CERT";
-    }
-    if (this->errorState == ERROR_FIND_CONTENT_BY_INDEX) {
-        return "ERROR_FIND_CONTENT_BY_INDEX";
-    }
-    if (this->errorState == ERROR_FAILED_CREATE_FILE) {
-        return "ERROR_FAILED_CREATE_FILE";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_H3) {
-        return "ERROR_FAILED_WRITE_H3";
-    }
-    if (this->errorState == ERROR_READ_CONTENT) {
-        return "ERROR_READ_CONTENT";
-    }
-    if (this->errorState == ERROR_WRITE_CONTENT) {
-        return "ERROR_WRITE_CONTENT";
-    }
-    if (this->errorState == ERROR_MALLOC_FAILED) {
-        return "ERROR_MALLOC_FAILED";
+    switch (this->errorState) {
+        case ERROR_NONE:
+            return "ERROR_NONE";
+        case ERROR_MALLOC_FAILED:
+            return "ERROR_MALLOC_FAILED";
+        case ERROR_READ_FIRST_SECTOR:
+            return "ERROR_READ_FIRST_SECTOR";
+        case ERROR_OPEN_ODD1:
+            return "ERROR_OPEN_ODD1";
+        case ERROR_PARSE_DISC_HEADER:
+            return "ERROR_PARSE_DISC_HEADER";
+        case ERROR_NO_GM_PARTITION:
+            return "ERROR_NO_GM_PARTITION";
+        case ERROR_CREATE_DIR:
+            return "ERROR_CREATE_DIR";
+        case ERROR_FAILED_TO_GET_NUSTITLE:
+            return "ERROR_FAILED_TO_GET_NUSTITLE";
+        case ERROR_FAILED_WRITE_TMD:
+            return "ERROR_FAILED_WRITE_TMD";
+        case ERROR_FAILED_WRITE_TICKET:
+            return "ERROR_FAILED_WRITE_TICKET";
+        case ERROR_FAILED_WRITE_CERT:
+            return "ERROR_FAILED_WRITE_CERT";
+        case ERROR_FIND_CONTENT_BY_INDEX:
+            return "ERROR_FIND_CONTENT_BY_INDEX";
+        case ERROR_FAILED_CREATE_FILE:
+            return "ERROR_FAILED_CREATE_FILE";
+        case ERROR_FAILED_WRITE_H3:
+            return "ERROR_FAILED_WRITE_H3";
+        case ERROR_READ_CONTENT:
+            return "ERROR_READ_CONTENT";
+        case ERROR_WRITE_CONTENT:
+            return "ERROR_WRITE_CONTENT";
     }
     return "UNKNOWN_ERROR";
 }
 
 std::string GMPartitionsDumperState::ErrorDescription() const {
-    if (this->errorState == ERROR_MALLOC_FAILED) {
-        return "ERROR_MALLOC_FAILED";
-    }
-    if (this->errorState == ERROR_NO_DISC_ID) {
-        return "ERROR_NO_DISC_ID";
-    }
-    if (this->errorState == ERROR_READ_FIRST_SECTOR) {
-        return "ERROR_READ_FIRST_SECTOR";
-    }
-    if (this->errorState == ERROR_OPEN_ODD1) {
-        return "ERROR_OPEN_ODD1";
-    }
-    if (this->errorState == ERROR_PARSE_DISCHEADER) {
-        return "ERROR_PARSE_DISCHEADER";
-    }
-    if (this->errorState == ERROR_NO_GM_PARTITION) {
-        return "ERROR_NO_GM_PARTITION";
-    }
-    if (this->errorState == ERROR_FAILED_TO_GET_NUSTITLE) {
-        return "ERROR_FAILED_TO_GET_NUSTITLE";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_TMD) {
-        return "ERROR_FAILED_WRITE_TMD";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_TICKET) {
-        return "ERROR_FAILED_WRITE_TICKET";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_CERT) {
-        return "ERROR_FAILED_WRITE_CERT";
-    }
-    if (this->errorState == ERROR_FIND_CONTENT_BY_INDEX) {
-        return "ERROR_FIND_CONTENT_BY_INDEX";
-    }
-    if (this->errorState == ERROR_FAILED_CREATE_FILE) {
-        return "ERROR_FAILED_CREATE_FILE";
-    }
-    if (this->errorState == ERROR_FAILED_WRITE_H3) {
-        return "ERROR_FAILED_WRITE_H3";
-    }
-    if (this->errorState == ERROR_READ_CONTENT) {
-        return "ERROR_READ_CONTENT";
-    }
-    if (this->errorState == ERROR_WRITE_CONTENT) {
-        return "ERROR_WRITE_CONTENT";
-    }
-    if (this->errorState == ERROR_MALLOC_FAILED) {
-        return "ERROR_MALLOC_FAILED";
+    switch (this->errorState) {
+        case ERROR_NONE:
+            break;
+        case ERROR_MALLOC_FAILED:
+            return "Failed to allocate memory.";
+        case ERROR_READ_FIRST_SECTOR:
+            return "Failed to read first sector.";
+        case ERROR_OPEN_ODD1:
+            return "Failed to read from disc.";
+        case ERROR_PARSE_DISC_HEADER:
+            return "Failed to parse the disc header.";
+        case ERROR_NO_GM_PARTITION:
+            return "No games were found on this disc.";
+        case ERROR_CREATE_DIR:
+            return "Failed to create a directory. \nMake sure to have enough space on the storage device.";
+        case ERROR_FAILED_TO_GET_NUSTITLE:
+            return "Failed to parse partition as NUSTitle";
+        case ERROR_FAILED_WRITE_TMD:
+            return "Failed to dump the title.tmd";
+        case ERROR_FAILED_WRITE_TICKET:
+            return "Failed to dump the title.tik";
+        case ERROR_FAILED_WRITE_CERT:
+            return "Failed to dump the title.cert";
+        case ERROR_FIND_CONTENT_BY_INDEX:
+            return "Failed to find requested index";
+        case ERROR_FAILED_CREATE_FILE:
+            return "Failed to create a file. \nMake sure to have enough space on the storage device.";
+        case ERROR_FAILED_WRITE_H3:
+            return "Failed to dump the a .h3 file";
+        case ERROR_READ_CONTENT:
+            return "Failed to read the a .app file from disc";
+        case ERROR_WRITE_CONTENT:
+            return "Failed to dump a .app. \nMake sure to have enough space on the storage device.";
     }
     return "UNKNOWN_ERROR";
 }

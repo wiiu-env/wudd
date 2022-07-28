@@ -57,7 +57,6 @@ public:
         ERROR_READ_FIRST_SECTOR,
         ERROR_FILE_OPEN_FAILED,
         ERROR_MALLOC_FAILED,
-        ERROR_NO_DISC_ID,
         ERROR_WRITE_FAILED,
         ERROR_NO_DISC_FOUND
     };
