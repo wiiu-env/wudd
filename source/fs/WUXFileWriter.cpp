@@ -76,7 +76,7 @@ int32_t WUXFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
             indexTable[this->currentSector] = swap_uint32(this->writtenSector);
             hashMap[hashOut]                = writtenSector;
             if (isOpen()) {
-                if (!write((uint8_t *) addr, this->sectorSize)) {
+                if (write((uint8_t *) addr, this->sectorSize) != this->sectorSize) {
                     DEBUG_FUNCTION_LINE_ERR("Write failed");
                     return -1;
                 }

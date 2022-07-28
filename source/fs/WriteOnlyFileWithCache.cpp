@@ -45,7 +45,7 @@ WriteOnlyFileWithCache::~WriteOnlyFileWithCache() {
 bool WriteOnlyFileWithCache::flush() {
     if (this->writeBufferPos > 0) {
         int32_t res = CFile::write(static_cast<const uint8_t *>(this->writeBuffer), this->writeBufferPos);
-        if (res < 0) {
+        if (res != this->writeBufferPos) {
             DEBUG_FUNCTION_LINE_ERR("Failed to flush cache, write failed: %d (expected %d)", res, this->writeBufferPos);
             return false;
         }
