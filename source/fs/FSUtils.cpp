@@ -1,63 +1,9 @@
 #include "FSUtils.h"
 #include "CFile.hpp"
-#include "utils/logger.h"
-#include "utils/utils.h"
+#include <cstdio>
+#include <cstring>
 #include <fcntl.h>
-#include <malloc.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
-
-int32_t FSUtils::LoadFileToMem(const char *filepath, uint8_t **inbuffer, uint32_t *size) {
-    //! always initialze input
-    *inbuffer = nullptr;
-    if (size)
-        *size = 0;
-
-    int32_t iFd = open(filepath, O_RDONLY);
-    if (iFd < 0)
-        return -1;
-
-    uint32_t filesize = lseek(iFd, 0, SEEK_END);
-    lseek(iFd, 0, SEEK_SET);
-
-    auto *buffer = (uint8_t *) memalign(0x40, ROUNDUP(filesize, 0x40));
-    if (buffer == nullptr) {
-        close(iFd);
-        return -2;
-    }
-
-    uint32_t blocksize = 0x4000;
-    uint32_t done      = 0;
-    int32_t readBytes  = 0;
-
-    while (done < filesize) {
-        if (done + blocksize > filesize) {
-            blocksize = filesize - done;
-        }
-        readBytes = read(iFd, buffer + done, blocksize);
-        if (readBytes <= 0)
-            break;
-        done += readBytes;
-    }
-
-    close(iFd);
-
-    if (done != filesize) {
-        free(buffer);
-        buffer = nullptr;
-        return -3;
-    }
-
-    *inbuffer = buffer;
-
-    //! sign is optional input
-    if (size) {
-        *size = filesize;
-    }
-
-    return filesize;
-}
 
 int32_t FSUtils::CheckFile(const char *filepath) {
     if (!filepath)
@@ -128,39 +74,6 @@ int32_t FSUtils::CreateSubfolder(const char *fullpath) {
     }
 
     return 1;
-}
-
-
-bool FSUtils::copyFile(const std::string &in, const std::string &out) {
-    // Using C++ buffers is **really** slow. Copying in 1023 byte chunks.
-    // Let's do it the old way.
-    size_t size;
-
-    int source = open(in.c_str(), O_RDONLY, 0);
-    int dest   = open(out.c_str(), 0x602, 0644);
-    if (source < 0) {
-        return false;
-    }
-    if (dest < 0) {
-        close(source);
-        return false;
-    }
-
-    auto bufferSize = 1024 * 1024;
-    char *buf       = (char *) memalign(0x40, ROUNDUP(bufferSize, 0x40));
-    if (buf == NULL) {
-        return false;
-    }
-
-    while ((size = read(source, buf, bufferSize)) > 0) {
-        write(dest, buf, size);
-    }
-
-    free(buf);
-
-    close(source);
-    close(dest);
-    return true;
 }
 
 int32_t FSUtils::saveBufferToFile(const char *path, void *buffer, uint32_t size) {
