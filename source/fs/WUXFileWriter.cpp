@@ -33,7 +33,7 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
 
     this->sectorIndexTable = (void *) memalign(0x40, ROUNDUP(totalSectorCount * 4, 0x40));
     if (sectorIndexTable == nullptr) {
-        DEBUG_FUNCTION_LINE("Failed to alloc");
+        DEBUG_FUNCTION_LINE_ERR("Failed to alloc");
         WUDFileWriter::close();
         return;
     }
@@ -77,7 +77,7 @@ int32_t WUXFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
             hashMap[hashOut]                = writtenSector;
             if (isOpen()) {
                 if (!write((uint8_t *) addr, this->sectorSize)) {
-                    DEBUG_FUNCTION_LINE("Write failed");
+                    DEBUG_FUNCTION_LINE_ERR("Write failed");
                     return -1;
                 }
             }

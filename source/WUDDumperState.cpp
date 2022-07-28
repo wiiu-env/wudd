@@ -70,7 +70,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             if (this->sectorBuf == nullptr) {
                 this->sectorBuf = (void *) memalign(0x100, this->sectorBufSize);
                 if (this->sectorBuf == nullptr) {
-                    DEBUG_FUNCTION_LINE("ERROR_MALLOC_FAILED");
+                    DEBUG_FUNCTION_LINE_ERR("ERROR_MALLOC_FAILED");
                     this->setError(ERROR_MALLOC_FAILED);
                     return ApplicationState::SUBSTATE_RUNNING;
                 }
@@ -165,7 +165,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
                 this->state = STATE_DUMP_DISC_DONE;
                 if (this->fileHandle->isOpen()) {
                     if (!this->fileHandle->flush()) {
-                        DEBUG_FUNCTION_LINE("Flush failed");
+                        DEBUG_FUNCTION_LINE_ERR("Final flush failed");
                         this->setError(ERROR_WRITE_FAILED);
                         return ApplicationState::SUBSTATE_RUNNING;
                     }

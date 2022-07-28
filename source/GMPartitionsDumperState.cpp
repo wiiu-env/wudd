@@ -269,7 +269,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
                 this->curNUSTitle  = gmPartitionPair.second;
                 this->dataProvider = this->curNUSTitle->dataProcessor->getDataProvider();
             } else {
-                DEBUG_FUNCTION_LINE("Failed to find a GM partition");
+                DEBUG_FUNCTION_LINE_ERR("Failed to find a GM partition");
                 this->setError(ERROR_NO_GM_PARTITION);
                 return SUBSTATE_RUNNING;
             }
