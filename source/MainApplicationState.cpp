@@ -88,7 +88,7 @@ ApplicationState::eSubState MainApplicationState::update(Input *input) {
             } else if (this->selectedOptionY == 3) {
                 //
             } else {
-                if (gRunFromHBL) {
+                if (!gRunFromHBL) {
                     SYSLaunchMenu();
                 }
             }
