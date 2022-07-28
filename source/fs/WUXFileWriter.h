@@ -39,10 +39,10 @@ public:
 
     int32_t writeSector(const uint8_t *buffer, uint32_t numberOfSectors) override;
 
-    void finalize() override;
+    bool finalize() override;
 
 private:
-    void writeSectorIndexTable();
+    bool writeSectorIndexTable();
 
     uint64_t totalSectorCount;
 

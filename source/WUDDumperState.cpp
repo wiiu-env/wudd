@@ -169,7 +169,11 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
                         this->setError(ERROR_WRITE_FAILED);
                         return ApplicationState::SUBSTATE_RUNNING;
                     }
-                    this->fileHandle->finalize();
+                    if (!this->fileHandle->finalize()) {
+                        DEBUG_FUNCTION_LINE_ERR("Finalize failed");
+                        this->setError(ERROR_WRITE_FAILED);
+                        return ApplicationState::SUBSTATE_RUNNING;
+                    }
                     this->fileHandle->close();
                 }
             }
