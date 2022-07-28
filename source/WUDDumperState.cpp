@@ -132,7 +132,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
                                                                SECTOR_SIZE, targetDevice == TARGET_SD);
         }
         if (!this->fileHandle->isOpen()) {
-            DEBUG_FUNCTION_LINE("Failed to open file");
+            DEBUG_FUNCTION_LINE_ERR("Failed to open file.");
             this->setError(ERROR_FILE_OPEN_FAILED);
             return ApplicationState::SUBSTATE_RUNNING;
         }
@@ -255,6 +255,7 @@ void WUDDumperState::render() {
         WiiUScreen::drawLinef("Error:       %s", ErrorMessage().c_str());
         WiiUScreen::drawLinef("Description: %s", ErrorDescription().c_str());
         WiiUScreen::drawLine();
+        WiiUScreen::drawLine();
         WiiUScreen::drawLine("Press A to return.");
     } else if (this->state == STATE_OPEN_ODD1) {
         WiiUScreen::drawLine("Open /dev/odd01");
@@ -328,31 +329,37 @@ void WUDDumperState::setError(WUDDumperState::eErrorState err) {
 }
 
 std::string WUDDumperState::ErrorMessage() const {
-    if (this->errorState == ERROR_READ_FIRST_SECTOR) {
-        return "ERROR_READ_FIRST_SECTOR";
-    } else if (this->errorState == ERROR_FILE_OPEN_FAILED) {
-        return "ERROR_FILE_OPEN_FAILED";
-    } else if (this->errorState == ERROR_MALLOC_FAILED) {
-        return "ERROR_MALLOC_FAILED";
-    } else if (this->errorState == ERROR_NO_DISC_ID) {
-        return "ERROR_NO_DISC_ID";
-    } else if (this->errorState == ERROR_WRITE_FAILED) {
-        return "ERROR_WRITE_FAILED";
+    switch (this->errorState) {
+        case ERROR_READ_FIRST_SECTOR:
+            return "ERROR_READ_FIRST_SECTOR";
+        case ERROR_NONE:
+            return "ERROR_NONE";
+        case ERROR_FILE_OPEN_FAILED:
+            return "ERROR_FILE_OPEN_FAILED";
+        case ERROR_MALLOC_FAILED:
+            return "ERROR_MALLOC_FAILED";
+        case ERROR_WRITE_FAILED:
+            return "ERROR_WRITE_FAILED";
+        case ERROR_NO_DISC_FOUND:
+            return "ERROR_NO_DISC_FOUND";
     }
     return "UNKNOWN_ERROR";
 }
 
 std::string WUDDumperState::ErrorDescription() const {
-    if (this->errorState == ERROR_READ_FIRST_SECTOR) {
-        return "Failed to read first sector.";
-    } else if (this->errorState == ERROR_MALLOC_FAILED) {
-        return "Failed to allocate data.";
-    } else if (this->errorState == ERROR_FILE_OPEN_FAILED) {
-        return "Failed to create file";
-    } else if (this->errorState == ERROR_NO_DISC_ID) {
-        return "Failed to get the disc id";
-    } else if (this->errorState == ERROR_WRITE_FAILED) {
-        return "Failed to write the file. \nMake sure to have enough space on the storage";
+    switch (this->errorState) {
+        case ERROR_READ_FIRST_SECTOR:
+            return "Failed to read first sector.";
+        case ERROR_NONE:
+            return "ERROR_NONE";
+        case ERROR_FILE_OPEN_FAILED:
+            return "Failed to create file \nMake sure to have enough space on the storage device.";
+        case ERROR_MALLOC_FAILED:
+            return "Failed to allocate data.";
+        case ERROR_WRITE_FAILED:
+            return "Failed to write the file. \nMake sure to have enough space on the storage device.";
+        case ERROR_NO_DISC_FOUND:
+            return "Please insert a Wii U disc.";
     }
     return "UNKNOWN_ERROR";
 }

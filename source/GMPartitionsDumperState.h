@@ -55,10 +55,9 @@ public:
     enum eErrorState {
         ERROR_NONE,
         ERROR_MALLOC_FAILED,
-        ERROR_NO_DISC_ID,
         ERROR_READ_FIRST_SECTOR,
         ERROR_OPEN_ODD1,
-        ERROR_PARSE_DISCHEADER,
+        ERROR_PARSE_DISC_HEADER,
         ERROR_NO_GM_PARTITION,
         ERROR_CREATE_DIR,
         ERROR_FAILED_TO_GET_NUSTITLE,
