@@ -26,7 +26,6 @@ std::optional<std::unique_ptr<WiiUDiscContentsHeader>> WiiUDiscContentsHeader::m
         return {};
     }
     if (!discReader->hasDiscKey) {
-        DEBUG_FUNCTION_LINE_ERR();
         if (!discReader->readEncrypted(buffer.get(), offset, LENGTH)) {
             DEBUG_FUNCTION_LINE_ERR("Failed to read data");
             return {};

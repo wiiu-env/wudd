@@ -1,6 +1,4 @@
 #include "utils.h"
-#include "../fs/FSUtils.h"
-#include "TinySHA1.hpp"
 #include "logger.h"
 #include <cstddef>
 #include <cstring>
@@ -38,29 +36,6 @@ void Utils::dumpHex(const void *data, size_t size) {
             }
         }
     }
-}
-
-
-std::string Utils::calculateSHA1(const char *buffer, size_t size) {
-    sha1::SHA1 s;
-    s.processBytes(buffer, size);
-    uint32_t digest[5];
-    s.getDigest(digest);
-    char tmp[48];
-    snprintf(tmp, 45, "%08X%08X%08X%08X%08X", digest[0], digest[1], digest[2], digest[3], digest[4]);
-    return tmp;
-}
-
-std::string Utils::hashFile(const std::string &path) {
-    uint8_t *data = NULL;
-    uint32_t size = 0;
-    FSUtils::LoadFileToMem(path.c_str(), &data, &size);
-    if (data == NULL) {
-        return calculateSHA1(NULL, 0);
-    }
-    std::string result = calculateSHA1(reinterpret_cast<const char *>(data), size);
-    free(data);
-    return result;
 }
 
 unsigned int swap_uint32(unsigned int val) {
