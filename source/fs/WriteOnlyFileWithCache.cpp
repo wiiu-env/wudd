@@ -46,7 +46,7 @@ bool WriteOnlyFileWithCache::flush() {
     if (this->writeBufferPos > 0) {
         int32_t res = CFile::write(static_cast<const uint8_t *>(this->writeBuffer), this->writeBufferPos);
         if (res < 0) {
-            DEBUG_FUNCTION_LINE("Failed to flush cache, write failed: %d", res);
+            DEBUG_FUNCTION_LINE_ERR("Failed to flush cache, write failed: %d (expected %d)", res, this->writeBufferPos);
             return false;
         }
         this->writeBufferPos = 0;
@@ -59,7 +59,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
     size_t finalWriteSize = writeSize;
     if (splitFile) {
         if (pos + writeBufferPos + finalWriteSize >= SPLIT_SIZE) {
-            DEBUG_FUNCTION_LINE("We need to split");
+            DEBUG_FUNCTION_LINE("We need to split files");
             if (!flush()) {
                 return -2;
             }
@@ -67,7 +67,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
             uint32_t realWriteSize = SPLIT_SIZE - pos;
 
             if (realWriteSize > 0) {
-                DEBUG_FUNCTION_LINE("Write remaining %8d bytes", realWriteSize);
+                DEBUG_FUNCTION_LINE_VERBOSE("Write remaining %8d bytes", realWriteSize);
                 if (CFile::write(reinterpret_cast<const uint8_t *>(addr), realWriteSize) != (int32_t) realWriteSize) {
                     return -3;
                 }
@@ -91,7 +91,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
 
     if (finalWriteSize == this->writeBufferSize) {
         if (!this->flush()) {
-            DEBUG_FUNCTION_LINE("Flush failed");
+            DEBUG_FUNCTION_LINE_ERR("Flush failed");
             return -1;
         }
         return CFile::write(reinterpret_cast<const uint8_t *>(addr), finalWriteSize);
@@ -115,7 +115,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
 
         if (this->writeBufferPos == this->writeBufferSize) {
             if (!this->flush()) {
-                DEBUG_FUNCTION_LINE("Flush failed");
+                DEBUG_FUNCTION_LINE_ERR("Flush failed");
                 return -2;
             }
         }

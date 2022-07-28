@@ -103,7 +103,7 @@ bool DiscReaderDiscDrive::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t 
     uint32_t block_cnt         = size >> 15;
     uint32_t offset_in_sectors = offset >> 15;
     if (FSAEx_RawRead(__wut_devoptab_fs_client, buf, 0x8000, block_cnt, offset_in_sectors, device_handle) < 0) {
-        DEBUG_FUNCTION_LINE("Failed to read from Disc");
+        DEBUG_FUNCTION_LINE_ERR("Failed to read from Disc");
         return false;
     }
     return true;
