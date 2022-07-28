@@ -27,7 +27,11 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     wuxHeader.uncompressedSize = swap_uint64(WUD_FILE_SIZE);
     wuxHeader.flags            = 0;
 
-    this->write((uint8_t *) &wuxHeader, sizeof(wuxHeader_t));
+    if (this->write((uint8_t *) &wuxHeader, sizeof(wuxHeader_t)) != sizeof(wuxHeader_t)) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to write header");
+        WUDFileWriter::close();
+        return;
+    }
     this->sectorTableStart = this->tell();
     this->totalSectorCount = WUD_FILE_SIZE / this->sectorSize;
 
@@ -39,7 +43,8 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     }
     memset(this->sectorIndexTable, 0, totalSectorCount * 4);
 
-    if (this->write((uint8_t *) this->sectorIndexTable, totalSectorCount * 4) < 0) {
+    if (this->write((uint8_t *) this->sectorIndexTable, totalSectorCount * 4) != (int32_t) ((uint32_t) totalSectorCount * 4)) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to write initial sector index table");
         WUDFileWriter::close();
         return;
     }
@@ -53,14 +58,24 @@ WUXFileWriter::WUXFileWriter(const char *path, int32_t cacheSize, int32_t sector
     uint64_t padding  = this->sectorTableEnd - tableEnd;
     auto *paddingData = (uint8_t *) memalign(0x40, ROUNDUP(padding, 0x40));
     memset(paddingData, 0, padding);
-    this->write(reinterpret_cast<const uint8_t *>(paddingData), padding);
+    if (this->write(reinterpret_cast<const uint8_t *>(paddingData), padding) != (int32_t) padding) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to write padding.");
+        WUDFileWriter::close();
+        return;
+    }
     free(paddingData);
     this->hashMap.clear();
-    flush();
+    if (!flush()) {
+        WUXFileWriter::close();
+    }
 }
 
 
 int32_t WUXFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSectors) {
+    if (!isOpen()) {
+        DEBUG_FUNCTION_LINE_ERR("Failed to write sector, file is not open");
+        return -1;
+    }
     int32_t curWrittenSectors = 0;
     for (uint32_t i = 0; i < numberOfSectors; i++) {
         uint32_t addr = ((uint32_t) buffer) + (i * this->sectorSize);
@@ -89,23 +104,36 @@ int32_t WUXFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
     return curWrittenSectors;
 }
 
-void WUXFileWriter::writeSectorIndexTable() {
+bool WUXFileWriter::writeSectorIndexTable() {
     if (this->isOpen()) {
-        flush();
+        if (!flush()) {
+            return false;
+        }
         // We need to make sure to call CFile::seek!
-        seek((int64_t) sectorTableStart, SEEK_SET_BASE_CLASS);
-        write((uint8_t *) sectorIndexTable, totalSectorCount * 4);
-        flush();
+        if (seek((int64_t) sectorTableStart, SEEK_SET_BASE_CLASS) < 0) {
+            DEBUG_FUNCTION_LINE_ERR("Seek failed");
+            return false;
+        }
+        if (write((uint8_t *) sectorIndexTable, totalSectorCount * 4) != (int32_t) ((uint32_t) totalSectorCount * 4)) {
+            DEBUG_FUNCTION_LINE_ERR("Failed to write sector index table");
+            return false;
+        }
+        if (!flush()) {
+            return false;
+        }
     }
+    return true;
 }
 
 WUXFileWriter::~WUXFileWriter() {
+    WUXFileWriter::flush();
     WUXFileWriter::close();
     free(sectorIndexTable);
 }
 
-void WUXFileWriter::finalize() {
+bool WUXFileWriter::finalize() {
     WUDFileWriter::finalize();
-    writeSectorIndexTable();
+    bool res = writeSectorIndexTable();
     WUXFileWriter::close();
+    return res;
 }

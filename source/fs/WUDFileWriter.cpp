@@ -29,5 +29,6 @@ int32_t WUDFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
     return -1;
 }
 
-void WUDFileWriter::finalize() {
+bool WUDFileWriter::finalize() {
+    return true;
 }

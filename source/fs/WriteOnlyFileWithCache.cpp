@@ -45,7 +45,7 @@ WriteOnlyFileWithCache::~WriteOnlyFileWithCache() {
 bool WriteOnlyFileWithCache::flush() {
     if (this->writeBufferPos > 0) {
         int32_t res = CFile::write(static_cast<const uint8_t *>(this->writeBuffer), this->writeBufferPos);
-        if (res != this->writeBufferPos) {
+        if (res != (int32_t) this->writeBufferPos) {
             DEBUG_FUNCTION_LINE_ERR("Failed to flush cache, write failed: %d (expected %d)", res, this->writeBufferPos);
             return false;
         }
@@ -58,7 +58,7 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
     auto finalAddr        = addr;
     size_t finalWriteSize = writeSize;
     if (splitFile) {
-        if (pos + writeBufferPos + finalWriteSize >= SPLIT_SIZE) {
+        if (pos + writeBufferPos + finalWriteSize >= (uint64_t) SPLIT_SIZE) {
             DEBUG_FUNCTION_LINE("We need to split files");
             if (!flush()) {
                 return -2;
