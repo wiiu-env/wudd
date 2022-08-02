@@ -35,7 +35,7 @@ WUDDumperState::WUDDumperState(WUDDumperState::eDumpTargetFormat pTargetFormat, 
 
 WUDDumperState::~WUDDumperState() {
     if (this->oddFd >= 0) {
-        FSAEx_RawClose(__wut_devoptab_fs_client, oddFd);
+        FSAEx_RawCloseEx(gFSAClientHandle, oddFd);
     }
     free(sectorBuf);
     free(emptySector);
@@ -51,7 +51,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
     }
     if (this->state == STATE_OPEN_ODD1) {
         if (this->currentSector > 0) {
-            auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &(this->oddFd));
+            auto ret = FSAEx_RawOpenEx(gFSAClientHandle, "/dev/odd01", &(this->oddFd));
             if (ret >= 0) {
                 // continue!
                 this->state = STATE_DUMP_DISC;
@@ -65,7 +65,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             this->state = STATE_PLEASE_INSERT_DISC;
             return ApplicationState::SUBSTATE_RUNNING;
         }
-        auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &(this->oddFd));
+        auto ret = FSAEx_RawOpenEx(gFSAClientHandle, "/dev/odd01", &(this->oddFd));
         if (ret >= 0) {
             if (this->sectorBuf == nullptr) {
                 this->sectorBuf = (void *) memalign(0x100, this->sectorBufSize);
@@ -83,7 +83,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             return SUBSTATE_RETURN;
         }
     } else if (this->state == STATE_READ_DISC_INFO) {
-        if (FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
+        if (FSAEx_RawReadEx(gFSAClientHandle, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
             this->discId[10] = '\0';
             memcpy(this->discId.data(), sectorBuf, 10);
             this->state = STATE_READ_DISC_INFO_DONE;
@@ -96,7 +96,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         this->state = STATE_DUMP_DISC_KEY;
     } else if (this->state == STATE_DUMP_DISC_KEY) {
         // Read the WiiUDiscContentsHeader to determine if we need disckey and if it's the correct one.
-        auto res = FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 3, this->oddFd);
+        auto res = FSAEx_RawReadEx(gFSAClientHandle, this->sectorBuf, READ_SECTOR_SIZE, 1, 3, this->oddFd);
         WUDDiscKey discKey;
         bool hasDiscKey = false;
         if (res >= 0) {
@@ -151,7 +151,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         }
 
         size_t numSectors = this->currentSector + READ_NUM_SECTORS > this->totalSectorCount ? this->totalSectorCount - this->currentSector : READ_NUM_SECTORS;
-        if ((this->readResult = FSAEx_RawRead(__wut_devoptab_fs_client, sectorBuf, READ_SECTOR_SIZE, numSectors, this->currentSector, this->oddFd)) >= 0) {
+        if ((this->readResult = FSAEx_RawReadEx(gFSAClientHandle, sectorBuf, READ_SECTOR_SIZE, numSectors, this->currentSector, this->oddFd)) >= 0) {
             auto curWrittenSectors = fileHandle->writeSector((const uint8_t *) this->sectorBuf, numSectors);
             if (curWrittenSectors < 0) {
                 this->setError(ERROR_WRITE_FAILED);
@@ -180,7 +180,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         } else {
             this->state = STATE_WAIT_USER_ERROR_CONFIRM;
             if (this->oddFd >= 0) {
-                FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
+                FSAEx_RawCloseEx(gFSAClientHandle, this->oddFd);
                 this->oddFd = -1;
             }
             return ApplicationState::SUBSTATE_RUNNING;
@@ -203,7 +203,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
     } else if (this->state == STATE_WAIT_USER_ERROR_CONFIRM) {
         if (this->autoSkipOnError) {
             if (this->oddFd >= 0) {
-                FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
+                FSAEx_RawCloseEx(gFSAClientHandle, this->oddFd);
                 this->oddFd = -1;
             }
         }

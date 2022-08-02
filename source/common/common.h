@@ -1,5 +1,6 @@
 #pragma once
 
+#include <coreinit/filesystem_fsa.h>
 #include <ntfs.h>
 #include <wut.h>
 
@@ -9,11 +10,12 @@
 extern ntfs_md *ntfs_mounts;
 extern int ntfs_mount_count;
 
-extern "C" FSClient *__wut_devoptab_fs_client;
+extern FSAClientHandle gFSAClientHandle;
 
 extern BOOL gRunFromHBL;
 extern BOOL gBlockHomeButton;
 extern uint32_t gBlockHomeButtonCooldown;
+
 
 enum eDumpTarget {
     TARGET_SD,
