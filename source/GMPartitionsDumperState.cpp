@@ -36,6 +36,10 @@ GMPartitionsDumperState::GMPartitionsDumperState(eDumpTarget pTargetDevice) : ta
 }
 
 GMPartitionsDumperState::~GMPartitionsDumperState() {
+    if (this->oddFd != -1) {
+        FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
+        this->oddFd = -1;
+    }
     free(this->sectorBuf);
     this->sectorBuf = nullptr;
     free(this->readBuffer);
