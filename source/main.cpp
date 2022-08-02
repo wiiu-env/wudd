@@ -53,9 +53,7 @@ int main(int argc, char **argv) {
 
         ProcUIClearCallbacks();
         ProcUIRegisterCallback(PROCUI_CALLBACK_HOME_BUTTON_DENIED,
-                               &procHomeButtonDeniedCustom, NULL, 100);
-
-
+                               &procHomeButtonDeniedCustom, nullptr, 100);
     } else {
         gRunFromHBL = false;
     }
@@ -76,7 +74,18 @@ int main(int argc, char **argv) {
 
     WPADInput::init();
 
+    gFSAClientHandle = FSAAddClient(nullptr);
+    if (!gFSAClientHandle) {
+        OSFatal("FSAAddClient failed");
+    }
+
+    if (Mocha_UnlockFSClientEx(gFSAClientHandle) != MOCHA_RESULT_SUCCESS) {
+        OSFatal("Failed to unlock FSAClientHandle");
+    }
+
     main_loop();
+
+    FSADelClient(gFSAClientHandle);
 
     WPADInput::close();
 

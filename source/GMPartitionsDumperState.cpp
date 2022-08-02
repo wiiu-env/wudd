@@ -37,7 +37,7 @@ GMPartitionsDumperState::GMPartitionsDumperState(eDumpTarget pTargetDevice) : ta
 
 GMPartitionsDumperState::~GMPartitionsDumperState() {
     if (this->oddFd != -1) {
-        FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
+        FSAEx_RawCloseEx(gFSAClientHandle, this->oddFd);
         this->oddFd = -1;
     }
     free(this->sectorBuf);
@@ -182,7 +182,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
     }
 
     if (this->state == STATE_OPEN_ODD1) {
-        auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &(this->oddFd));
+        auto ret = FSAEx_RawOpenEx(gFSAClientHandle, "/dev/odd01", &(this->oddFd));
         if (ret >= 0) {
             if (this->sectorBuf == nullptr) {
                 this->sectorBuf = (void *) memalign(0x100, this->sectorBufSize);
@@ -200,13 +200,13 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
             return ApplicationState::SUBSTATE_RETURN;
         }
     } else if (this->state == STATE_READ_DISC_INFO) {
-        if (FSAEx_RawRead(__wut_devoptab_fs_client, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
+        if (FSAEx_RawReadEx(gFSAClientHandle, this->sectorBuf, READ_SECTOR_SIZE, 1, 0, this->oddFd) >= 0) {
             this->discId[10] = '\0';
             memcpy(this->discId.data(), sectorBuf, 10);
             this->state = STATE_READ_DISC_INFO_DONE;
             return ApplicationState::SUBSTATE_RUNNING;
         }
-        FSAEx_RawClose(__wut_devoptab_fs_client, this->oddFd);
+        FSAEx_RawCloseEx(gFSAClientHandle, this->oddFd);
         this->oddFd = -1;
 
         this->setError(ERROR_READ_FIRST_SECTOR);

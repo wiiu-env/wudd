@@ -31,13 +31,13 @@ DiscReaderDiscDrive::DiscReaderDiscDrive() : DiscReader() {
         return;
     }
 
-    auto ret = FSAEx_RawOpen(__wut_devoptab_fs_client, "/dev/odd01", &device_handle);
+    auto ret = FSAEx_RawOpenEx(gFSAClientHandle, "/dev/odd01", &device_handle);
     if (ret < 0) {
         free(sector_buf);
         return;
     }
 
-    auto res = FSAEx_RawRead(__wut_devoptab_fs_client, sector_buf, READ_SECTOR_SIZE, 1, 3, device_handle);
+    auto res = FSAEx_RawReadEx(gFSAClientHandle, sector_buf, READ_SECTOR_SIZE, 1, 3, device_handle);
     if (res >= 0) {
         if (((uint32_t *) sector_buf)[0] != WiiUDiscContentsHeader::MAGIC) {
             uint8_t iv[16];
@@ -75,7 +75,7 @@ DiscReaderDiscDrive::DiscReaderDiscDrive() : DiscReader() {
 }
 
 bool DiscReaderDiscDrive::readEncryptedSector(uint8_t *buffer, uint32_t block_cnt, uint32_t block_offset) const {
-    if (FSAEx_RawRead(__wut_devoptab_fs_client, buffer, READ_SECTOR_SIZE, block_cnt, block_offset, device_handle) < 0) {
+    if (FSAEx_RawReadEx(gFSAClientHandle, buffer, READ_SECTOR_SIZE, block_cnt, block_offset, device_handle) < 0) {
         return false;
     }
     return true;
@@ -87,7 +87,7 @@ bool DiscReaderDiscDrive::IsReady() {
 
 DiscReaderDiscDrive::~DiscReaderDiscDrive() {
     if (device_handle != -1) {
-        FSAEx_RawClose(__wut_devoptab_fs_client, device_handle);
+        FSAEx_RawCloseEx(gFSAClientHandle, device_handle);
         device_handle = -1;
     }
 }
@@ -102,7 +102,7 @@ bool DiscReaderDiscDrive::readEncrypted(uint8_t *buf, uint64_t offset, uint32_t 
     }
     uint32_t block_cnt         = size >> 15;
     uint32_t offset_in_sectors = offset >> 15;
-    if (FSAEx_RawRead(__wut_devoptab_fs_client, buf, 0x8000, block_cnt, offset_in_sectors, device_handle) < 0) {
+    if (FSAEx_RawReadEx(gFSAClientHandle, buf, 0x8000, block_cnt, offset_in_sectors, device_handle) < 0) {
         DEBUG_FUNCTION_LINE_ERR("Failed to read from Disc");
         return false;
     }
