@@ -81,7 +81,7 @@ bool DiscReader::readDecrypted(uint8_t *out_buffer, uint64_t clusterOffset, uint
         uint32_t blockNumber = (totalOffset / BLOCK_SIZE);
         uint32_t blockOffset = (totalOffset % BLOCK_SIZE);
 
-        readOffset = (blockNumber * BLOCK_SIZE);
+        readOffset = ((uint64_t) blockNumber * BLOCK_SIZE);
         if (!useFixedIV) {
             memset(usedIV, 0, 16);
             uint64_t ivTemp = usedFileOffset >> 16;
