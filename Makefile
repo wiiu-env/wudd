@@ -52,6 +52,7 @@ SOURCES		:=	source \
 
 DATA		:=	data
 INCLUDES	:=	source
+ICON	    :=	data/icon.png
 
 #-------------------------------------------------------------------------------
 # options for code generation
