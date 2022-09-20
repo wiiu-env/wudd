@@ -33,10 +33,6 @@ jobs:
       with:
        name: wuhb-binary
        path: "*.wuhb"
-    - uses: actions/upload-artifact@master
-      with:
-       name: rpx-binary
-       path: "*.rpx"
   deploy-binary:
     needs: build-binary
     runs-on: ubuntu-18.04
@@ -49,10 +45,6 @@ jobs:
     - uses: actions/download-artifact@master
       with:
         name: wuhb-binary
-        path: wiiu/apps/wudd
-    - uses: actions/download-artifact@master
-      with:
-        name: rpx-binary
         path: wiiu/apps/wudd
     - name: zip artifact
       run: zip -r ${{ env.REPOSITORY_NAME }}_${{ env.DATETIME }}.zip wiiu
