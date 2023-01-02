@@ -28,5 +28,5 @@ public:
     ~H3HashArray();
 
     std::unique_ptr<uint8_t[]> data;
-    uint8_t size;
+    uint32_t size;
 };
