@@ -151,7 +151,7 @@ void initMochaLib() {
 
 void deInitMochaLib() {
     if (slibMochaMount) {
-        Mocha_DeinitLibrary();
+        Mocha_DeInitLibrary();
     }
 
     Mocha_sdio_disc_interface.shutdown();
