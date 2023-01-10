@@ -11,6 +11,7 @@
 #include <mocha/mocha.h>
 #include <ntfs.h>
 #include <padscore/kpad.h>
+#include <sndcore2/core.h>
 #include <thread>
 #include <whb/log.h>
 #include <whb/proc.h>
@@ -38,6 +39,7 @@ procHomeButtonDeniedCustom(void *context) {
 int main(int argc, char **argv) {
     initLogging();
     DEBUG_FUNCTION_LINE("Hello from wudump!");
+    AXInit();
     WHBProcInit();
     WiiUScreen::Init();
 
@@ -106,6 +108,7 @@ int main(int argc, char **argv) {
 
     WiiUScreen::DeInit();
     WHBProcShutdown();
+    AXQuit();
 
     return 0;
 }
