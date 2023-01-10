@@ -38,7 +38,6 @@ procHomeButtonDeniedCustom(void *context) {
 
 int main(int argc, char **argv) {
     initLogging();
-    DEBUG_FUNCTION_LINE("Hello from wudump!");
     AXInit();
     WHBProcInit();
     WiiUScreen::Init();
@@ -64,7 +63,7 @@ int main(int argc, char **argv) {
     IMIsAPDEnabled(&isAPDEnabled);
 
     if (isAPDEnabled) {
-        DEBUG_FUNCTION_LINE("Disable auto shutdown");
+        DEBUG_FUNCTION_LINE_VERBOSE("Disable auto shutdown");
         IMDisableAPD();
     }
 
@@ -100,7 +99,7 @@ int main(int argc, char **argv) {
     }
 
     if (isAPDEnabled) {
-        DEBUG_FUNCTION_LINE("Enable auto shutdown");
+        DEBUG_FUNCTION_LINE_VERBOSE("Enable auto shutdown");
         IMEnableAPD();
     }
 
@@ -114,7 +113,7 @@ int main(int argc, char **argv) {
 }
 
 void main_loop() {
-    DEBUG_FUNCTION_LINE("Creating state");
+    DEBUG_FUNCTION_LINE_VERBOSE("Creating state");
     std::unique_ptr<MainApplicationState> state = std::make_unique<MainApplicationState>();
     CombinedInput baseInput;
     VPadInput vpadInput;
@@ -124,7 +123,7 @@ void main_loop() {
             WPAD_CHAN_2,
             WPAD_CHAN_3};
 
-    DEBUG_FUNCTION_LINE("Entering main loop");
+    DEBUG_FUNCTION_LINE_VERBOSE("Entering main loop");
     while (WHBProcIsRunning()) {
         baseInput.reset();
         if (vpadInput.update(1280, 720)) {
