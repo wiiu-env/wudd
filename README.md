@@ -9,6 +9,8 @@ Features:
 
 Files will be dumped to `/wudump/[DISC-ID]/`. The disc id of a game can be found on the disc (e.g. WUP-P-ARDP for the EUR version of Super Mario 3D World). If WUDD fails to determine the disc id, "DISC" with a timestamp will be used instead.
 
+If you want to create a partial dump (skipped sectors represented by 00 bytes) for discs with unreadable sectors, you can avoid the need to manually choose the skip sectors option on each error, by pressing Y at the error message to activate auto skip mode
+
 ## How to merge splitted files
 
 When you dump a .wux or .wud to the SD card it gets splitted into 2 GiB parts (FAT32 limitation). To merge them you can use the `copy` cmd tool.
