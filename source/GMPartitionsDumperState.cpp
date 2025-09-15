@@ -152,7 +152,7 @@ void GMPartitionsDumperState::render() {
             WiiUScreen::drawLine();
         }
         WiiUScreen::drawLine();
-        WiiUScreen::drawLine("Press B to abort the dumping");
+        WiiUScreen::drawLine("Press X to abort the dumping");
 
     } else if (this->state == STATE_DUMP_DONE) {
         WiiUScreen::drawLine("Dumping done. Press A to return.");
@@ -327,7 +327,7 @@ ApplicationState::eSubState GMPartitionsDumperState::update(Input *input) {
         this->curContentIndex = 0;
         this->state           = STATE_DUMP_PARTITION_CONTENTS;
     } else if (this->state == STATE_DUMP_PARTITION_CONTENTS) {
-        if (buttonPressed(input, Input::BUTTON_B)) {
+        if (buttonPressed(input, Input::BUTTON_X)) {
             this->state = STATE_ABORT_CONFIRMATION;
             return ApplicationState::SUBSTATE_RUNNING;
         }
