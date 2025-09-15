@@ -145,7 +145,7 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
         this->writtenSectors   = 0;
         this->retryCount       = 10;
     } else if (this->state == STATE_DUMP_DISC) {
-        if (buttonPressed(input, Input::BUTTON_B)) {
+        if (buttonPressed(input, Input::BUTTON_X)) {
             this->state = STATE_ABORT_CONFIRMATION;
             return ApplicationState::SUBSTATE_RUNNING;
         }
@@ -287,6 +287,7 @@ void WUDDumperState::render() {
             }
             WiiUScreen::drawLine();
             WiiUScreen::drawLine("Press A to skip this sector (will be replaced by 0's)");
+            WiiUScreen::drawLine("Press Y to activate auto-skip mode");
             WiiUScreen::drawLine("Press B to try again");
         } else {
             OSTime curTime       = OSGetTime();
@@ -305,7 +306,7 @@ void WUDDumperState::render() {
             WiiUScreen::drawLinef("Skipped dumping %d sectors", this->skippedSectors.size());
             WiiUScreen::drawLine();
         }
-        WiiUScreen::drawLinef("Press B to abort");
+        WiiUScreen::drawLinef("Press X to abort");
     } else if (this->state == STATE_DUMP_DISC_DONE) {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
     } else if (this->state == STATE_ABORT_CONFIRMATION) {
