@@ -16,7 +16,7 @@ If you want to create a partial dump (skipped sectors represented by 00 bytes) f
 When you dump a .wux or .wud to the SD card it gets splitted into 2 GiB parts (FAT32 limitation). To merge them you can use the `copy` cmd tool.
 
 Example:
-`copy /b game.wux.part1 + game.wux.part2 game.wux`
+`copy /b game.wux.part01 + game.wux.part02 game.wux`
 
 ## Dependencies
 Requires an [Environment](https://github.com/wiiu-env/EnvironmentLoader) (e.g. Tiramisu or Aroma) with [MochaPayload](https://github.com/wiiu-env/MochaPayload) (Nightly-MochaPayload-20220725-155554 or newer)
