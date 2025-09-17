@@ -235,6 +235,9 @@ ApplicationState::eSubState WUDDumperState::update(Input *input) {
             this->readResult = 0;
         } else if (buttonPressed(input, Input::BUTTON_Y)) {
             this->autoSkipOnError = true;
+        } else if (buttonPressed(input, Input::BUTTON_X)) {
+            this->state = STATE_ABORT_CONFIRMATION;
+            return ApplicationState::SUBSTATE_RUNNING;
         }
     } else if (this->state == STATE_DUMP_DISC_DONE) {
         WiiUScreen::drawLinef("Dumping done! Press A to continue");
