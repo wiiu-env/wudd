@@ -30,5 +30,22 @@ int32_t WUDFileWriter::writeSector(const uint8_t *buffer, uint32_t numberOfSecto
 }
 
 bool WUDFileWriter::finalize() {
+    if (this->isOpen()) {
+        if (!this->flush()) {
+            DEBUG_FUNCTION_LINE_ERR("Final flush failed");
+            return false;
+        }
+        this->close();
+    }
+
     return true;
+}
+
+
+std::set<std::string> WUDFileWriter::getPaths() const {
+    return getPathsInternal();
+}
+
+bool WUDFileWriter::isReady() const {
+    return isOpen();
 }

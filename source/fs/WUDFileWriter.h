@@ -16,15 +16,20 @@
  ****************************************************************************/
 #pragma once
 
+#include "IWUDFileWriter.h"
 #include "WriteOnlyFileWithCache.h"
 
-class WUDFileWriter : public WriteOnlyFileWithCache {
+class WUDFileWriter : public IWUDFileWriter, public WriteOnlyFileWithCache {
 public:
     WUDFileWriter(const char *string, int32_t cacheSize, int32_t sectorSize, bool split = false);
+    ~WUDFileWriter() override = default;
+    int32_t writeSector(const uint8_t *sector_buf, size_t size) override;
 
-    virtual int32_t writeSector(const uint8_t *buffer, uint32_t numberOfSectors);
+    bool finalize() override;
 
-    virtual bool finalize();
+    [[nodiscard]] std::set<std::string> getPaths() const override;
+
+    [[nodiscard]] bool isReady() const override;
 
 protected:
     int32_t sectorSize;

@@ -109,7 +109,7 @@ bool WUXFileWriter::writeSectorIndexTable() {
         if (!flush()) {
             return false;
         }
-        // We need to make sure to call CFile::seek!
+        // We need to make sure NOT to call CFile::seek!
         if (seek((int64_t) sectorTableStart, SEEK_SET_BASE_CLASS) < 0) {
             DEBUG_FUNCTION_LINE_ERR("Seek failed");
             return false;
@@ -132,8 +132,8 @@ WUXFileWriter::~WUXFileWriter() {
 }
 
 bool WUXFileWriter::finalize() {
-    WUDFileWriter::finalize();
     bool res = writeSectorIndexTable();
+    WUXFileWriter::flush();
     WUXFileWriter::close();
     return res;
 }

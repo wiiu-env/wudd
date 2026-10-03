@@ -44,8 +44,9 @@ void MainApplicationState::render() {
         WiiUScreen::drawLinef("%s Dump as WUX", this->selectedOptionY == 0 ? ">" : " ");
         WiiUScreen::drawLinef("%s Dump as WUD", this->selectedOptionY == 1 ? ">" : " ");
         WiiUScreen::drawLinef("%s Dump partition as .app", this->selectedOptionY == 2 ? ">" : " ");
+        WiiUScreen::drawLinef("%s Hash disc", this->selectedOptionY == 3 ? ">" : " ");
         WiiUScreen::drawLine();
-        WiiUScreen::drawLinef("%s Dumptarget:", this->selectedOptionY == 3 ? ">" : " ");
+        WiiUScreen::drawLinef("%s Dumptarget:", this->selectedOptionY == 4 ? ">" : " ");
         if (ntfs_mount_count > 0) {
             WiiUScreen::drawLinef("     [%s] SD    [%s] NTFS (USB)", dumpTarget == TARGET_SD ? "x" : " ", dumpTarget == TARGET_NTFS ? "x" : " ");
         } else {
@@ -53,7 +54,7 @@ void MainApplicationState::render() {
         }
         WiiUScreen::drawLine();
         if (!gRunFromHBL) {
-            WiiUScreen::drawLinef("%s Exit", this->selectedOptionY == 4 ? ">" : " ");
+            WiiUScreen::drawLinef("%s Exit", this->selectedOptionY == 5 ? ">" : " ");
         }
     }
 
@@ -63,9 +64,9 @@ void MainApplicationState::render() {
 
 ApplicationState::eSubState MainApplicationState::update(Input *input) {
     if (this->state == STATE_WELCOME_SCREEN) {
-        int optionCount = gRunFromHBL ? 4 : 5;
+        int optionCount = gRunFromHBL ? 5 : 6;
         proccessMenuNavigationY(input, optionCount);
-        if (selectedOptionY == 3) {
+        if (selectedOptionY == 4) {
             if (ntfs_mount_count > 0) {
                 proccessMenuNavigationX(input, 2);
                 if (selectedOptionX == 0) {
@@ -86,6 +87,9 @@ ApplicationState::eSubState MainApplicationState::update(Input *input) {
                 this->state    = STATE_DO_SUBSTATE;
                 this->subState = std::make_unique<GMPartitionsDumperState>(dumpTarget);
             } else if (this->selectedOptionY == 3) {
+                this->state    = STATE_DO_SUBSTATE;
+                this->subState = std::make_unique<WUDDumperState>(WUDDumperState::DUMP_STUB, dumpTarget);
+            } else if (this->selectedOptionY == 4) {
                 //
             } else {
                 if (!gRunFromHBL) {

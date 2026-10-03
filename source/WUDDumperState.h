@@ -19,6 +19,8 @@
 #include "ApplicationState.h"
 #include "fs/WUXFileWriter.h"
 #include "fs/WriteOnlyFileWithCache.h"
+#include "hash/FileHashes.h"
+
 #include <array>
 #include <common/common.h>
 #include <input/Input.h>
@@ -31,11 +33,13 @@
 #define WRITE_BUFFER_NUM_SECTORS 128
 #define WUD_FILE_SIZE            0x5D3A00000L
 
+class IWUDFileWriter;
 class WUDDumperState : public ApplicationState {
 public:
     enum eDumpTargetFormat {
         DUMP_AS_WUX,
         DUMP_AS_WUD,
+        DUMP_STUB,
     };
 
     enum eDumpState {
@@ -46,6 +50,7 @@ public:
         STATE_READ_DISC_INFO_DONE,
         STATE_DUMP_DISC_KEY,
         STATE_DUMP_DISC_START,
+        STATE_DUMP_DISC_DONE_SAVING_REPORT,
         STATE_DUMP_DISC_DONE,
         STATE_WAIT_USER_ERROR_CONFIRM,
         STATE_DUMP_DISC,
@@ -59,6 +64,28 @@ public:
         ERROR_MALLOC_FAILED,
         ERROR_WRITE_FAILED,
         ERROR_NO_DISC_FOUND
+    };
+
+    struct DiscInfo {
+        std::set<std::string> filepaths;
+        std::optional<std::string> discIdOpt;
+        uint64_t sizeBytes{};
+        std::map<FileHashes::HashType, std::string> hashes;
+        std::vector<uint64_t> skippedSectors;
+    };
+    struct KeyInfo {
+        std::string filepath;
+        uint64_t sizeBytes{};
+        std::map<FileHashes::HashType, std::string> hashes;
+    };
+
+    struct WuddLog {
+        OSCalendarTime startDatetime;
+        uint32_t durationSeconds{};
+        std::string wuddVersion;
+        DiscInfo disc;
+        std::optional<KeyInfo> discKeyOpt;
+        eDumpTargetFormat targetFormat;
     };
 
     explicit WUDDumperState(eDumpTargetFormat pTarget, eDumpTarget pTargetDevice);
@@ -89,9 +116,11 @@ public:
     int oddFd      = -1;
     int retryCount = 10;
 
-    OSTime startTime{};
+    OSTime dumpStartTicks{};
 
-    std::unique_ptr<WUDFileWriter> fileHandle = {};
+    std::unique_ptr<IWUDFileWriter> fileHandle = {};
+
+    FileHashes wudFileHashes;
 
     std::array<uint8_t, 11> discId{};
 
@@ -110,5 +139,10 @@ public:
 
     void *emptySector = nullptr;
     std::string getPathNameForDisc();
-    OSTime dumpStartDate;
+    static bool writeLogFile(const char *filepath, const WuddLog &log);
+    bool hasDiscKey = false;
+    WUDDiscKey currentDiscKey;
+
+    std::string logFileName;
+    bool logFileSaved = false;
 };
