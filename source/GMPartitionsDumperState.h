@@ -20,6 +20,7 @@
 #include "common/common.h"
 #include "fs/WUXFileWriter.h"
 #include "fs/WriteOnlyFileWithCache.h"
+#include "hash/FileHashes.h"
 #include <WUD/NUSTitle.h>
 #include <WUD/entities/TMD/Content.h>
 #include <WUD/header/WiiUDiscHeader.h>

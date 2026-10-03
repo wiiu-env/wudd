@@ -1,56 +1,71 @@
 # WUDD - Wii U Disc Dumper
 
-Inspired by [wudump](https://github.com/FIX94/wudump) from FIX94.
+Inspired by [wudump](https://github.com/FIX94/wudump) by FIX94.
 
-Features:
-- Dump a Wii U Disc in WUD (uncompressed) or [WUX](https://gbatemp.net/threads/wii-u-image-wud-compression-tool.397901/) (loseless compression) format (including the game.key)
-- Dump the GM Partitions (Game, Updates, DLCs) of an Wii U Disc as *.app,*.h3, .tmd, .tik, .cert files
-- Supports dumping to SD (FAT32) and USB (NTFS only). When dumping to SD the files get slitted in 2 GiB parts. 
+## Features
 
-Files will be dumped to `/wudump/[DISC-ID]/`. The disc id of a game can be found on the disc (e.g. WUP-P-ARDP for the EUR version of Super Mario 3D World). If WUDD fails to determine the disc id, "DISC" with a timestamp will be used instead.
+* Dump a Wii U disc in WUD (uncompressed) or [WUX](https://gbatemp.net/threads/wii-u-image-wud-compression-tool.397901/) (lossless compression) format, including the game key.
+* Dump the GM partitions (Game, Updates, and DLC) of a Wii U disc as `.app`, `.h3`, `.tmd`, `.tik`, and `.cert` files.
+* Supports dumping to SD (FAT32) and USB (NTFS only). When dumping to an SD card, files are split into 2 GiB parts due to the FAT32 file-size limitation.
+* Save disc hashes to the SD card. **Hash disc** hashes the disc without saving any disc data.
 
-If you want to create a partial dump (skipped sectors represented by 00 bytes) for discs with unreadable sectors, you can avoid the need to manually choose the skip sectors option on each error, by pressing Y at the error message to activate auto skip mode
+Files are dumped to `/wudump/[DISC-ID]/`.
 
-## How to merge splitted files
+The disc ID of a game can be found on the disc (e.g. `WUP-P-ARDP` for the EUR version of Super Mario 3D World). If WUDD cannot determine the disc ID, `DISC` followed by a timestamp is used instead.
 
-When you dump a .wux or .wud to the SD card it gets splitted into 2 GiB parts (FAT32 limitation). To merge them you can use the `copy` cmd tool.
+If you want to create a partial dump (with skipped sectors represented by `00` bytes) for discs with unreadable sectors, you can avoid manually selecting the skip-sectors option for each error by pressing **Y** when an error occurs. This activates auto-skip mode.
 
-Example:
-`copy /b game.wux.part01 + game.wux.part02 game.wux`
+## How to Merge Split Files
+
+When you dump a `.wux` or `.wud` file to an SD card, it is split into 2 GiB parts due to the FAT32 file-size limitation.
+
+To merge the parts, you can use the Windows `copy` command:
+
+```cmd
+copy /b game.wux.part01 + game.wux.part02 game.wux
+```
 
 ## Dependencies
-Requires an [Environment](https://github.com/wiiu-env/EnvironmentLoader) (e.g. Tiramisu or Aroma) with [MochaPayload](https://github.com/wiiu-env/MochaPayload) (Nightly-MochaPayload-20220725-155554 or newer)
 
-- [wut](https://github.com/devkitPro/wut)
-- [libmocha](https://github.com/wiiu-env/libmocha)
-- [libntfs](https://github.com/wiiu-env/libntfs)
+WUDD requires an [Environment](https://github.com/wiiu-env/EnvironmentLoader) (e.g. Tiramisu or Aroma) with [MochaPayload](https://github.com/wiiu-env/MochaPayload) (Nightly-MochaPayload-20220725-155554 or newer).
 
-## Buildflags
+Build dependencies:
+
+* [wut](https://github.com/devkitPro/wut)
+* [libmocha](https://github.com/wiiu-env/libmocha)
+* [libntfs](https://github.com/wiiu-env/libntfs)
+
+## Build Flags
 
 ### Logging
-Building via `make` only logs errors (via OSReport). To enable logging via the [LoggingModule](https://github.com/wiiu-env/LoggingModule) set `DEBUG` to `1` or `VERBOSE`.
 
-`make` Logs errors only (via OSReport).  
-`make DEBUG=1` Enables information and error logging via [LoggingModule](https://github.com/wiiu-env/LoggingModule).  
-`make DEBUG=VERBOSE` Enables verbose information and error logging via [LoggingModule](https://github.com/wiiu-env/LoggingModule).
+Building with `make` only logs errors via `OSReport`. To enable logging via the [LoggingModule](https://github.com/wiiu-env/LoggingModule), set `DEBUG` to `1` or `VERBOSE`.
 
-If the [LoggingModule](https://github.com/wiiu-env/LoggingModule) is not present, it'll fallback to UDP (Port 4405) and [CafeOS](https://github.com/wiiu-env/USBSerialLoggingModule) logging.
+* `make` — Logs errors only via `OSReport`.
+* `make DEBUG=1` — Enables information and error logging via the [LoggingModule](https://github.com/wiiu-env/LoggingModule).
+* `make DEBUG=VERBOSE` — Enables verbose information and error logging via the [LoggingModule](https://github.com/wiiu-env/LoggingModule).
 
-## Building using the Dockerfile
+If the [LoggingModule](https://github.com/wiiu-env/LoggingModule) is not present, WUDD falls back to UDP logging on port `4405` and [CafeOS](https://github.com/wiiu-env/USBSerialLoggingModule) logging.
 
-It's possible to use a docker image for building. This way you don't need anything installed on your host system.
+## Building Using the Dockerfile
 
-```
-# Build docker image (only needed once)
+You can use the provided Dockerfile to build WUDD inside a Docker container. This means you don't need to install the build dependencies on your host system.
+
+```sh
+# Build the Docker image (only needed once)
 docker build . -t wudd-builder
 
-# make 
+# Build
 docker run -it --rm -v ${PWD}:/project wudd-builder make
 
-# make clean
+# Clean
 docker run -it --rm -v ${PWD}:/project wudd-builder make clean
 ```
 
-## Format the code via docker
+## Formatting the Code Using Docker
 
-`docker run --rm -v ${PWD}:/src ghcr.io/wiiu-env/clang-format:13.0.0-2 -r ./source -i`
+You can format the source code using the provided ClangFormat Docker image:
+
+```sh
+docker run --rm -v ${PWD}:/src ghcr.io/wiiu-env/clang-format:13.0.0-2 -r ./source -i
+```

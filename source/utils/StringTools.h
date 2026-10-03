@@ -52,4 +52,5 @@ std::string string_format(const std::string &format, Args... args) {
 class StringTools {
 public:
     static void StripUnicodeAndLineBreak(std::string &str);
+    static void ReplaceStringInPlace(std::string &subject, const std::string &search, const std::string &replace);
 };
