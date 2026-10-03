@@ -17,6 +17,7 @@
 #pragma once
 
 #include <fs/CFile.hpp>
+#include <set>
 
 #define SEEK_SET_BASE_CLASS 0x4242
 
@@ -45,4 +46,8 @@ public:
     bool splitFile = false;
     int32_t part   = 1;
     std::string originalPath;
+    std::set<std::string> paths;
+
+protected:
+    [[nodiscard]] std::set<std::string> getPathsInternal() const;
 };

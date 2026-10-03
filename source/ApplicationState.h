@@ -5,7 +5,8 @@
 #include "utils/ScreenUtils.h"
 #include "utils/WiiUScreen.h"
 #include "version.h"
-#include <stdint.h>
+
+#define VERSION_STR "v1.2.3"
 
 class ApplicationState {
 public:
@@ -56,7 +57,7 @@ public:
     }
 
     virtual void printHeader() {
-        WiiUScreen::drawLine("WUDD - Wii U Disc Dumper v1.2.2" VERSION_EXTRA);
+        WiiUScreen::drawLine("WUDD - Wii U Disc Dumper " VERSION_STR " " VERSION_EXTRA);
         WiiUScreen::drawLine("==================");
         WiiUScreen::drawLine("");
     }

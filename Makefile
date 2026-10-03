@@ -37,6 +37,7 @@ SOURCES		:=	source \
 				source/input \
 				source/common \
 				source/utils \
+				source/hash \
 				source/utils/blocksize \
 				source/WUD \
 				source/WUD/content \

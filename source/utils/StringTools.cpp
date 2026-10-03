@@ -36,3 +36,12 @@ void StringTools::StripUnicodeAndLineBreak(std::string &str) {
     std::replace(str.begin(), str.end(), (char) 0x0D, ' '); // replace CR with space
     str.erase(remove_if(str.begin(), str.end(), invalidChar), str.end());
 }
+
+void StringTools::ReplaceStringInPlace(std::string &subject, const std::string &search,
+                                       const std::string &replace) {
+    size_t pos = 0;
+    while ((pos = subject.find(search, pos)) != std::string::npos) {
+        subject.replace(pos, search.length(), replace);
+        pos += replace.length();
+    }
+}

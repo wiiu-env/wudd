@@ -34,6 +34,9 @@ WriteOnlyFileWithCache::WriteOnlyFileWithCache(const char *path, int32_t cacheSi
         this->close();
         return;
     }
+
+    paths.insert(split ? std::string(path) + ".part01" : path);
+
     this->writeBufferPos = 0;
 }
 
@@ -52,6 +55,10 @@ bool WriteOnlyFileWithCache::flush() {
         this->writeBufferPos = 0;
     }
     return true;
+}
+
+std::set<std::string> WriteOnlyFileWithCache::getPathsInternal() const {
+    return paths;
 }
 
 int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
@@ -81,8 +88,9 @@ int32_t WriteOnlyFileWithCache::write(const uint8_t *addr, size_t writeSize) {
             CFile::close();
 
             // open the next part
-            DEBUG_FUNCTION_LINE("Open %s", string_format("%s.part%02d", originalPath.c_str(), part).c_str());
-            this->open(string_format("%s.part%02d", originalPath.c_str(), part), WriteOnly);
+            const auto newFilePath = string_format("%s.part%02d", originalPath.c_str(), part);
+            paths.insert(newFilePath);
+            this->open(newFilePath, WriteOnly);
         }
         if (finalWriteSize == 0) {
             return (int32_t) writeSize;
@@ -133,9 +141,10 @@ int32_t WriteOnlyFileWithCache::seek(int64_t offset, int32_t origin) {
             if ((offset / SPLIT_SIZE) + 1 != part) {
                 flush();
                 close();
-                part = (offset / SPLIT_SIZE) + 1;
-                DEBUG_FUNCTION_LINE("Open %s", string_format("%s.part%02d", originalPath.c_str(), part).c_str());
-                this->open(string_format("%s.part%02d", originalPath.c_str(), part), ReadWrite);
+                part                   = (offset / SPLIT_SIZE) + 1;
+                const auto newFilePath = string_format("%s.part%02d", originalPath.c_str(), part);
+                paths.insert(newFilePath);
+                this->open(newFilePath, ReadWrite);
             }
             return CFile::seek(offset % SPLIT_SIZE, SEEK_SET);
         }
